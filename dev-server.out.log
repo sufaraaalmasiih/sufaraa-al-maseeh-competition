@@ -1,0 +1,62 @@
+
+> sufaraa-al-maseeh@0.1.0 dev
+> set NEXT_TEST_WASM=1&& set NEXT_TEST_WASM_DIR=node_modules\@next\swc-wasm-nodejs&& set NEXT_SWC_CACHE_DIR=.next-swc-cache&& next dev
+
+   ▲ Next.js 15.5.18
+   - Local:        http://localhost:3000
+   - Network:      http://10.2.0.2:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 2.4s
+ ○ Compiling / ...
+ ✓ Compiled /team in 8.4s (1667 modules)
+ GET /login 200 in 7022ms
+ GET /team 200 in 6504ms
+ ○ Compiling /facilitator-login ...
+ ✓ Compiled /facilitator-login in 1101ms (1847 modules)
+ GET /facilitator-login 200 in 1477ms
+ ○ Compiling /facilitator ...
+ ✓ Compiled /facilitator in 695ms (1899 modules)
+ GET /facilitator 200 in 924ms
+ ○ Compiling /audience ...
+ ✓ Compiled /audience in 529ms (1874 modules)
+ GET /audience 200 in 894ms
+ ✓ Compiled / in 447ms (1082 modules)
+ GET / 307 in 694ms
+ GET /facilitator 200 in 194ms
+ GET /facilitator-login 200 in 78ms
+ GET / 307 in 48ms
+ ○ Compiling /login ...
+ ✓ Compiled /login in 538ms (1106 modules)
+ GET /login 200 in 837ms
+ GET / 307 in 42ms
+ GET /login 200 in 46ms
+ ○ Compiling /register ...
+ GET /login?mode=signup&next=%2Fdashboard&error=EMAIL_EXISTS 200 in 810ms
+ GET /login?mode=signin&next=%2Fdashboard 200 in 810ms
+ GET /login?mode=signup&next=%2Fdashboard 200 in 811ms
+ GET /login?fullName=raf&email=rafreus9%40gmail.com&password=123456789&confirmPassword=123456789 200 in 812ms
+ GET /login 200 in 814ms
+ ✓ Compiled /register in 1165ms (1934 modules)
+ GET / 307 in 287ms
+ GET /login 200 in 73ms
+ ✓ Compiled /admin-login in 435ms (1936 modules)
+ GET /admin-login 200 in 492ms
+ ✓ Compiled in 1051ms (1950 modules)
+ GET /team 200 in 93ms
+ GET /login 200 in 102ms
+ GET / 307 in 68ms
+ GET /login 200 in 69ms
+ GET /login 200 in 62ms
+ GET /register 200 in 264ms
+ GET /dev/create-admin-user 200 in 267ms
+ ✓ Compiled in 547ms (1950 modules)
+ GET /team 200 in 47ms
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 1920ms (2253 modules)
+ GET /login 500 in 2550ms
+ GET /team 500 in 1228ms
+ GET /team 500 in 246ms
+ GET /team 500 in 231ms
+[?25h

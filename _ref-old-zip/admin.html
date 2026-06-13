@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>
+   لوحة الميسر
+  </title>
+<link href="style.css" rel="stylesheet"/>
+<link href="stage3-final-v9646.css" rel="stylesheet"/>
+<link href="stage4-final-v9650.css" rel="stylesheet"/>
+</head>
+<body>
+<header class="topbar">
+<div class="brand">
+<img alt="شعار سفراء المسيح" class="logo-img" src="logo.png"/>
+<div>
+<h1>
+      سفراء المسيح
+     </h1>
+<p>
+      نحيا بالكلمة... ونشهد للحق
+     </p>
+</div>
+</div>
+<div class="top-actions-v9520">
+<button class="btn secondary" onclick="toggleSiteFullscreenV9520()">
+     ⛶ ملء الشاشة
+    </button>
+<button class="btn danger" onclick="logout()">
+     خروج
+    </button>
+</div>
+</header>
+<main class="container">
+<nav class="admin-tabs admin-tabs-v95119"><button class="stage active" onclick="showAdmin('game',this)">اللعبة</button>
+
+
+
+<button class="stage" onclick="showAdmin('control',this)">
+     التحكم
+    </button>
+<button class="stage" onclick="showAdmin('finals',this)">
+     النتائج النهائية
+    </button>
+<button class="stage" onclick="showAdmin('history',this)">
+     تاريخ المسابقة
+    </button>
+<button class="stage" onclick="showAdmin('questions',this)">
+     بنك الأسئلة
+    </button>
+<button class="stage" onclick="showAdmin('videos',this)">
+     فيديوهات / عن الجمهور
+    </button>
+<button class="stage" onclick="showAdmin('org',this)">
+     عن الجهة
+    </button>
+</nav>
+
+
+
+<section class="admin-page card" id="game"><h2>اللعبة</h2><div id="gameFlowPanel">جاري تحميل مسار اللعبة...</div></section><section class="admin-page card hidden" id="control">
+<h2>
+     التحكم والمتابعة
+    </h2>
+<p>
+     اختر فريقًا لمشاهدة اللاعبين والإجابات، أو لإعادته إلى بداية مرحلة عند حدوث مشكلة تقنية.
+    </p>
+<div class="stage2-grid">
+<div>
+<label>
+       الفريق
+      </label>
+<select id="teamSelect" onchange="renderControl()">
+</select>
+</div>
+<div>
+<label>
+       إعادة الفريق إلى بداية مرحلة
+      </label>
+<select id="restartStageSelect">
+<option value="stage1">
+        المرحلة الأولى
+       </option>
+<option value="stage2">
+        المرحلة الثانية
+       </option>
+<option value="stage3">
+        المرحلة الثالثة
+       </option>
+<option value="stage4">
+        المرحلة الرابعة
+       </option>
+</select>
+</div>
+<div>
+<label>
+       ترحيل كل الفرق إلى مرحلة
+      </label>
+<select id="moveAllStageSelect">
+<option value="intro1">
+        شرح المرحلة الأولى
+       </option>
+<option value="stage1">
+        المرحلة الأولى
+       </option>
+<option value="intro2">
+        شرح المرحلة الثانية
+       </option>
+<option value="stage2">
+        المرحلة الثانية
+       </option>
+<option value="intro3">
+        شرح المرحلة الثالثة
+       </option>
+<option value="stage3">
+        المرحلة الثالثة
+       </option>
+<option value="intro4">
+        شرح المرحلة الرابعة
+       </option>
+<option value="stage4">
+        المرحلة الرابعة
+       </option>
+<option value="final">
+        النهائي
+       </option>
+</select>
+</div>
+</div>
+<button class="btn" id="pauseBtn" onclick="togglePause()">
+     إيقاف مؤقت ⏸️
+    </button>
+<button class="btn" onclick="restartTeamStage()">
+     إعادة لبداية المرحلة
+    </button>
+<button class="btn secondary" onclick="moveAllTeamsToStage()">
+     ترحيل كل الفرق
+    </button>
+<button class="btn danger" onclick="resetAll()">
+     تصفير كل النتائج
+    </button>
+<div class="mini-card" id="playersBox">
+</div>
+<h3>
+     إجابات الفريق
+    </h3>
+<label>
+     فلترة الإجابات
+    </label>
+<select id="logStageFilter" onchange="renderAnswerLog()">
+<option value="all">
+      العام - كل المراحل
+     </option>
+<option value="اجمعوا الكنوز">
+      المرحلة الأولى
+     </option>
+<option value="فتشوا الكتب">
+      المرحلة الثانية
+     </option>
+<option value="على المحك">
+      المرحلة الثالثة
+     </option>
+<option value="اثبتوا بالحق">
+      المرحلة الرابعة
+     </option>
+</select>
+<div id="answerLogBox">
+</div>
+</section>
+<section class="admin-page card hidden" id="finals">
+<h2>
+     النتائج النهائية
+    </h2>
+<div id="finalTable">
+</div>
+<button class="btn save-results-btn finish-btn" onclick="saveFinalResults()">
+     حفظ النتائج
+    </button>
+</section>
+<section class="admin-page card hidden" id="history">
+<h2>
+     تاريخ المسابقة
+    </h2>
+<p class="muted">
+     لا يتم تحديث هذه الصفحة إلا عند الضغط على زر حفظ النتائج.
+    </p>
+<div id="historyList">
+</div>
+</section>
+<section class="admin-page card hidden" id="questions">
+<h2>
+     بنك الأسئلة - استيراد Excel
+    </h2>
+<div id="questionBankPanel">
+</div>
+</section>
+<section class="admin-page card hidden" id="videos">
+<h2>
+     فيديوهات / عن الجمهور
+    </h2>
+<p>
+     هذا الفيديو موضوع مؤقتًا كشرح لكل المراحل.
+    </p>
+<div class="intro-video admin-video-card">
+<iframe allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen="" class="stage-video-frame" frameborder="0" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube.com/embed/0rC6j13eyd4?rel=0&amp;modestbranding=1&amp;playsinline=1" title="فيديو شرح المراحل">
+</iframe>
+<small>
+      فيديو شرح المراحل
+     </small>
+</div>
+</section>
+<section class="admin-page card hidden" id="org">
+<h2>
+     عن الجهة المنظمة
+    </h2>
+<p>
+     سفراء المسيح: نحيا بالكلمة ونشهد للحق. مسابقة تعليمية تفاعلية للأطفال والشباب حول الكتاب المقدس.
+    </p>
+</section>
+</main>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js">
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
+</script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
+</script>
+<script src="firebase-init.js">
+</script>
+<script src="data.js">
+</script>
+<script src="game-flow-core.js"></script>
+<script src="admin-script.js">
+</script>
+<script src="admin-polish-v9542.js">
+</script>
+<script src="admin-game-flow.js"></script>
+<script src="stage3-shared-v9646.js"></script>
+<script src="stage3-admin-v9646.js"></script>
+<script src="stage4-shared-v9650.js"></script>
+<script src="stage4-admin-v9650.js"></script>
+</body>
+</html>

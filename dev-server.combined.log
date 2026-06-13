@@ -1,0 +1,12 @@
+ ⚠ experimental.useWasmBinary is not an option for supported platform win32/x64 and will be ignored.
+ ⚠ experimental.useWasmBinary is not an option for supported platform win32/x64 and will be ignored.
+   ▲ Next.js 15.5.18
+   - Local:        http://localhost:3000
+   - Network:      http://10.2.0.2:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1464ms
+ ○ Compiling /login ...
+ ✓ Compiled /login in 4.7s (615 modules)
+ GET /login 200 in 5034ms

@@ -1,0 +1,33 @@
+
+> sufaraa-al-maseeh@0.1.0 dev
+> set NEXT_TEST_WASM=1&& set NEXT_TEST_WASM_DIR=node_modules\@next\swc-wasm-nodejs&& set NEXT_SWC_CACHE_DIR=.next-swc-cache&& next dev
+
+   ▲ Next.js 15.5.18
+   - Local:        http://localhost:3000
+   - Network:      http://10.2.0.2:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 2s
+ ○ Compiling /login ...
+ ✓ Compiled /login in 3.2s (615 modules)
+ GET /login 200 in 3516ms
+ ○ Compiling /audience ...
+ ✓ Compiled /audience in 2.8s (1636 modules)
+ GET /audience 200 in 3126ms
+ ○ Compiling /facilitator ...
+ ✓ Compiled /facilitator in 779ms (1682 modules)
+ GET /facilitator 200 in 1137ms
+ ✓ Compiled in 279ms (713 modules)
+ GET /facilitator 200 in 152ms
+ ✓ Compiled in 171ms (713 modules)
+ ✓ Compiled in 137ms (713 modules)
+ ✓ Compiled in 152ms (713 modules)
+ ✓ Compiled in 161ms (713 modules)
+ ✓ Compiled in 133ms (713 modules)
+ ✓ Compiled in 597ms (1672 modules)
+ ✓ Compiled in 196ms (713 modules)
+ ✓ Compiled in 473ms (1674 modules)
+ ✓ Compiled in 534ms (1674 modules)
+ ✓ Compiled in 268ms (714 modules)
+[?25h

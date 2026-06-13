@@ -1,0 +1,48 @@
+
+> sufaraa-al-maseeh@0.1.0 dev
+> set NEXT_TEST_WASM=1&& set NEXT_TEST_WASM_DIR=node_modules\@next\swc-wasm-nodejs&& set NEXT_SWC_CACHE_DIR=.next-swc-cache&& next dev
+
+   ▲ Next.js 15.5.18
+   - Local:        http://localhost:3000
+   - Network:      http://10.2.0.2:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 2.2s
+ ○ Compiling /login ...
+ ✓ Compiled /login in 3.6s (615 modules)
+ GET /login 200 in 3983ms
+ ○ Compiling /audience ...
+ ✓ Compiled /audience in 3.2s (1638 modules)
+ GET /audience 200 in 3629ms
+ ○ Compiling /facilitator-login ...
+ ✓ Compiled /facilitator-login in 1120ms (1806 modules)
+ GET /facilitator-login 200 in 1512ms
+ GET /facilitator-login 200 in 49ms
+ GET /facilitator-login 200 in 66ms
+ ○ Compiling /facilitator ...
+ ✓ Compiled /facilitator in 791ms (1862 modules)
+ GET /facilitator 200 in 906ms
+ ✓ Compiled /team-login in 295ms (1864 modules)
+ GET /team-login 200 in 794ms
+ ○ Compiling /team ...
+ ✓ Compiled /team in 559ms (1887 modules)
+ GET /team 200 in 620ms
+ GET /facilitator-login 200 in 233ms
+ GET /facilitator 200 in 26ms
+ GET /team-login 200 in 54ms
+ GET /team 200 in 17ms
+ GET /facilitator-login 200 in 60ms
+ GET /facilitator 200 in 17ms
+ GET /audience 200 in 81ms
+ GET /team-login 200 in 43ms
+ GET /team 200 in 19ms
+ GET /facilitator-login 200 in 41ms
+ GET /facilitator 200 in 17ms
+ GET /team-login 200 in 40ms
+ GET /team 200 in 18ms
+ GET /audience 200 in 35ms
+ ✓ Compiled in 2.8s (1901 modules)
+ GET /audience 200 in 238ms
+ ✓ Compiled in 1527ms (1919 modules)
+[?25h

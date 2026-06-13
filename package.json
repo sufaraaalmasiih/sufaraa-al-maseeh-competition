@@ -1,0 +1,44 @@
+{
+  "name": "sufaraa-al-maseeh",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "set NEXT_TEST_WASM=1&& set NEXT_TEST_WASM_DIR=node_modules\\@next\\swc-wasm-nodejs&& set NEXT_SWC_CACHE_DIR=.next-swc-cache&& next dev",
+    "build": "set NEXT_TEST_WASM=1&& set NEXT_TEST_WASM_DIR=node_modules\\@next\\swc-wasm-nodejs&& set NEXT_SWC_CACHE_DIR=.next-swc-cache&& next build",
+    "start": "next start",
+    "lint": "set NEXT_TEST_WASM=1&& set NEXT_TEST_WASM_DIR=node_modules\\@next\\swc-wasm-nodejs&& set NEXT_SWC_CACHE_DIR=.next-swc-cache&& next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "@radix-ui/react-label": "^2.1.8",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@radix-ui/react-tabs": "^1.1.13",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "firebase": "^12.6.0",
+    "framer-motion": "^12.40.0",
+    "html2canvas": "^1.4.1",
+    "lucide-react": "^0.468.0",
+    "next": "^15.0.0",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "react-hook-form": "^7.66.1",
+    "tailwind-merge": "^3.4.0",
+    "tailwindcss-animate": "^1.0.7",
+    "xlsx": "^0.18.5",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@next/swc-wasm-nodejs": "^15.5.18",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9",
+    "eslint-config-next": "^15.0.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5"
+  }
+}

@@ -1,0 +1,20 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js
+1 info using npm@11.12.1
+2 info using node@v24.15.0
+3 silly config load:file:C:\Program Files\nodejs\node_modules\npm\npmrc
+4 silly config load:file:C:\Users\ASUS\Documents\Codex\2026-05-30\codex-master-prompt-v1-sufaraa-al\.npmrc
+5 silly config load:file:C:\Users\ASUS\.npmrc
+6 silly config load:file:C:\Users\ASUS\AppData\Roaming\npm\etc\npmrc
+7 verbose title npm install
+8 verbose argv "install" "--package-lock-only" "--ignore-scripts" "--cache" ".npm-cache" "--no-audit" "--no-fund" "--progress" "false"
+9 verbose logfile logs-max:10 dir:C:\Users\ASUS\Documents\Codex\2026-05-30\codex-master-prompt-v1-sufaraa-al\.npm-cache\_logs\2026-05-30T15_40_05_861Z-
+10 verbose logfile C:\Users\ASUS\Documents\Codex\2026-05-30\codex-master-prompt-v1-sufaraa-al\.npm-cache\_logs\2026-05-30T15_40_05_861Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4496293888 maxSize:1124073472 maxEntrySize:562036736
+13 silly idealTree buildDeps
+14 verbose cwd C:\Users\ASUS\Documents\Codex\2026-05-30\codex-master-prompt-v1-sufaraa-al
+15 verbose os Windows_NT 10.0.26200
+16 verbose node v24.15.0
+17 verbose npm  v11.12.1
+18 verbose exit 0
+19 info ok
