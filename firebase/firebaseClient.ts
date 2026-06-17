@@ -3,13 +3,44 @@ import { browserLocalPersistence, getAuth, setPersistence, type Auth } from "fir
 import { getFirestore, type Firestore } from "firebase/firestore";
 import { getStorage, type FirebaseStorage } from "firebase/storage";
 
+/** Public defaults for project sufaraaalmasiih-53478 (safe to embed in client). */
+const PROJECT_DEFAULTS = {
+  authDomain: "sufaraaalmasiih-53478.firebaseapp.com",
+  projectId: "sufaraaalmasiih-53478",
+  storageBucket: "sufaraaalmasiih-53478.firebasestorage.app",
+  messagingSenderId: "118820359157",
+  appId: "1:118820359157:web:ded14cbe45cb2f5a5baebc",
+} as const;
+
+function normalizeEnvValue(value: string | undefined): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.startsWith("NEXT_PUBLIC_")) {
+    return undefined;
+  }
+
+  return trimmed;
+}
+
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: normalizeEnvValue(process.env.NEXT_PUBLIC_FIREBASE_API_KEY),
+  authDomain:
+    normalizeEnvValue(process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN) ??
+    PROJECT_DEFAULTS.authDomain,
+  projectId:
+    normalizeEnvValue(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) ??
+    PROJECT_DEFAULTS.projectId,
+  storageBucket:
+    normalizeEnvValue(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET) ??
+    PROJECT_DEFAULTS.storageBucket,
+  messagingSenderId:
+    normalizeEnvValue(process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID) ??
+    PROJECT_DEFAULTS.messagingSenderId,
+  appId:
+    normalizeEnvValue(process.env.NEXT_PUBLIC_FIREBASE_APP_ID) ?? PROJECT_DEFAULTS.appId,
 };
 
 /** Allows Next.js build/prerender to finish when Netlify env vars are not yet set. */
@@ -22,17 +53,12 @@ const buildStubFirebaseConfig = {
   appId: "1:000000000000:web:buildstub000000",
 };
 
-function isFirebaseConfigured(): boolean {
-  return Boolean(
-    firebaseConfig.apiKey &&
-      firebaseConfig.authDomain &&
-      firebaseConfig.projectId &&
-      firebaseConfig.appId,
-  );
+export function isFirebaseClientConfigured(): boolean {
+  return Boolean(firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId);
 }
 
 function resolveFirebaseConfig() {
-  if (isFirebaseConfigured()) {
+  if (isFirebaseClientConfigured()) {
     return firebaseConfig;
   }
 
@@ -40,9 +66,7 @@ function resolveFirebaseConfig() {
     return buildStubFirebaseConfig;
   }
 
-  throw new Error(
-    "Missing Firebase configuration. Set NEXT_PUBLIC_FIREBASE_* environment variables.",
-  );
+  return buildStubFirebaseConfig;
 }
 
 let appInstance: FirebaseApp | undefined;
@@ -87,12 +111,6 @@ let persistenceConfigured = false;
 let persistencePromise: Promise<void> | null = null;
 
 function resolveFirebaseAuth(): Auth {
-  if (!isFirebaseConfigured() && typeof window === "undefined") {
-    throw new Error(
-      "Firebase Auth is not available during SSR without NEXT_PUBLIC_FIREBASE_* variables.",
-    );
-  }
-
   lazyAuth ??= getAuth(getFirebaseApp());
   return lazyAuth;
 }

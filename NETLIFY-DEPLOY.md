@@ -73,7 +73,7 @@ git push -u origin main
 
 1. [Firebase Console](https://console.firebase.google.com/project/sufaraaalmasiih-53478/authentication/settings)  
 2. **Authentication** → **Settings** → **Authorized domains**  
-3. أضف نطاق Netlify، مثلاً: `your-site-name.netlify.app`
+3. أضف نطاق Netlify، مثلاً: `sufaraaalmasiih.netlify.app`
 
 بدون هذه الخطوة تسجيل الدخول يفشل على الموقع المنشور.
 

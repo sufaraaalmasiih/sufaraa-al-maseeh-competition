@@ -29,7 +29,7 @@
     --brand-gold: #f3bc2d;
     --shell-gutter: clamp(0.75rem, 2.8vw, 1.75rem);
     --shell-gutter-lg: clamp(1rem, 4vw, 2.5rem);
-    --shell-max: min(100%, 80rem);
+    --shell-max: min(100%, clamp(48rem, 94vw, 80rem));
     --card-radius: clamp(1rem, 2vw, 1.5rem);
     --glass-bg: rgba(255, 255, 255, 0.58);
     --glass-border: rgba(255, 255, 255, 0.72);
@@ -54,6 +54,25 @@
     width: 100%;
     overflow-x: hidden;
     overflow-y: auto;
+    padding:
+      env(safe-area-inset-top)
+      env(safe-area-inset-right)
+      env(safe-area-inset-bottom)
+      env(safe-area-inset-left);
+  }
+
+  @media (max-width: 639px) {
+    body:has(.app-viewport-fill:not(.app-flow-shell)) {
+      overflow-y: auto;
+    }
+
+    .app-viewport-fill:not(.app-flow-shell) {
+      height: auto;
+      min-height: 100dvh;
+      max-height: none;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
   }
 
   body:has(.app-viewport-fill:not(.app-flow-shell)) {
@@ -688,13 +707,13 @@
 
   .auth-screen__wrap {
     @apply mx-auto flex w-full flex-col justify-center py-5;
-    width: min(42rem, calc(100vw - 1.5rem));
+    width: min(clamp(20rem, 94vw, 48rem), calc(100vw - 1.5rem));
     min-height: min(100dvh, 100%);
     padding-inline: clamp(0.75rem, 2.5vw, 1.25rem);
   }
 
   .auth-screen__wrap--hub {
-    width: min(42rem, calc(100vw - 1.5rem));
+    width: min(clamp(20rem, 94vw, 48rem), calc(100vw - 1.5rem));
   }
 
   .auth-screen__card {
@@ -767,7 +786,8 @@
   }
 
   .team-waiting-screen__content {
-    @apply mx-auto flex h-full max-h-full w-full max-w-xl flex-col items-center justify-center overflow-hidden px-4 py-3 text-center sm:px-5;
+    @apply mx-auto flex h-full max-h-full w-full flex-col items-center justify-center overflow-hidden px-4 py-3 text-center sm:px-5;
+    max-width: min(100%, clamp(20rem, 92vw, 48rem));
   }
 
   .audience-waiting-screen__content {
@@ -9506,5 +9526,83 @@
     color: #143a5a;
     font-weight: 700;
     text-decoration: underline;
+  }
+
+  /* ===== Responsive — هاتف → شاشة كبيرة / عرض جمهور ===== */
+
+  @media (min-width: 1024px) {
+    .auth-screen__wrap,
+    .auth-screen__wrap--hub {
+      width: min(clamp(28rem, 48vw, 52rem), calc(100vw - 2rem));
+    }
+
+    .auth-portal-section__tiles {
+      gap: 0.75rem;
+    }
+
+    .auth-portal-tile {
+      min-height: 5rem;
+      padding: 0.875rem 1rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    :root {
+      --shell-gutter: clamp(1rem, 2vw, 2rem);
+      --shell-max: min(100%, 84rem);
+    }
+
+    .facilitator-console__inner {
+      max-width: min(100%, 80rem);
+    }
+
+    .audience-waiting-screen__content {
+      max-width: min(98vw, 88rem);
+    }
+
+    .loading-state--page .loading-state__card {
+      max-width: min(100%, 36rem);
+    }
+  }
+
+  @media (min-width: 1536px) {
+    :root {
+      --shell-max: min(100%, 90rem);
+    }
+
+    .team-waiting-screen__title {
+      font-size: clamp(2.5rem, 4vw, 4rem);
+    }
+
+    .team-waiting-screen__slogan {
+      font-size: clamp(1.125rem, 2vw, 1.75rem);
+    }
+
+    .competition-stage-screen__title {
+      font-size: clamp(1.75rem, 2.5vw, 3rem);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .page-shell {
+      padding: clamp(0.5rem, 2vw, 0.75rem);
+    }
+
+    .facilitator-dock__label {
+      max-width: 4.5rem;
+      font-size: 0.68rem;
+    }
+
+    .app-brand-header {
+      @apply px-2.5 py-2.5;
+    }
+
+    .app-brand-header__name {
+      @apply text-lg;
+    }
+
+    .loading-state--page .loading-state__card {
+      @apply px-6 py-8;
+    }
   }
 }

@@ -1,17 +1,6 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { LoadingState } from "@/components/layout/state-view";
-
-const AudienceShell = dynamic(
-  () =>
-    import("@/features/audience/components/audience-shell").then((module) => ({
-      default: module.AudienceShell,
-    })),
-  {
-    loading: () => <LoadingState variant="page" />,
-  },
-);
+import { AudienceShell } from "@/features/audience/components/audience-shell";
 
 export default function AudiencePage() {
   return <AudienceShell />;

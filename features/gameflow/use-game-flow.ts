@@ -145,7 +145,12 @@ function scheduleLoadTimeout(): void {
 function parseGameFlowSnapshot(snapshot: DocumentSnapshot): GameFlowSnapshotResult {
   if (!snapshot.exists()) {
     return {
-      gameFlow: null,
+      gameFlow: {
+        status: "waiting_players",
+        currentStage: "none",
+        currentQuestion: 0,
+        competitionFrozen: false,
+      },
       stage3ActiveQuestion: null,
       stage3OpenedQuestionIds: [],
       stage3UsedQuestionIds: [],
@@ -157,7 +162,7 @@ function parseGameFlowSnapshot(snapshot: DocumentSnapshot): GameFlowSnapshotResu
       stage4QuestionCount: 15,
       stage2ReadingReference: "يوحنا 15: 1-17",
       stage2ReadingPassage: "",
-      error: "لم يتم العثور على إعدادات سير المسابقة.",
+      error: null,
     };
   }
 

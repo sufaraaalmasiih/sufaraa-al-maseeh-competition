@@ -1,10 +1,16 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { ChunkRecovery } from "@/components/layout/chunk-recovery";
 import { DevServerRecovery } from "@/components/layout/dev-server-recovery";
 import "./globals.css";
 
 /** Firebase listeners are runtime-only; skip static prerender during Netlify build. */
 export const dynamic = "force-dynamic";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: "Sufaraa Al-Maseeh",
