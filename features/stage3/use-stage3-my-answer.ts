@@ -23,7 +23,7 @@ export interface Stage3MyAnswerState {
 export function useStage3MyAnswer(questionId: string | null) {
   const [teamId, setTeamId] = useState<string | null>(null);
   const [answerState, setAnswerState] = useState<Stage3MyAnswerState | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let unsubscribeAnswer: (() => void) | undefined;
@@ -38,7 +38,7 @@ export function useStage3MyAnswer(questionId: string | null) {
         return;
       }
 
-      setLoading(true);
+      setAnswerState(null);
       unsubscribeAnswer = onSnapshot(
         answerRef(MAIN_COMPETITION_ID, buildStage3AnswerId(questionId, user.uid)),
         (snapshot) => {

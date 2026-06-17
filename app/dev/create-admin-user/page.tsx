@@ -9,6 +9,7 @@ export default function CreateAdminUserPage() {
         description="هذه الصفحة متاحة في بيئة التطوير فقط"
         switchHref="/login"
         switchLabel="العودة إلى بوابة الدخول"
+        variant="form"
       >
         <p className="text-center text-base font-bold text-[#143A5A]">
           هذه الصفحة متاحة في بيئة التطوير فقط

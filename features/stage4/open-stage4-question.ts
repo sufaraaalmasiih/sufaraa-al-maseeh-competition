@@ -4,6 +4,7 @@ import { gameFlowRef, timerRef } from "@/firebase/firestore";
 import { buildStage4AnsweringTimerPayload } from "@/features/gameflow/stage4-answering-timer";
 import { parseTimerDurations } from "@/features/facilitator/facilitator-timer-settings";
 import { getStage4MockQuestionByIndex } from "@/features/stage4/stage4-mock-questions";
+import { resolveStage4BankIndex } from "@/features/stage4/stage4-active-session";
 import { parseStage4FinishedQuestionIds } from "@/features/stage4/stage4-question-metadata";
 
 export async function openStage4Question() {
@@ -32,7 +33,7 @@ export async function openStage4Question() {
       throw new Error("All Stage 4 questions are finished.");
     }
 
-    const question = getStage4MockQuestionByIndex(questionIndex);
+    const question = getStage4MockQuestionByIndex(resolveStage4BankIndex(questionIndex));
     const finishedIds = parseStage4FinishedQuestionIds(gameFlow.stage4FinishedQuestionIds);
 
     if (!question) {

@@ -1,5 +1,5 @@
-/** Official PDF cap: up to 50 questions per Stage 1 run. */
-export const STAGE1_OFFICIAL_MAX_QUESTIONS = 50;
+/** Maximum rows allowed in the Stage 1 Excel bank (display count is set in facilitator settings). */
+export const STAGE1_OFFICIAL_MAX_QUESTIONS = 500;
 
 /** Delay after "تم تأكيد الإجابة" before showing the next question (mid-run). */
 export const STAGE1_MID_QUESTION_ADVANCE_MS = 300;

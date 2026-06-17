@@ -7,6 +7,14 @@ export const STAGE_OPTIONS_LABELS: Record<AdminStageKey, string> = {
   stage4: "اثبتوا بالحق",
 };
 
+/** عناوين أعمدة النقاط في جداول النتائج والسجل. */
+export const STAGE_SCORE_COLUMNS: { key: AdminStageKey; label: string }[] = [
+  { key: "stage1", label: STAGE_OPTIONS_LABELS.stage1 },
+  { key: "stage2", label: STAGE_OPTIONS_LABELS.stage2 },
+  { key: "stage3", label: STAGE_OPTIONS_LABELS.stage3 },
+  { key: "stage4", label: STAGE_OPTIONS_LABELS.stage4 },
+];
+
 export const STAGE_LOCK_OPTIONS: { key: AdminStageKey; label: string }[] = [
   { key: "stage1", label: STAGE_OPTIONS_LABELS.stage1 },
   { key: "stage2", label: STAGE_OPTIONS_LABELS.stage2 },

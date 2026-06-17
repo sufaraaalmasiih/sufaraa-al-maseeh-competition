@@ -1,14 +1,13 @@
 "use client";
 
-import { onSnapshot } from "firebase/firestore";
-import { useEffect, useMemo, useState } from "react";
-import { teamStatesCollectionRef } from "@/firebase/firestore";
+import { useMemo } from "react";
 import {
   getFacilitatorPhasePlan,
   type FacilitatorStageKey,
 } from "@/features/facilitator/facilitator-flow-plan";
 import { getStage2FieldByIndex } from "@/features/stage2/stage2-field-sequence";
 import { normalizeStage2Progress } from "@/features/stage2/stage2-progress";
+import { useTeamStatesSnapshot } from "@/features/gameflow/team-states-store";
 import type { GameFlowStatus } from "@/types";
 
 export interface LiveResultRow {
@@ -128,49 +127,34 @@ export function useLiveResults(
   status: GameFlowStatus | null,
   context: LiveResultsContext,
 ) {
-  const [rows, setRows] = useState<LiveResultRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const enabled = Boolean(status);
+  const { docs, loading, error } = useTeamStatesSnapshot("main", enabled);
 
   const plan = status ? getFacilitatorPhasePlan(status) : null;
   const stageName = plan?.stageName ?? "—";
+  const stageKey = status ? getFacilitatorPhasePlan(status).stageKey : "pre";
 
-  useEffect(() => {
-    if (!status) {
-      setRows([]);
-      setLoading(false);
-      return;
+  const rows = useMemo(() => {
+    if (!enabled) {
+      return [];
     }
 
-    const stageKey = getFacilitatorPhasePlan(status).stageKey;
-
-    return onSnapshot(
-      teamStatesCollectionRef("main"),
-      (snapshot) => {
-        const nextRows = snapshot.docs.map((item) =>
-          normalizeRow(item.id, item.data(), stageKey, context),
-        );
-        nextRows.sort((first, second) => {
-          if (second.totalScore !== first.totalScore) {
-            return second.totalScore - first.totalScore;
-          }
-          return first.teamName.localeCompare(second.teamName, "ar");
-        });
-        setRows(nextRows);
-        setError(null);
-        setLoading(false);
-      },
-      () => {
-        setError("تعذر تحميل النتائج الحالية.");
-        setLoading(false);
-      },
+    const nextRows = docs.map((item) =>
+      normalizeRow(item.id, item.data, stageKey, context),
     );
-  }, [status, context.stage3OwnerTeamId, context.stage4QuestionCount, context.stage4QuestionIndex]);
+    nextRows.sort((first, second) => {
+      if (second.totalScore !== first.totalScore) {
+        return second.totalScore - first.totalScore;
+      }
+      return first.teamName.localeCompare(second.teamName, "ar");
+    });
+    return nextRows;
+  }, [context, docs, enabled, stageKey]);
 
   const teams = useMemo(
     () => rows.map((row, index) => ({ ...row, rank: index + 1 })),
     [rows],
   );
 
-  return { teams, stageName, loading, error };
+  return { teams, stageName, loading: enabled ? loading : false, error };
 }

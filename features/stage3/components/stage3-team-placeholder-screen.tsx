@@ -33,7 +33,7 @@ export function Stage3TeamPlaceholderScreen({
   } = useTeamStage3Context();
 
   if (loading) {
-    return <LoadingState />;
+    return <LoadingState variant="page" />;
   }
 
   if (error) {

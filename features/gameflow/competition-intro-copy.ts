@@ -1,31 +1,49 @@
-export const COMPETITION_INTRO_SUMMARY = {
-  title: "سفراء المسيح",
-  slogan: "نحيا بالكلمة... ونشهد للحق",
-  lead: "مسابقة كتابية حية من أربع مراحل، والفائز يُحدَّد بالمجموع التراكمي للنقاط.",
-  readyHint: "تم التسجيل — بانتظار توجيه الميسر للمرحلة الأولى.",
-  readyDone: "تم التسجيل — بانتظار توجيه الميسر للمرحلة الأولى.",
-};
+import { DEFAULT_COMPETITION_CONTENT } from "@/features/competition-content/competition-content-defaults";
+import { getCompetitionContent } from "@/features/competition-content/competition-content-runtime";
 
-export const COMPETITION_INTRO_STAGES = [
+function getSummary() {
+  const content = getCompetitionContent();
+  return {
+    title: content.brand.title,
+    slogan: content.brand.slogan,
+    lead: content.competitionIntro.lead,
+    readyHint: content.competitionIntro.readyHint,
+    readyDone: content.competitionIntro.readyDone,
+  };
+}
+
+export const COMPETITION_INTRO_SUMMARY = new Proxy(
   {
-    number: 1,
-    name: "اجمعوا الكنوز",
-    summary: "7 دقائق، حتى 50 سؤالاً، 5 نقاط لكل إجابة صحيحة.",
+    title: DEFAULT_COMPETITION_CONTENT.brand.title,
+    slogan: DEFAULT_COMPETITION_CONTENT.brand.slogan,
+    lead: DEFAULT_COMPETITION_CONTENT.competitionIntro.lead,
+    readyHint: DEFAULT_COMPETITION_CONTENT.competitionIntro.readyHint,
+    readyDone: DEFAULT_COMPETITION_CONTENT.competitionIntro.readyDone,
   },
   {
-    number: 2,
-    name: "فتشوا الكتب",
-    summary:
-      "قراءة المرجع خلال 3 دقائق، ثم تحديد لاعبين لأربعة مجالات، 5 أسئلة لكل مجال، 15 نقطة لكل إجابة صحيحة.",
+    get(_target, prop) {
+      const summary = getSummary();
+      return summary[prop as keyof ReturnType<typeof getSummary>];
+    },
   },
+);
+
+export const COMPETITION_INTRO_STAGES = new Proxy(
+  DEFAULT_COMPETITION_CONTENT.competitionIntro.stages,
   {
-    number: 3,
-    name: "على المحك",
-    summary: "اختيار أسئلة من 5 مجالات، والفرق تلعب بالدور.",
+    get(target, prop) {
+      const stages = getCompetitionContent().competitionIntro.stages;
+      if (prop === "length") {
+        return stages.length;
+      }
+      if (prop === "map" || prop === "forEach" || prop === Symbol.iterator) {
+        return (stages as typeof target)[prop as keyof typeof target];
+      }
+      const index = Number(prop);
+      if (!Number.isNaN(index)) {
+        return stages[index];
+      }
+      return Reflect.get(stages, prop);
+    },
   },
-  {
-    number: 4,
-    name: "اثبتوا بالحق",
-    summary: "15 سؤالاً مشتركاً بنظام سلسلة متصاعدة للنقاط.",
-  },
-] as const;
+) as typeof DEFAULT_COMPETITION_CONTENT.competitionIntro.stages;

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { ChoiceCard } from "@/components/competition/choice-card";
-import { CompetitionAnswerSuccess } from "@/components/competition/competition-answer-success";
 import { CompetitionConfirmButton } from "@/components/competition/competition-confirm-button";
 import { QuestionPrompt } from "@/components/competition/question-prompt";
 import type {
@@ -63,12 +62,12 @@ export function Stage2TrueFalseCorrectQuestionCard({
   return (
     <div className="space-y-3">
       {hideQuestion ? null : (
-        <QuestionPrompt reference={question.reference} size="hero">
+        <QuestionPrompt reference={question.reference} imageUrl={question.imageUrl} size="hero">
           {question.statement}
         </QuestionPrompt>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="mx-auto grid w-full max-w-lg grid-cols-2 gap-3">
         {(
           [
             { choice: "true" as const, label: "صح", symbol: "✓", variant: "true" as const },
@@ -90,41 +89,37 @@ export function Stage2TrueFalseCorrectQuestionCard({
         ))}
       </div>
 
-      {showCorrectionInput ? (
-        <textarea
-          id={`correction-${question.id}`}
-          className="glass-input-secondary mx-auto min-h-20 w-full max-w-lg resize-none px-4 py-3 text-right text-base font-semibold leading-8"
-          disabled={isLocked}
-          placeholder="اكتب التصحيح"
-          value={correctionText}
-          onChange={(event) => {
-            setValidationError(null);
-            onCorrectionChange(event.target.value);
-          }}
-        />
-      ) : null}
+      <div className="gameplay-answer-zone">
+        {showCorrectionInput ? (
+          <div className="gameplay-answer-field">
+            <textarea
+              id={`correction-${question.id}`}
+              className="gameplay-answer-input min-h-20 resize-none py-3 leading-8"
+              disabled={isLocked}
+              placeholder="اكتب التصحيح"
+              value={correctionText}
+              onChange={(event) => {
+                setValidationError(null);
+                onCorrectionChange(event.target.value);
+              }}
+            />
+          </div>
+        ) : null}
 
-      {confirmed ? (
-        <CompetitionAnswerSuccess />
-      ) : (
-        <>
-          {saveError ? (
-            <p className="glass-card px-3 py-2 text-sm font-bold text-destructive">{saveError}</p>
-          ) : null}
-          {validationError ? (
-            <p className="glass-card px-3 py-2 text-sm font-bold text-destructive">
-              {validationError}
-            </p>
-          ) : null}
-          <CompetitionConfirmButton
-            className="mx-auto"
-            disabled={disabled || saving}
-            onClick={handleConfirmClick}
-          >
-            {saving ? "جاري الحفظ..." : "تأكيد الإجابة"}
-          </CompetitionConfirmButton>
-        </>
-      )}
+        {!confirmed && saveError ? (
+          <p className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-center text-sm font-bold text-destructive">
+            {saveError}
+          </p>
+        ) : null}
+        {!confirmed && validationError ? (
+          <p className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-center text-sm font-bold text-destructive">
+            {validationError}
+          </p>
+        ) : null}
+        <CompetitionConfirmButton confirmed={confirmed} disabled={disabled || saving} onClick={handleConfirmClick}>
+          {saving ? "جاري الحفظ..." : "تأكيد الإجابة"}
+        </CompetitionConfirmButton>
+      </div>
     </div>
   );
 }

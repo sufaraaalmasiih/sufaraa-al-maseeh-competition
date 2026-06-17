@@ -2,6 +2,7 @@
 
 import { STAGE3_NAME } from "@/features/stage3/stage3-constants";
 import { STAGE3_DIFFICULTY_LABELS, type Stage3Difficulty } from "@/features/stage3/stage3-question-types";
+import { cn } from "@/lib/utils";
 
 interface Stage3GameplayHeaderProps {
   ownerTeamName?: string | null;
@@ -9,6 +10,8 @@ interface Stage3GameplayHeaderProps {
   questionNumber?: number;
   difficulty?: Stage3Difficulty;
   showOwner?: boolean;
+  showLead?: boolean;
+  variant?: "default" | "bar";
 }
 
 export function Stage3GameplayHeader({
@@ -17,23 +20,44 @@ export function Stage3GameplayHeader({
   questionNumber,
   difficulty,
   showOwner = true,
+  showLead = true,
+  variant = "default",
 }: Stage3GameplayHeaderProps) {
+  const contextParts: string[] = [];
+  if (fieldLabel) {
+    contextParts.push(fieldLabel);
+  }
+  if (questionNumber) {
+    contextParts.push(`س${questionNumber}`);
+  }
+  if (difficulty) {
+    contextParts.push(STAGE3_DIFFICULTY_LABELS[difficulty]);
+  }
+
+  const showOwnerBlock = showOwner && ownerTeamName;
+  const hasContent = showLead || showOwnerBlock;
+
+  if (!hasContent) {
+    return null;
+  }
+
   return (
-    <div className="flex flex-col items-center gap-2 text-center">
-      <p className="text-sm font-bold text-[#4F8A10]">{STAGE3_NAME}</p>
-      {fieldLabel ? (
-        <p className="text-base font-bold text-[#2388C4]">
-          {fieldLabel}
-          {questionNumber ? ` — س${questionNumber}` : ""}
-          {difficulty ? ` · ${STAGE3_DIFFICULTY_LABELS[difficulty]}` : ""}
-        </p>
+    <header className={cn("stage3-gameplay-header", variant === "bar" && "stage3-gameplay-header--bar")}>
+      {showLead ? (
+        <div className="stage3-gameplay-header__lead">
+          <span className="stage3-gameplay-header__badge">{STAGE3_NAME}</span>
+          {contextParts.length > 0 ? (
+            <p className="stage3-gameplay-header__context">{contextParts.join(" · ")}</p>
+          ) : null}
+        </div>
       ) : null}
-      {showOwner && ownerTeamName ? (
-        <span className="stage3-owner-chip stage3-owner-chip--active">
-          الفريق صاحب الدور: {ownerTeamName}
-        </span>
+
+      {showOwnerBlock ? (
+        <div className="stage3-gameplay-header__owner">
+          <span className="stage3-gameplay-header__owner-label">صاحب الدور</span>
+          <span className="stage3-gameplay-header__owner-name">{ownerTeamName}</span>
+        </div>
       ) : null}
-    </div>
+    </header>
   );
 }
-

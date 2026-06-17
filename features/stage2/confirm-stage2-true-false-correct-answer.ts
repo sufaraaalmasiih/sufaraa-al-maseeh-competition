@@ -11,10 +11,15 @@ import {
   evaluateTrueFalseCorrectAnswer,
   serializeTrueFalseCorrectAnswer,
 } from "@/features/stage2/stage2-true-false-evaluation";
+import { getAuthoritativeStage2TrueFalseQuestion } from "@/features/facilitator/question-bank-runtime-cache";
 import type {
   Stage2TrueFalseChoice,
   Stage2TrueFalseCorrectQuestion,
 } from "@/features/stage2/stage2-true-false-correct-types";
+import {
+  assertAnsweringTimerOpen,
+  assertCompetitionNotFrozen,
+} from "@/lib/competition-guards";
 
 const MAIN_COMPETITION_ID = "main";
 const STAGE2_TRUE_FALSE_CORRECT_FIELD = "trueFalseCorrect";
@@ -72,22 +77,20 @@ export async function confirmStage2TrueFalseCorrectAnswer({
     ]);
 
     const gameFlow = gameFlowSnapshot.data();
+    assertCompetitionNotFrozen(gameFlow);
+
     if (gameFlow?.status !== "stage2_player_turns") {
       throw new Error("Stage 2 is not accepting true/false correct answers.");
     }
 
     if (timerSnapshot.exists()) {
       const timer = timerSnapshot.data();
-      const timerExpired =
-        timer.active === true &&
-        timer.stage === "stage2" &&
-        timer.purpose === "answering" &&
-        typeof timer.endsAtMs === "number" &&
-        timer.endsAtMs <= Date.now();
-
-      if (timerExpired) {
-        throw new Error("Stage 2 answering timer expired.");
-      }
+      assertAnsweringTimerOpen(
+        timer,
+        "stage2",
+        "answering",
+        "Stage 2 answering timer expired.",
+      );
     }
 
     if (answerSnapshot.exists() && answerSnapshot.data().confirmed === true) {
@@ -115,8 +118,10 @@ export async function confirmStage2TrueFalseCorrectAnswer({
         : 0;
     const currentTotalScore =
       typeof teamState.totalScore === "number" ? teamState.totalScore : 0;
+    const scoredQuestion =
+      getAuthoritativeStage2TrueFalseQuestion(question.id) ?? question;
     const isCorrect = evaluateTrueFalseCorrectAnswer(
-      question,
+      scoredQuestion,
       selectedChoice,
       trimmedCorrectionText,
     );

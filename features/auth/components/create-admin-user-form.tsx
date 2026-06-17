@@ -8,9 +8,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthLayout } from "@/features/auth/components/auth-layout";
-import type { AppRole } from "@/types";
+import {
+  ROLE_DESCRIPTIONS,
+  ROLE_LABELS,
+  type StaffRole,
+} from "@/features/auth/roles";
 
-type AdminRole = Exclude<AppRole, "team">;
+type AdminRole = StaffRole;
+
+const DEV_ROLE_OPTIONS: { value: AdminRole; label: string }[] = [
+  { value: "facilitator", label: ROLE_LABELS.facilitator },
+  { value: "super_admin", label: ROLE_LABELS.super_admin },
+  { value: "viewer", label: ROLE_LABELS.viewer },
+];
 
 export function CreateAdminUserForm() {
   const [fullName, setFullName] = useState("");
@@ -43,12 +53,20 @@ export function CreateAdminUserForm() {
 
   return (
     <AuthLayout
-      title="إنشاء حساب إدارة"
-      description="صفحة تطوير لإنشاء حسابات الجمهور والميسر والمشرف العام."
+      title="إنشاء حساب إدارة (تطوير)"
+      description="أداة محلية لتهيئة أول حسابات التشغيل أثناء التطوير. في الإنتاج، يُنشأ الميسر من لوحة المشرف العام فقط."
       switchHref="/login"
       switchLabel="العودة إلى بوابة الدخول"
+      variant="form"
     >
-      <form className="space-y-5" onSubmit={onSubmit}>
+      <div className="mb-5 rounded-xl border border-amber-300/35 bg-amber-50/90 px-4 py-3 text-sm leading-7 text-amber-950">
+        <p className="font-bold">متى تُستخدم هذه الصفحة؟</p>
+        <p className="mt-1">
+          عند أول تشغيل محلي قبل وجود أي مشرف عام. تُنشئ حساب Firebase وتسجّل دخولك
+          تلقائياً به. في الإنتاج لا تظهر في بوابة الدخول.
+        </p>
+      </div>
+      <form className="auth-form" onSubmit={onSubmit}>
         {success ? <p className="text-sm font-bold text-[#4F8A10]">{success}</p> : null}
         {error ? <p className="text-sm font-bold text-destructive">{error}</p> : null}
 
@@ -88,22 +106,25 @@ export function CreateAdminUserForm() {
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="auth-form__field">
           <Label htmlFor="role">الدور</Label>
           <select
             id="role"
             name="role"
-            className="flex h-11 w-full rounded-md border border-input bg-white px-3 py-2 text-base shadow-sm transition-colors focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
+            className="auth-form__select"
             value={role}
             onChange={(event) => setRole(event.target.value as AdminRole)}
           >
-            <option value="viewer">viewer</option>
-            <option value="facilitator">facilitator</option>
-            <option value="super_admin">super_admin</option>
+            {DEV_ROLE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
+          <p className="text-xs leading-6 text-muted-foreground">{ROLE_DESCRIPTIONS[role]}</p>
         </div>
 
-        <Button className="w-full" size="lg" disabled={isSubmitting}>
+        <Button className="auth-form__submit" size="lg" disabled={isSubmitting}>
           <ShieldPlus className="h-5 w-5" />
           {isSubmitting ? "جاري إنشاء الحساب..." : "إنشاء حساب الإدارة"}
         </Button>

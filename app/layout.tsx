@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { ChunkRecovery } from "@/components/layout/chunk-recovery";
+import { DevServerRecovery } from "@/components/layout/dev-server-recovery";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -13,7 +15,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl">
-      <body>{children}</body>
+      <body>
+        <ChunkRecovery />
+        <DevServerRecovery />
+        {children}
+      </body>
     </html>
   );
 }

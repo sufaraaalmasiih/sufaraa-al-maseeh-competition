@@ -1,6 +1,10 @@
 "use client";
 
-import type { Stage4QuestionMetadata } from "@/features/stage4/stage4-question-types";
+import { QuestionImage } from "@/components/competition/question-image";
+import {
+  getStage4QuestionTypeLabel,
+  type Stage4QuestionMetadata,
+} from "@/features/stage4/stage4-question-types";
 import { STAGE4_NAME } from "@/features/stage4/stage4-constants";
 
 interface Stage4QuestionDisplayProps {
@@ -8,19 +12,17 @@ interface Stage4QuestionDisplayProps {
   questionIndex: number;
   questionCount: number;
   variant?: "team" | "facilitator" | "audience";
+  embedded?: boolean;
+  hideMeta?: boolean;
 }
-
-const TYPE_LABELS = {
-  link: "الرابط العجيب",
-  image: "صور",
-  who_am_i: "من أنا",
-} as const;
 
 export function Stage4QuestionDisplay({
   question,
   questionIndex,
   questionCount,
   variant = "team",
+  embedded = false,
+  hideMeta = false,
 }: Stage4QuestionDisplayProps) {
   if (!question) {
     return (
@@ -33,39 +35,59 @@ export function Stage4QuestionDisplay({
   const shellClass =
     variant === "facilitator"
       ? "flow-stage-outro__inner space-y-4 p-6"
-      : "glass-card-premium space-y-4 p-6";
+      : variant === "audience"
+        ? "stage4-question-hero stage4-question-hero--audience glass-card-premium"
+        : embedded
+          ? "stage4-question-hero"
+          : "glass-card-premium space-y-4 p-6";
 
   return (
     <div className={shellClass}>
-      <div className="text-center">
-        <p className="text-xs font-bold text-[#2388C4]">{STAGE4_NAME}</p>
-        <p className="mt-1 text-sm font-semibold text-muted-foreground">
-          السؤال {questionIndex + 1} من {questionCount}
-        </p>
-        <p className="mt-2 text-xs font-bold text-[#B45309]">{TYPE_LABELS[question.type]}</p>
-      </div>
+      {!hideMeta ? (
+        variant === "audience" ? (
+          <div className="stage4-question-hero__meta stage4-question-hero__meta--audience">
+            <div className="stage4-question-hero__meta-bar">
+              <div className="stage4-question-hero__meta-lead">
+                <p className="stage4-question-hero__meta-stage">{STAGE4_NAME}</p>
+                <p className="stage4-question-hero__meta-progress">
+                  السؤال {questionIndex + 1} من {questionCount}
+                </p>
+              </div>
+              <span className="stage4-question-hero__meta-type">
+                {getStage4QuestionTypeLabel(question.type)}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="stage4-question-hero__meta text-center">
+            <p className="text-xs font-bold text-[#2388C4]">{STAGE4_NAME}</p>
+            <p className="mt-1 text-sm font-semibold text-muted-foreground">
+              السؤال {questionIndex + 1} من {questionCount}
+            </p>
+            <p className="mt-2 text-xs font-bold text-[#B45309]">
+              {getStage4QuestionTypeLabel(question.type)}
+            </p>
+          </div>
+        )
+      ) : null}
 
-      <h2 className="text-center text-xl font-black text-[#143A5A]">{question.prompt}</h2>
+      <h2 className="stage4-question-hero__prompt text-center text-xl font-black text-[#143A5A] sm:text-2xl">
+        {question.prompt}
+      </h2>
+
+      {question.reference ? (
+        <p className="stage4-question-hero__reference">{question.reference}</p>
+      ) : null}
 
       {question.linkText ? (
-        <p className="rounded-md border border-primary/15 bg-[#F3FAFF] px-4 py-3 text-center text-lg font-bold text-[#143A5A]">
-          {question.linkText}
-        </p>
+        <p className="stage4-question-hero__link">{question.linkText}</p>
       ) : null}
 
       {question.clue ? (
-        <p className="rounded-md border border-primary/15 bg-[#FFF8E8] px-4 py-3 text-center text-base leading-8 text-[#143A5A]">
-          {question.clue}
-        </p>
+        <p className="stage4-question-hero__clue">{question.clue}</p>
       ) : null}
 
-      {question.imageUrl && question.type === "image" ? (
-        <div className="flex justify-center">
-          <div className="flex h-32 w-32 items-center justify-center rounded-xl border border-primary/15 bg-white text-sm font-bold text-muted-foreground">
-            {variant === "audience" ? "صورة السؤال" : "صورة"}
-          </div>
-        </div>
-      ) : null}
+      <QuestionImage url={question.imageUrl} />
     </div>
   );
 }

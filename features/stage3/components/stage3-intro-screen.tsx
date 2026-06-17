@@ -1,35 +1,20 @@
 "use client";
 
-import { STAGE3_NAME } from "@/features/stage3/stage3-constants";
-import { useTimerDurations } from "@/features/facilitator/use-timer-durations";
+import { StageIntroContent } from "@/features/stage/components/stage-intro-content";
+import { useCompetitionContent } from "@/features/competition-content/competition-content-runtime";
 
-export function Stage3IntroScreen() {
-  const durations = useTimerDurations();
+interface Stage3IntroScreenProps {
+  showTeamMeta?: boolean;
+}
 
-  const rules = [
-    "اختاروا السؤال من لوحة المرحلة",
-    `لديكم ${durations.stage3Selection} ثانية لاختيار السؤال`,
-    `لديكم ${durations.stage3Answer} ثانية للإجابة`,
-    `الإعلان يستمر ${durations.stage3Reveal} ثوانٍ`,
-    "النقاط حسب قيمة السؤال على اللوحة",
-  ];
+export function Stage3IntroScreen({ showTeamMeta = false }: Stage3IntroScreenProps) {
+  const content = useCompetitionContent();
 
   return (
-    <section className="competition-stage-intro-wrap">
-      <div className="competition-stage-intro-card">
-        <span className="competition-stage-screen__badge">{STAGE3_NAME}</span>
-        <h2 className="competition-stage-intro-card__title">جاهزون للتحدي؟</h2>
-        <p className="competition-stage-intro-card__lead">
-          مرحلة الأسئلة والإجابات السريعة — اختاروا بحكمة واجيبوا بدقة
-        </p>
-        <ul className="competition-stage-rules">
-          {rules.map((rule) => (
-            <li key={rule} className="competition-stage-rule">
-              {rule}
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
+    <StageIntroContent
+      stage="stage3"
+      showTeamMeta={showTeamMeta}
+      footer={<p className="stage1-intro-screen__hint">{content.stages.stage3.hint}</p>}
+    />
   );
 }

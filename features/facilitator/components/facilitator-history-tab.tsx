@@ -25,34 +25,10 @@ import {
   useSessionEditLog,
   type ArchiveTeam,
   type CompetitionSession,
-  type SessionEditLogEntry,
 } from "@/features/facilitator/competition-session";
+import { SessionEditLogPanel } from "@/features/facilitator/components/session-edit-log-panel";
+import { ArchiveResultsTable } from "@/features/facilitator/components/archive-results-table";
 import { cn } from "@/lib/utils";
-
-const STAGE_KEYS: { key: keyof ArchiveTeam; label: string }[] = [
-  { key: "stage1", label: "م1" },
-  { key: "stage2", label: "م2" },
-  { key: "stage3", label: "م3" },
-  { key: "stage4", label: "م4" },
-];
-
-const ACTION_LABELS: Record<string, string> = {
-  session_started: "بدء المسابقة",
-  results_saved: "حفظ النتائج",
-  session_metadata_updated: "تعديل بيانات السجل",
-  session_results_updated: "تعديل النتائج",
-  session_deleted: "حذف السجل",
-  adjust_team_score: "تعديل نقاط",
-  update_team_profile: "تعديل بيانات فريق",
-  reset_all_scores: "تصفير النقاط",
-  toggle_team_stage_lock: "قفل/فتح مرحلة",
-  set_team_facilitator_override: "انتقال استثنائي",
-  clear_team_facilitator_override: "إلغاء انتقال استثنائي",
-  delete_team_answers: "حذف إجابات",
-  reset_team_competition_data: "تصفير بيانات فريق",
-  delete_team_completely: "حذف فريق",
-  migrate_all_teams_stage: "نقل جميع الفرق",
-};
 
 function formatDate(ms: number): string {
   if (!ms) {
@@ -68,33 +44,11 @@ function formatDate(ms: number): string {
   }
 }
 
-function summarizeEditChange(entry: SessionEditLogEntry): string | null {
-  if (entry.action === "session_metadata_updated") {
-    const before = entry.beforeValue as Record<string, string> | undefined;
-    const after = entry.afterValue as Record<string, string> | undefined;
-    if (before?.title && after?.title && before.title !== after.title) {
-      return `العنوان: ${before.title} ← ${after.title}`;
-    }
-  }
-
-  if (entry.action === "session_results_updated") {
-    const before = Array.isArray(entry.beforeValue) ? entry.beforeValue.length : 0;
-    const after = Array.isArray(entry.afterValue) ? entry.afterValue.length : 0;
-    return `عدد الفرق: ${before} ← ${after}`;
-  }
-
-  if (entry.teamName) {
-    return entry.teamName;
-  }
-
-  return null;
-}
-
 export function FacilitatorHistoryTab() {
   const { archives, loading, error } = useCompetitionHistory();
 
   if (loading) {
-    return <LoadingState />;
+    return <LoadingState variant="page" />;
   }
   if (error) {
     return <ErrorState title="تعذر تحميل السجل" description={error} />;
@@ -320,47 +274,11 @@ function SessionCard({ archive }: { archive: CompetitionSession }) {
         </div>
 
         {sortedTeams.length > 0 ? (
-          <div className="facilitator-table-wrap">
-            <table className="facilitator-table">
-              <thead>
-                <tr>
-                  <th>المركز</th>
-                  <th>الفريق</th>
-                  <th>المحافظة</th>
-                  {STAGE_KEYS.map((stage) => (
-                    <th key={stage.key}>{stage.label}</th>
-                  ))}
-                  <th>المجموع</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedTeams.map((team) => (
-                  <tr key={team.teamId}>
-                    <td className="font-bold text-[#143A5A]">{team.rank}</td>
-                    <td className="font-bold text-[#143A5A]">{team.teamName}</td>
-                    <td>{team.governorate}</td>
-                    {STAGE_KEYS.map((stage) => (
-                      <td key={stage.key}>
-                        {editingTeams ? (
-                          <input
-                            type="number"
-                            className="facilitator-input facilitator-input--delta"
-                            value={team[stage.key] as number}
-                            onChange={(event) =>
-                              updateScore(team.teamId, stage.key, event.target.value)
-                            }
-                          />
-                        ) : (
-                          (team[stage.key] as number)
-                        )}
-                      </td>
-                    ))}
-                    <td className="font-black text-[#2388C4]">{team.total}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ArchiveResultsTable
+            teams={sortedTeams}
+            editable={editingTeams}
+            onScoreChange={updateScore}
+          />
         ) : (
           <EmptyState title="لم تُحفظ النتائج النهائية بعد." />
         )}
@@ -429,70 +347,5 @@ function SessionCard({ archive }: { archive: CompetitionSession }) {
         <FacilitatorControlsConfirmCard request={confirmRequest} onClose={closeConfirm} />
       ) : null}
     </>
-  );
-}
-
-function SessionEditLogPanel({
-  entries,
-  loading,
-  error,
-}: {
-  entries: SessionEditLogEntry[];
-  loading: boolean;
-  error: string | null;
-}) {
-  if (loading) {
-    return <LoadingState />;
-  }
-  if (error) {
-    return <ErrorState title="تعذر تحميل سجل التعديلات" description={error} />;
-  }
-  if (entries.length === 0) {
-    return (
-      <div className="mt-4 rounded-2xl border border-[#143A5A]/10 bg-white/70 p-4">
-        <p className="text-sm font-bold text-[#143A5A]/55">لا توجد تعديلات مسجلة بعد.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="mt-4 space-y-3 rounded-2xl border border-[#143A5A]/10 bg-white/70 p-4">
-      <div className="flex items-center gap-2">
-        <ScrollText className="h-4 w-4 text-[#2388C4]" aria-hidden />
-        <h4 className="text-sm font-black text-[#143A5A]">سجل التعديلات (للقراءة فقط)</h4>
-      </div>
-      <div className="space-y-3">
-        {entries.map((entry) => {
-          const changeSummary = summarizeEditChange(entry);
-          return (
-            <article
-              key={entry.id}
-              className="rounded-xl border border-[#143A5A]/8 bg-white px-4 py-3"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <strong className="text-sm font-black text-[#143A5A]">
-                  {ACTION_LABELS[entry.action] ?? entry.action}
-                </strong>
-                <span className="text-xs font-bold text-[#143A5A]/45">
-                  {formatDate(entry.createdAtMs)}
-                </span>
-              </div>
-              <p className="mt-2 text-sm font-bold text-[#143A5A]/75">
-                {entry.facilitatorName}
-                {entry.teamName ? ` · ${entry.teamName}` : ""}
-              </p>
-              {changeSummary ? (
-                <p className="mt-2 text-sm leading-7 text-[#143A5A]/70">{changeSummary}</p>
-              ) : null}
-              {entry.reason ? (
-                <p className="mt-2 text-sm leading-7 text-[#143A5A]/80">
-                  <span className="font-black">السبب:</span> {entry.reason}
-                </p>
-              ) : null}
-            </article>
-          );
-        })}
-      </div>
-    </div>
   );
 }

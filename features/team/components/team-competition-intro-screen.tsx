@@ -30,7 +30,7 @@ export function TeamCompetitionIntroScreen() {
   }
 
   if (loading) {
-    return <LoadingState />;
+    return <LoadingState variant="page" />;
   }
 
   if (error) {

@@ -235,7 +235,7 @@ Auth user → `teams/{uid}` → `competitions/main/teamStates/{uid}` → logo ا
 | `facilitatorOverride` | object \| null — انظر §14 |
 | `updatedAt` | |
 
-**⚠️ تناقض:** `buildInitialTeamStateDocument()` يكتب `readiness.stage1` لكن confirm intro يكتب `readiness.stage1Intro`. الـ UI يقرأ `stage1Intro` عبر hooks. عند debug readiness راجع الحقل الفعلي في Firestore.
+**⚠️ تناقض (مُصلَح يونيو 2026):** `buildInitialTeamStateDocument()` يكتب الآن `readiness.stage1Intro` و `readiness.stage1`. الفرق الأول لجاهزية مقدمة المرحلة 1؛ الثاني لبوابة المرحلة.
 
 ### `competitions/main/answers/{id}`
 
@@ -747,7 +747,9 @@ All use fingerprint refs to avoid duplicate writes from multiple facilitator tab
 
 ## 20. مهام معلقة
 
-- [ ] Firestore security rules in repo + deploy docs
+- [x] Firestore security rules in repo + deploy docs (`firestore.rules`, `FIREBASE-DEPLOY.md`)
+- [x] Fix readiness field inconsistency (`stage1Intro` in initial teamState)
+- [x] editLogEntries cap (`MAX_EDIT_LOG_ENTRIES = 150`)
 - [ ] viewer role login path or removal
 - [ ] Team password change via Admin SDK
 - [ ] Excel export for final results

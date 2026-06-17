@@ -6,10 +6,10 @@ import { EmptyState } from "@/components/layout/empty-state";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
 import { setGameFlowStatus } from "@/features/facilitator/facilitator-flow-actions";
 import { saveActiveSessionResults } from "@/features/facilitator/competition-session";
+import { ArchiveResultsTable } from "@/features/facilitator/components/archive-results-table";
 import { exportElementAsPng } from "@/features/facilitator/export-results-image";
 import { useFinalResults } from "@/features/facilitator/use-final-results";
 import { CompetitionPodium } from "@/components/competition/competition-podium";
-import { cn } from "@/lib/utils";
 
 export function FacilitatorResultsTab() {
   const { teams, loading, error } = useFinalResults();
@@ -70,7 +70,7 @@ export function FacilitatorResultsTab() {
   }
 
   if (loading) {
-    return <LoadingState />;
+    return <LoadingState variant="page" />;
   }
 
   if (error) {
@@ -137,6 +137,7 @@ export function FacilitatorResultsTab() {
 
       <div ref={exportRef} className="facilitator-export-target space-y-6">
         <CompetitionPodium
+          animate
           teams={topThree.map((team) => ({
             teamId: team.teamId,
             teamName: team.teamName,
@@ -153,43 +154,7 @@ export function FacilitatorResultsTab() {
             <p className="facilitator-card__desc">نقاط كل مرحلة والمجموع الكلي.</p>
           </div>
         </div>
-        <div className="facilitator-table-wrap">
-          <table className="facilitator-table">
-            <thead>
-              <tr>
-                <th>المركز</th>
-                <th>الفريق</th>
-                <th>المحافظة</th>
-                <th>م1</th>
-                <th>م2</th>
-                <th>م3</th>
-                <th>م4</th>
-                <th>المجموع</th>
-              </tr>
-            </thead>
-            <tbody>
-              {teams.map((team) => (
-                <tr
-                  key={team.teamId}
-                  className={cn(
-                    team.rank === 1 && "facilitator-table__row--gold",
-                    team.rank === 2 && "facilitator-table__row--silver",
-                    team.rank === 3 && "facilitator-table__row--bronze",
-                  )}
-                >
-                  <td className="font-bold text-[#143A5A]">{team.rank}</td>
-                  <td className="font-bold text-[#143A5A]">{team.teamName}</td>
-                  <td>{team.governorate}</td>
-                  <td>{team.stage1}</td>
-                  <td>{team.stage2}</td>
-                  <td>{team.stage3}</td>
-                  <td>{team.stage4}</td>
-                  <td className="font-black text-[#2388C4]">{team.total}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ArchiveResultsTable teams={teams} />
       </div>
       </div>
     </div>

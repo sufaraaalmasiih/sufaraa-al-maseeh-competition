@@ -1,0 +1,436 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import {
+  ANSWER_STAGE_FILTERS,
+  OVERRIDE_STATUS_OPTIONS,
+  STAGE_OPTIONS_LABELS,
+} from "@/features/facilitator/facilitator-controls-copy";
+import {
+  clearTeamFacilitatorOverride,
+  deleteTeamAnswers,
+  deleteTeamCompletely,
+  resetTeamCompetitionData,
+  setTeamFacilitatorOverride,
+  toggleTeamStageLock,
+  updateTeamFullProfile,
+  type AdminStageKey,
+} from "@/features/facilitator/facilitator-team-admin";
+import {
+  validateOverrideQuestionNumber,
+  overrideQuestionNumberToIndex,
+} from "@/features/facilitator/facilitator-controls-question-limits";
+import type { ControlsConfirmRequest } from "@/features/facilitator/components/facilitator-controls-confirm-card";
+import { STAGE3_QUESTION_OPTIONS } from "@/features/facilitator/components/facilitator-controls-constants";
+import { useActiveSessionEditLog } from "@/features/facilitator/competition-session";
+import { useGameFlow } from "@/features/gameflow/use-game-flow";
+import { useAllTeamStageLocksSummary } from "@/features/facilitator/use-all-team-stage-locks";
+import { useAnswersLog } from "@/features/facilitator/use-answers-log";
+import { useTeamAdminState } from "@/features/facilitator/use-team-admin-state";
+import { useTeamProfile } from "@/features/facilitator/use-team-profile";
+import { useStage1Ranking } from "@/features/stage1/use-stage1-ranking";
+import type { GameFlowStatus } from "@/types";
+import type { TeamPlayer } from "@/types";
+
+export function useFacilitatorControlsTab() {
+  const { stage4QuestionCount } = useGameFlow();
+  const { teams, loading, error } = useStage1Ranking();
+  const [selectedTeamId, setSelectedTeamId] = useState("");
+  const [confirmRequest, setConfirmRequest] = useState<ControlsConfirmRequest | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+
+  const selectedTeam = useMemo(
+    () => teams.find((team) => team.teamId === selectedTeamId) ?? null,
+    [selectedTeamId, teams],
+  );
+
+  const { email, players, loading: profileLoading, error: profileError } =
+    useTeamProfile(selectedTeamId || null);
+  const { stageLocks, override, loading: adminLoading } = useTeamAdminState(
+    selectedTeamId || null,
+  );
+  const { locks: globalLocks, mixed: globalLocksMixed, loading: globalLocksLoading } =
+    useAllTeamStageLocksSummary();
+  const { rows: answerRows, loading: answersLoading } = useAnswersLog();
+
+  const [teamName, setTeamName] = useState("");
+  const [governorate, setGovernorate] = useState("");
+  const [playerNames, setPlayerNames] = useState<string[]>(["", "", "", "", ""]);
+  const [accountEmail, setAccountEmail] = useState("");
+  const [accountPassword, setAccountPassword] = useState("");
+
+  const [overrideStatusKey, setOverrideStatusKey] = useState(
+    OVERRIDE_STATUS_OPTIONS[0]?.status ?? "stage1_intro",
+  );
+  const [overrideQuestionNumber, setOverrideQuestionNumber] = useState("1");
+  const [overrideStage3QuestionId, setOverrideStage3QuestionId] = useState(
+    STAGE3_QUESTION_OPTIONS[0]?.id ?? "",
+  );
+  const [answerFilter, setAnswerFilter] = useState<"all" | AdminStageKey>("all");
+  const [showAnswers, setShowAnswers] = useState(false);
+  const [showEditLog, setShowEditLog] = useState(false);
+  const { entries: editLogEntries, loading: editLogLoading, error: editLogError } =
+    useActiveSessionEditLog();
+
+  const selectedOverrideOption = useMemo(
+    () => OVERRIDE_STATUS_OPTIONS.find((option) => option.status === overrideStatusKey),
+    [overrideStatusKey],
+  );
+
+  const overrideQuestionScope = selectedOverrideOption?.questionIndexScope ?? null;
+
+  const overrideQuestionValidation = useMemo(() => {
+    if (!overrideQuestionScope) {
+      return { valid: true, max: 0, message: null as string | null };
+    }
+    return validateOverrideQuestionNumber(
+      overrideQuestionScope,
+      Number(overrideQuestionNumber),
+      stage4QuestionCount,
+    );
+  }, [overrideQuestionNumber, overrideQuestionScope, stage4QuestionCount]);
+
+  const filteredAnswers = useMemo(() => {
+    if (!selectedTeamId) return [];
+    return answerRows.filter((row) => {
+      if (row.teamId !== selectedTeamId) return false;
+      if (answerFilter === "all") return true;
+      return row.stage === answerFilter;
+    });
+  }, [answerFilter, answerRows, selectedTeamId]);
+
+  useEffect(() => {
+    if (!selectedTeam) {
+      setTeamName("");
+      setGovernorate("");
+      setPlayerNames(["", "", "", "", ""]);
+      setAccountEmail("");
+      setAccountPassword("");
+      return;
+    }
+    setTeamName(selectedTeam.teamName);
+    setGovernorate(selectedTeam.governorate);
+  }, [selectedTeam]);
+
+  useEffect(() => {
+    setAccountEmail(email);
+    setPlayerNames(
+      players.map((player) => player.name).concat(["", "", "", "", ""]).slice(0, 5),
+    );
+  }, [email, players]);
+
+  function openConfirm(request: ControlsConfirmRequest) {
+    setConfirmRequest(request);
+  }
+
+  function closeConfirm() {
+    setConfirmRequest(null);
+  }
+
+  function requestSaveProfile() {
+    if (!selectedTeam) {
+      setToast("اختر فريقاً أولاً.");
+      return;
+    }
+    if (!teamName.trim()) {
+      setToast("اسم الفريق مطلوب.");
+      return;
+    }
+
+    const nextPlayers: TeamPlayer[] = playerNames.map((name, index) => ({
+      name: name.trim(),
+      type: index === 4 ? "substitute" : "main",
+    }));
+
+    openConfirm({
+      title: "حفظ بيانات الفريق",
+      details: [
+        { label: "الفريق", value: teamName.trim() },
+        { label: "المحافظة", value: governorate.trim() || "غير محددة" },
+        { label: "البريد", value: accountEmail.trim() || "—" },
+        {
+          label: "كلمة المرور",
+          value: accountPassword.trim().length >= 6 ? "تعيين كلمة جديدة" : "بدون تغيير",
+        },
+        {
+          label: "اللاعبون",
+          value: nextPlayers.map((player) => player.name || "—").join(" · "),
+        },
+      ],
+      confirmLabel: "حفظ بيانات الفريق",
+      onConfirm: async (reason) => {
+        await updateTeamFullProfile({
+          teamId: selectedTeam.teamId,
+          teamName: teamName.trim(),
+          governorate: governorate.trim() || "غير محددة",
+          players: nextPlayers,
+          email: accountEmail.trim(),
+          reason,
+        });
+        setAccountPassword("");
+        setToast("تم حفظ بيانات الفريق.");
+      },
+    });
+  }
+
+  function requestApplyOverride() {
+    if (!selectedTeam || !selectedOverrideOption) {
+      setToast("اختر فريقاً أولاً.");
+      return;
+    }
+
+    if (overrideQuestionScope && !overrideQuestionValidation.valid) {
+      setToast(overrideQuestionValidation.message ?? "رقم السؤال غير صالح.");
+      return;
+    }
+
+    const questionIndex =
+      overrideQuestionScope && overrideQuestionValidation.valid
+        ? overrideQuestionNumberToIndex(Number(overrideQuestionNumber))
+        : undefined;
+
+    const details = [
+      { label: "الفريق", value: selectedTeam.teamName },
+      { label: "الشاشة", value: selectedOverrideOption.label },
+    ];
+
+    if (overrideQuestionScope) {
+      details.push({
+        label: "رقم السؤال",
+        value: `${overrideQuestionNumber} من ${overrideQuestionValidation.max}`,
+      });
+    }
+
+    if (selectedOverrideOption.needsStage3Question) {
+      const stage3Label =
+        STAGE3_QUESTION_OPTIONS.find((option) => option.id === overrideStage3QuestionId)
+          ?.label ?? overrideStage3QuestionId;
+      details.push({ label: "سؤال على المحك", value: stage3Label });
+    }
+
+    openConfirm({
+      title: "انتقال استثنائي للفريق",
+      details,
+      confirmLabel: "إرسال الفريق للشاشة",
+      onConfirm: async (reason) => {
+        await setTeamFacilitatorOverride({
+          teamId: selectedTeam.teamId,
+          teamName: selectedTeam.teamName,
+          status: selectedOverrideOption.status as GameFlowStatus,
+          currentStage: selectedOverrideOption.currentStage,
+          stage1QuestionIndex:
+            selectedOverrideOption.questionIndexScope === "stage1"
+              ? questionIndex
+              : undefined,
+          stage2QuestionIndex:
+            selectedOverrideOption.questionIndexScope === "stage2"
+              ? questionIndex
+              : undefined,
+          stage4QuestionIndex:
+            selectedOverrideOption.questionIndexScope === "stage4"
+              ? questionIndex
+              : undefined,
+          stage3QuestionId: selectedOverrideOption.needsStage3Question
+            ? overrideStage3QuestionId
+            : undefined,
+          reason,
+        });
+        setToast("تم إرسال الفريق إلى الشاشة المختارة.");
+      },
+    });
+  }
+
+  function requestClearOverride() {
+    if (!selectedTeam || !override?.active) {
+      return;
+    }
+
+    openConfirm({
+      title: "إلغاء الانتقال الاستثنائي",
+      details: [
+        { label: "الفريق", value: selectedTeam.teamName },
+        { label: "الشاشة الحالية", value: override.status },
+      ],
+      onConfirm: async (reason) => {
+        await clearTeamFacilitatorOverride({
+          teamId: selectedTeam.teamId,
+          teamName: selectedTeam.teamName,
+          reason,
+        });
+        setToast("عاد الفريق لمتابعة سير المسابقة العام.");
+      },
+    });
+  }
+
+  function requestToggleLock(stage: AdminStageKey, locked: boolean) {
+    const scopeLabel = selectedTeamId
+      ? selectedTeam?.teamName ?? "فريق واحد"
+      : "جميع الفرق";
+
+    openConfirm({
+      title: locked ? "قفل مرحلة" : "فتح مرحلة",
+      tone: locked ? "danger" : "default",
+      details: [
+        { label: "النطاق", value: scopeLabel },
+        { label: "المرحلة", value: STAGE_OPTIONS_LABELS[stage] },
+        { label: "الإجراء", value: locked ? "قفل" : "فتح" },
+      ],
+      confirmLabel: locked ? "تأكيد القفل" : "تأكيد الفتح",
+      onConfirm: async (reason) => {
+        const count = await toggleTeamStageLock({
+          teamId: selectedTeamId || null,
+          stage,
+          locked,
+          reason,
+        });
+        setToast(
+          selectedTeamId
+            ? locked
+              ? `تم إغلاق ${STAGE_OPTIONS_LABELS[stage]} لهذا الفريق.`
+              : `تم فتح ${STAGE_OPTIONS_LABELS[stage]} لهذا الفريق.`
+            : locked
+              ? `تم إغلاق ${STAGE_OPTIONS_LABELS[stage]} لـ ${count} فريقاً.`
+              : `تم فتح ${STAGE_OPTIONS_LABELS[stage]} لـ ${count} فريقاً.`,
+        );
+      },
+    });
+  }
+
+  function requestResetTeamData() {
+    if (!selectedTeam) return;
+
+    openConfirm({
+      title: "حذف بيانات الفريق",
+      tone: "danger",
+      details: [
+        { label: "الفريق", value: selectedTeam.teamName },
+        { label: "يُحذف", value: "النقاط · التقدم · الإجابات · حالة المسابقة" },
+        { label: "يبقى", value: "حساب الفريق وبياناته الأساسية" },
+      ],
+      confirmLabel: "حذف بيانات الفريق",
+      onConfirm: async (reason) => {
+        await resetTeamCompetitionData({
+          teamId: selectedTeam.teamId,
+          teamName: selectedTeam.teamName,
+          governorate: selectedTeam.governorate,
+          reason,
+        });
+        setToast("تم حذف بيانات الفريق وإعادة ضبط تقدمه.");
+      },
+    });
+  }
+
+  function requestDeleteTeamCompletely() {
+    if (!selectedTeam) return;
+
+    openConfirm({
+      title: "حذف الفريق بالكامل",
+      tone: "danger",
+      details: [
+        { label: "الفريق", value: selectedTeam.teamName },
+        { label: "يُحذف", value: "التسجيل · الملف · الإجابات · حالة المسابقة" },
+        {
+          label: "ملاحظة",
+          value: "حساب الدخول في Firebase يبقى — احذفه من Console إن لزم",
+        },
+      ],
+      confirmLabel: "حذف الفريق نهائياً",
+      onConfirm: async (reason) => {
+        await deleteTeamCompletely({
+          teamId: selectedTeam.teamId,
+          teamName: selectedTeam.teamName,
+          reason,
+        });
+        setSelectedTeamId("");
+        setToast("تم حذف الفريق بالكامل من المسابقة.");
+      },
+    });
+  }
+
+  function requestDeleteAnswers() {
+    if (!selectedTeam) return;
+
+    const filterLabel =
+      ANSWER_STAGE_FILTERS.find((option) => option.value === answerFilter)?.label ??
+      "كل المراحل";
+
+    openConfirm({
+      title: "حذف إجابات الفريق",
+      tone: "danger",
+      details: [
+        { label: "الفريق", value: selectedTeam.teamName },
+        { label: "النطاق", value: filterLabel },
+        { label: "عدد ظاهر", value: String(filteredAnswers.length) },
+      ],
+      confirmLabel: "حذف الإجابات",
+      onConfirm: async (reason) => {
+        const count = await deleteTeamAnswers({
+          teamId: selectedTeam.teamId,
+          teamName: selectedTeam.teamName,
+          stage: answerFilter,
+          reason,
+        });
+        setToast(`تم حذف ${count} إجابة.`);
+      },
+    });
+  }
+
+  return {
+    teams,
+    loading,
+    error,
+    toast,
+    selectedTeamId,
+    setSelectedTeamId,
+    selectedTeam,
+    confirmRequest,
+    closeConfirm,
+    profileLoading,
+    profileError,
+    adminLoading,
+    teamName,
+    setTeamName,
+    governorate,
+    setGovernorate,
+    accountEmail,
+    setAccountEmail,
+    accountPassword,
+    setAccountPassword,
+    playerNames,
+    setPlayerNames,
+    globalLocks,
+    globalLocksMixed,
+    globalLocksLoading,
+    stageLocks,
+    override,
+    overrideStatusKey,
+    setOverrideStatusKey,
+    overrideQuestionNumber,
+    setOverrideQuestionNumber,
+    overrideStage3QuestionId,
+    setOverrideStage3QuestionId,
+    selectedOverrideOption,
+    overrideQuestionScope,
+    overrideQuestionValidation,
+    answerFilter,
+    setAnswerFilter,
+    showAnswers,
+    setShowAnswers,
+    filteredAnswers,
+    answersLoading,
+    showEditLog,
+    setShowEditLog,
+    editLogEntries,
+    editLogLoading,
+    editLogError,
+    requestSaveProfile,
+    requestApplyOverride,
+    requestClearOverride,
+    requestToggleLock,
+    requestResetTeamData,
+    requestDeleteTeamCompletely,
+    requestDeleteAnswers,
+  };
+}
+
+export type UseFacilitatorControlsTabReturn = ReturnType<typeof useFacilitatorControlsTab>;

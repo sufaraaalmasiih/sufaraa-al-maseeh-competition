@@ -1,7 +1,7 @@
 "use client";
 
-import { onAuthStateChanged, onIdTokenChanged, type User } from "firebase/auth";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { onAuthStateChanged, type User } from "firebase/auth";
+import { useEffect, useSyncExternalStore } from "react";
 import { getClientFirebaseAuth, ensureAuthPersistence } from "@/firebase/firebaseClient";
 import { getUserRole } from "@/firebase/get-user-role";
 import { authDebug } from "@/lib/auth-debug";
@@ -17,8 +17,32 @@ interface AuthRoleState {
   error: string | null;
 }
 
-const ROLE_LOOKUP_TIMEOUT_MS = 8_000;
-const AUTH_RESOLVE_TIMEOUT_MS = 12_000;
+const ROLE_LOOKUP_TIMEOUT_MS = 5_000;
+const AUTH_FAILSAFE_MS = 4_000;
+const AUTH_BOOTSTRAP_TIMEOUT_MS = 3_000;
+const LOOKUP_WATCHDOG_MS = 6_000;
+
+const SERVER_SNAPSHOT: AuthRoleState = {
+  user: null,
+  role: null,
+  loading: true,
+  error: null,
+};
+
+type ResolvedAuthCache = {
+  uid: string;
+  role: AppRole | null;
+};
+
+let resolvedAuthCache: ResolvedAuthCache | null = null;
+let authStore: AuthRoleState = { ...SERVER_SNAPSHOT };
+let authListeners = new Set<() => void>();
+let authListenerStarted = false;
+let failsafeTimerId: number | undefined;
+let lookupUid: string | null = null;
+let lookupWatchdogId: number | undefined;
+let failsafeArmed = false;
+let bootstrapDone = false;
 
 function syncLoadingDebug(partial: Parameters<typeof patchLoadingDebug>[0]): void {
   if (isLoadingDebugPanelEnabled()) {
@@ -45,216 +69,254 @@ function authTimeoutMessage(user: User | null): string {
   return "تعذر الاتصال بخدمة المصادقة. يرجى إعادة تحميل الصفحة أو تسجيل الدخول.";
 }
 
-export function useAuthRole(): AuthRoleState {
-  const [state, setState] = useState<AuthRoleState>({
-    user: null,
-    role: null,
-    loading: true,
-    error: null,
+function publish(next: AuthRoleState): void {
+  authStore = next;
+  syncLoadingDebug({
+    authLoading: next.loading,
+    userUid: next.user?.uid ?? null,
+    role: next.role,
   });
+  authListeners.forEach((listener) => listener());
+}
 
-  const resolveGenerationRef = useRef(0);
-  const loadingRef = useRef(true);
-  const authReadyRef = useRef(false);
-  const authTimeoutRef = useRef<number | null>(null);
+function clearLookupWatchdog(): void {
+  if (lookupWatchdogId !== undefined) {
+    window.clearTimeout(lookupWatchdogId);
+    lookupWatchdogId = undefined;
+  }
+}
 
-  useEffect(() => {
-    loadingRef.current = state.loading;
-  }, [state.loading]);
+function scheduleLookupWatchdog(uid: string): void {
+  clearLookupWatchdog();
 
-  const clearAuthTimeout = useCallback(() => {
-    if (authTimeoutRef.current !== null) {
-      window.clearTimeout(authTimeoutRef.current);
-      authTimeoutRef.current = null;
-    }
-  }, []);
+  lookupWatchdogId = window.setTimeout(() => {
+    lookupWatchdogId = undefined;
 
-  const finishLoading = useCallback(
-    (next: AuthRoleState) => {
-      clearAuthTimeout();
-      loadingRef.current = next.loading;
-      setState(next);
-      syncLoadingDebug({
-        authLoading: next.loading,
-        userUid: next.user?.uid ?? null,
-        role: next.role,
-      });
-    },
-    [clearAuthTimeout],
-  );
-
-  const forceAuthTimeout = useCallback(() => {
-    if (!loadingRef.current) {
+    if (lookupUid !== uid || !authStore.loading) {
       return;
     }
 
-    authHardTrace("auth resolve timeout — forcing loading false");
-    authDebug("auth resolve timeout — forcing loading false");
-
-    setState((prev) => {
-      if (!prev.loading) {
-        return prev;
-      }
-
-      const next: AuthRoleState = {
-        user: prev.user,
-        role: prev.role,
-        loading: false,
-        error: authTimeoutMessage(prev.user),
-      };
-      loadingRef.current = false;
-      syncLoadingDebug({
-        authLoading: false,
-        userUid: next.user?.uid ?? null,
-        role: next.role,
-      });
-      return next;
+    authHardTrace("role lookup watchdog — forcing loading false", { uid });
+    finishResolved({
+      user: getClientFirebaseAuth().currentUser,
+      role: resolvedAuthCache?.uid === uid ? resolvedAuthCache.role : null,
+      loading: false,
+      error: "تعذر تحميل صلاحيات المستخدم خلال المهلة المحددة.",
     });
-    clearAuthTimeout();
-  }, [clearAuthTimeout]);
+  }, LOOKUP_WATCHDOG_MS);
+}
 
-  const scheduleAuthTimeout = useCallback(() => {
-    clearAuthTimeout();
-    authTimeoutRef.current = window.setTimeout(forceAuthTimeout, AUTH_RESOLVE_TIMEOUT_MS);
-  }, [clearAuthTimeout, forceAuthTimeout]);
+function clearFailsafe(): void {
+  failsafeArmed = false;
+  if (failsafeTimerId !== undefined) {
+    window.clearTimeout(failsafeTimerId);
+    failsafeTimerId = undefined;
+  }
+}
 
-  useEffect(() => {
-    let cancelled = false;
-    let unsubscribeAuth: (() => void) | undefined;
-    let unsubscribeToken: (() => void) | undefined;
+function scheduleFailsafe(): void {
+  if (failsafeArmed || !authStore.loading) {
+    return;
+  }
 
-    const auth = getClientFirebaseAuth();
-    authHardTrace("useAuthRole useEffect START");
-    authDebug("subscribing onAuthStateChanged");
-    scheduleAuthTimeout();
+  failsafeArmed = true;
+  clearFailsafe();
 
-    const resolveUser = (user: User | null, source: string) => {
-      if (cancelled) {
-        return;
-      }
+  failsafeTimerId = window.setTimeout(() => {
+    failsafeTimerId = undefined;
+    failsafeArmed = false;
 
-      // Firebase may emit null before IndexedDB persistence restores the session.
-      // Ignore that premature null; authStateReady is the source of truth for sign-out.
-      if (!authReadyRef.current && user === null) {
-        authHardTrace("ignored premature null auth state", { source });
-        return;
-      }
-
-      const generation = ++resolveGenerationRef.current;
-
-      authHardTrace("auth state resolve", {
-        source,
-        userExists: Boolean(user),
-        uid: user?.uid ?? null,
-      });
-      authDebug("auth state resolve", { uid: user?.uid ?? null, source });
-
-      if (!user) {
-        finishLoading({ user: null, role: null, loading: false, error: null });
-        return;
-      }
-
-      finishLoading({ user, role: null, loading: true, error: null });
-      scheduleAuthTimeout();
-
-      void (async () => {
-        authDebug("role lookup start", { uid: user.uid });
-        authHardTrace("role lookup start", { uid: user.uid });
-
-        try {
-          const tokenResult = await withTimeout(
-            user.getIdTokenResult(),
-            ROLE_LOOKUP_TIMEOUT_MS,
-            "getIdTokenResult",
-          );
-          if (generation !== resolveGenerationRef.current || cancelled) {
-            return;
-          }
-
-          authDebug("token claims loaded", { uid: user.uid, claims: tokenResult.claims });
-
-          const role = await withTimeout(
-            getUserRole(user.uid),
-            ROLE_LOOKUP_TIMEOUT_MS,
-            "getUserRole",
-          );
-          if (generation !== resolveGenerationRef.current || cancelled) {
-            return;
-          }
-
-          authDebug("loading false", { uid: user.uid, role });
-          authHardTrace("loading false — role resolved", { uid: user.uid, role });
-          finishLoading({ user, role, loading: false, error: null });
-        } catch (error) {
-          if (generation !== resolveGenerationRef.current || cancelled) {
-            return;
-          }
-
-          authHardTraceError("role lookup failed", error);
-          authDebug("loading false — role lookup error");
-          finishLoading({
-            user,
-            role: null,
-            loading: false,
-            error: "تعذر تحميل صلاحيات المستخدم.",
-          });
-        }
-      })();
-    };
-
-    void (async () => {
-      try {
-        await ensureAuthPersistence();
-        await auth.authStateReady();
-        if (cancelled) {
-          return;
-        }
-
-        authReadyRef.current = true;
-        authHardTrace("authStateReady resolved", {
-          uid: auth.currentUser?.uid ?? null,
-        });
-        resolveUser(auth.currentUser, "authStateReady");
-      } catch (error) {
-        authHardTraceError("authStateReady failed", error);
-        if (!cancelled) {
-          authReadyRef.current = true;
-          resolveUser(auth.currentUser, "authStateReady-fallback");
-        }
-      }
-    })();
-
-    try {
-      unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-        if (user) {
-          authReadyRef.current = true;
-        }
-        resolveUser(user, "onAuthStateChanged");
-      });
-
-      unsubscribeToken = onIdTokenChanged(auth, (user) => {
-        authHardTrace("onIdTokenChanged fired", { uid: user?.uid ?? null });
-      });
-    } catch (error) {
-      authHardTraceError("useAuthRole useEffect setup failed", error);
-      finishLoading({
-        user: null,
-        role: null,
-        loading: false,
-        error: "تعذر تهيئة المصادقة.",
-      });
+    if (!authStore.loading) {
+      return;
     }
 
+    const auth = getClientFirebaseAuth();
+    const user = auth.currentUser;
+
+    authHardTrace("auth failsafe timeout — forcing loading false");
+    authDebug("auth failsafe timeout — forcing loading false");
+
+    publish({
+      user,
+      role: user && resolvedAuthCache?.uid === user.uid ? resolvedAuthCache.role : null,
+      loading: false,
+      error: authTimeoutMessage(user),
+    });
+  }, AUTH_FAILSAFE_MS);
+}
+
+function finishResolved(next: AuthRoleState): void {
+  if (!next.loading && next.user) {
+    resolvedAuthCache = { uid: next.user.uid, role: next.role };
+  }
+
+  if (!next.loading && !next.user) {
+    resolvedAuthCache = null;
+  }
+
+  lookupUid = null;
+  clearLookupWatchdog();
+  publish(next);
+
+  if (!next.loading) {
+    clearFailsafe();
+  }
+}
+
+async function resolveSignedInUser(user: User, source: string): Promise<void> {
+  if (resolvedAuthCache?.uid === user.uid) {
+    authDebug("role lookup skipped — cache hit", { uid: user.uid, source });
+    finishResolved({ user, role: resolvedAuthCache.role, loading: false, error: null });
+    return;
+  }
+
+  if (lookupUid === user.uid) {
+    authDebug("role lookup skipped — already in flight", { uid: user.uid, source });
+    return;
+  }
+
+  lookupUid = user.uid;
+  scheduleLookupWatchdog(user.uid);
+  authDebug("role lookup start", { uid: user.uid, source });
+  authHardTrace("role lookup start", { uid: user.uid, source });
+
+  try {
+    const role = await withTimeout(getUserRole(user.uid), ROLE_LOOKUP_TIMEOUT_MS, "getUserRole");
+
+    if (lookupUid !== user.uid) {
+      return;
+    }
+
+    authDebug("loading false", { uid: user.uid, role });
+    authHardTrace("loading false — role resolved", { uid: user.uid, role });
+    finishResolved({ user, role, loading: false, error: null });
+  } catch (error) {
+    if (lookupUid !== user.uid) {
+      return;
+    }
+
+    authHardTraceError("role lookup failed", error);
+    finishResolved({
+      user,
+      role: null,
+      loading: false,
+      error: "تعذر تحميل صلاحيات المستخدم.",
+    });
+  }
+}
+
+function handleAuthUser(user: User | null, source: string): void {
+  authHardTrace("auth state resolve", {
+    source,
+    userExists: Boolean(user),
+    uid: user?.uid ?? null,
+  });
+
+  if (!user) {
+    finishResolved({ user: null, role: null, loading: false, error: null });
+    return;
+  }
+
+  void resolveSignedInUser(user, source);
+}
+
+function bootstrapAuthState(source: string): void {
+  if (bootstrapDone) {
+    return;
+  }
+  bootstrapDone = true;
+
+  const auth = getClientFirebaseAuth();
+
+  if (auth.currentUser) {
+    handleAuthUser(auth.currentUser, `${source}:currentUser`);
+    return;
+  }
+
+  void Promise.race([
+    auth.authStateReady(),
+    new Promise<never>((_, reject) => {
+      window.setTimeout(() => {
+        reject(new Error(`authStateReady timed out after ${AUTH_BOOTSTRAP_TIMEOUT_MS}ms`));
+      }, AUTH_BOOTSTRAP_TIMEOUT_MS);
+    }),
+  ])
+    .then(() => {
+      handleAuthUser(auth.currentUser, `${source}:authStateReady`);
+    })
+    .catch((error) => {
+      authHardTraceError("auth bootstrap timeout", error);
+      handleAuthUser(auth.currentUser, `${source}:authStateReady-timeout`);
+    });
+}
+
+function ensureLoadingFailsafe(): void {
+  if (!authStore.loading) {
+    return;
+  }
+
+  scheduleFailsafe();
+  bootstrapAuthState("ensureLoadingFailsafe");
+}
+
+function startAuthListener(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (authListenerStarted) {
+    ensureLoadingFailsafe();
+    return;
+  }
+
+  authListenerStarted = true;
+  (window as Window & { __authRoleBuild?: string }).__authRoleBuild = "singleton-v4";
+  authHardTrace("auth listener START");
+
+  publish({ ...authStore, loading: true, error: null });
+  ensureLoadingFailsafe();
+
+  const auth = getClientFirebaseAuth();
+
+  void ensureAuthPersistence().catch((error) => {
+    authHardTraceError("ensureAuthPersistence failed", error);
+  });
+
+  onAuthStateChanged(auth, (user) => {
+    handleAuthUser(user, "onAuthStateChanged");
+  });
+}
+
+function subscribeAuthStore(listener: () => void): () => void {
+  startAuthListener();
+  authListeners.add(listener);
+  return () => {
+    authListeners.delete(listener);
+  };
+}
+
+function getAuthStoreSnapshot(): AuthRoleState {
+  return authStore;
+}
+
+function getAuthStoreServerSnapshot(): AuthRoleState {
+  return SERVER_SNAPSHOT;
+}
+
+export function useAuthRole(): AuthRoleState {
+  const state = useSyncExternalStore(
+    subscribeAuthStore,
+    getAuthStoreSnapshot,
+    getAuthStoreServerSnapshot,
+  );
+
+  useEffect(() => {
+    startAuthListener();
+
     return () => {
-      authHardTrace("useAuthRole useEffect CLEANUP");
-      cancelled = true;
-      authReadyRef.current = false;
-      resolveGenerationRef.current += 1;
-      clearAuthTimeout();
-      unsubscribeAuth?.();
-      unsubscribeToken?.();
+      // Keep the singleton listener alive for the app session.
     };
-  }, [clearAuthTimeout, finishLoading, scheduleAuthTimeout]);
+  }, []);
 
   return state;
 }

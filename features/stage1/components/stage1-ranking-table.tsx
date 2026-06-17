@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { AnimatedRankingRow } from "@/components/motion/animated-ranking-row";
 import type { RankedStage1Team } from "@/features/stage1/stage1-ranking";
 
 interface Stage1RankingTableProps {
@@ -18,6 +19,9 @@ interface Stage1RankingTableProps {
   title?: string;
   description?: string;
   stageLabel?: string;
+  animate?: boolean;
+  /** Hide card header when wrapped by audience stage shell */
+  hideHeader?: boolean;
 }
 
 const topRankStyles: Record<number, string> = {
@@ -34,11 +38,14 @@ export function Stage1RankingTable({
   title,
   description,
   stageLabel = "اجمعوا الكنوز",
+  animate = false,
+  hideHeader = false,
 }: Stage1RankingTableProps) {
   const audience = variant === "audience";
 
   return (
-    <Card>
+    <Card className={hideHeader ? "border-0 bg-transparent shadow-none" : undefined}>
+      {hideHeader ? null : (
       <CardHeader className={audience ? "text-center" : undefined}>
         {audience ? (
           <p className="text-sm font-bold text-[#4F8A10]">{stageLabel}</p>
@@ -56,17 +63,20 @@ export function Stage1RankingTable({
               : "يعتمد الترتيب على نقاط المرحلة الأولى ثم المجموع ثم اسم الفريق.")}
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        {loading ? <LoadingState /> : null}
+      )}
+      <CardContent className={hideHeader ? "p-0" : undefined}>
+        {loading ? <LoadingState variant="inline" /> : null}
         {error ? <ErrorState title="تعذر تحميل الترتيب" description={error} /> : null}
         {!loading && !error && teams.length === 0 ? (
           <EmptyState title="بانتظار تسجيل الفرق" />
         ) : null}
         {!loading && !error && teams.length > 0 && audience ? (
-          <div className="space-y-3">
-            {teams.map((team) => (
-              <div
+          <div className="competition-ranking-scroll competition-ranking-scroll--cards space-y-3">
+            {teams.map((team, index) => (
+              <AnimatedRankingRow
                 key={team.teamId}
+                index={index}
+                animate={animate}
                 className={cn(
                   "grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-md border border-primary/10 bg-white p-4",
                   topRankStyles[team.rank],
@@ -91,13 +101,13 @@ export function Stage1RankingTable({
                     نقطة
                   </p>
                 </div>
-              </div>
+              </AnimatedRankingRow>
             ))}
           </div>
         ) : null}
         {!loading && !error && teams.length > 0 && !audience ? (
-          <div className="overflow-x-auto rounded-md border border-primary/10">
-            <table className="w-full min-w-[640px] text-right text-sm">
+          <div className="overflow-x-auto competition-ranking-scroll">
+            <table className="competition-ranking-table w-full min-w-[640px] text-right text-sm">
               <thead className="bg-[#F3FAFF] text-[#143A5A]">
                 <tr>
                   <th className="px-4 py-3 font-bold">المركز</th>

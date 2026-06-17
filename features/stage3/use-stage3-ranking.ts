@@ -1,13 +1,12 @@
 "use client";
 
-import { onSnapshot } from "firebase/firestore";
-import { useEffect, useState } from "react";
-import { teamStatesCollectionRef } from "@/firebase/firestore";
+import { useMemo } from "react";
 import {
   getStage3Ranking,
   type RankedStage3Team,
   type Stage3RankingTeam,
 } from "@/features/stage3/stage3-ranking";
+import { useTeamStatesSnapshot } from "@/features/gameflow/team-states-store";
 
 function normalizeTeamState(
   id: string,
@@ -26,29 +25,16 @@ function normalizeTeamState(
   };
 }
 
-export function useStage3Ranking() {
-  const [teams, setTeams] = useState<RankedStage3Team[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export function useStage3Ranking(enabled = true) {
+  const { docs, loading, error } = useTeamStatesSnapshot("main", enabled);
 
-  useEffect(() => {
-    return onSnapshot(
-      teamStatesCollectionRef("main"),
-      (snapshot) => {
-        setTeams(
-          getStage3Ranking(
-            snapshot.docs.map((item) => normalizeTeamState(item.id, item.data())),
-          ),
-        );
-        setError(null);
-        setLoading(false);
-      },
-      () => {
-        setError("تعذر تحميل ترتيب المرحلة الثالثة.");
-        setLoading(false);
-      },
-    );
-  }, []);
+  const teams = useMemo(
+    () =>
+      getStage3Ranking(
+        docs.map((item) => normalizeTeamState(item.id, item.data)),
+      ),
+    [docs],
+  );
 
   return { teams, loading, error };
 }

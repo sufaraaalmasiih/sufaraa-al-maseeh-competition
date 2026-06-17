@@ -12,7 +12,12 @@ import {
   serializeMatchingPairings,
   type Stage2MatchingPairings,
 } from "@/features/stage2/stage2-matching";
+import { getAuthoritativeStage2MatchingQuestion } from "@/features/facilitator/question-bank-runtime-cache";
 import type { Stage2MatchingQuestion } from "@/features/stage2/stage2-matching-types";
+import {
+  assertAnsweringTimerOpen,
+  assertCompetitionNotFrozen,
+} from "@/lib/competition-guards";
 
 const MAIN_COMPETITION_ID = "main";
 const STAGE2_MATCHING_FIELD = "matching";
@@ -63,22 +68,20 @@ export async function confirmStage2MatchingAnswer({
     ]);
 
     const gameFlow = gameFlowSnapshot.data();
+    assertCompetitionNotFrozen(gameFlow);
+
     if (gameFlow?.status !== "stage2_player_turns") {
       throw new Error("Stage 2 is not accepting matching answers.");
     }
 
     if (timerSnapshot.exists()) {
       const timer = timerSnapshot.data();
-      const timerExpired =
-        timer.active === true &&
-        timer.stage === "stage2" &&
-        timer.purpose === "answering" &&
-        typeof timer.endsAtMs === "number" &&
-        timer.endsAtMs <= Date.now();
-
-      if (timerExpired) {
-        throw new Error("Stage 2 answering timer expired.");
-      }
+      assertAnsweringTimerOpen(
+        timer,
+        "stage2",
+        "answering",
+        "Stage 2 answering timer expired.",
+      );
     }
 
     if (answerSnapshot.exists() && answerSnapshot.data().confirmed === true) {
@@ -106,7 +109,9 @@ export async function confirmStage2MatchingAnswer({
         : 0;
     const currentTotalScore =
       typeof teamState.totalScore === "number" ? teamState.totalScore : 0;
-    const isCorrect = evaluateMatchingPairings(question, pairings);
+    const scoredQuestion =
+      getAuthoritativeStage2MatchingQuestion(question.id) ?? question;
+    const isCorrect = evaluateMatchingPairings(scoredQuestion, pairings);
     const pointsDelta = isCorrect ? CORRECT_ANSWER_POINTS : 0;
 
     transaction.set(confirmedAnswerRef, {

@@ -1,0 +1,21 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "answers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "stage", "order": "ASCENDING" },
+        { "fieldPath": "questionId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "answers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "teamId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

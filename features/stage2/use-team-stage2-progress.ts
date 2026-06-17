@@ -13,6 +13,10 @@ import {
   emptyStage2Roles,
   type Stage2Roles,
 } from "@/features/stage2/stage2-types";
+import {
+  FIRESTORE_LISTENER_TIMEOUT_MS,
+  scheduleFirestoreListenerTimeout,
+} from "@/lib/firestore-listener-timeout";
 import { patchLoadingDebug } from "@/lib/loading-debug-store";
 import { realLoadingDebug } from "@/lib/real-loading-debug";
 
@@ -37,18 +41,35 @@ export function useTeamStage2Progress(): TeamStage2ProgressData {
   useEffect(() => {
     realLoadingDebug("useTeamStage2Progress", "hook mounted, subscribing auth");
     let unsubscribeTeamState: (() => void) | undefined;
+    let clearListenerTimeout: (() => void) | undefined;
+    const loadingRef = { current: true };
+
+    const finishLoading = (nextError: string | null = null) => {
+      clearListenerTimeout?.();
+      clearListenerTimeout = undefined;
+      loadingRef.current = false;
+      setLoading(false);
+      patchLoadingDebug({ stage2ProgressLoading: false });
+      if (nextError) {
+        setError(nextError);
+        realLoadingDebug("useTeamStage2Progress", "loading false reached (error)", {
+          error: nextError,
+        });
+      } else {
+        setError(null);
+      }
+    };
 
     const unsubscribeAuth = onAuthStateChanged(firebaseAuth, (user) => {
       if (!user) {
         unsubscribeTeamState?.();
         unsubscribeTeamState = undefined;
+        clearListenerTimeout?.();
         subscribedTeamIdRef.current = null;
         setTeamId(null);
         setRoles(emptyStage2Roles);
         setProgress(defaultProgress);
-        setError(null);
-        setLoading(false);
-        patchLoadingDebug({ stage2ProgressLoading: false });
+        finishLoading();
         realLoadingDebug("useTeamStage2Progress", "loading false reached (no user)");
         return;
       }
@@ -64,14 +85,24 @@ export function useTeamStage2Progress(): TeamStage2ProgressData {
       }
 
       unsubscribeTeamState?.();
+      clearListenerTimeout?.();
       subscribedTeamIdRef.current = nextTeamId;
       setTeamId(nextTeamId);
+      loadingRef.current = true;
       setLoading(true);
       patchLoadingDebug({ stage2ProgressLoading: true });
       realLoadingDebug("useTeamStage2Progress", "subscribing team doc listener", {
         teamId: nextTeamId,
         listenerPath,
       });
+
+      clearListenerTimeout = scheduleFirestoreListenerTimeout(
+        () => loadingRef.current,
+        () => {
+          finishLoading("تعذر تحميل تقدم المرحلة الثانية خلال المهلة. أعد تحميل الصفحة.");
+        },
+        FIRESTORE_LISTENER_TIMEOUT_MS,
+      );
 
       unsubscribeTeamState = onSnapshot(
         teamStateRef("main", nextTeamId),
@@ -95,17 +126,13 @@ export function useTeamStage2Progress(): TeamStage2ProgressData {
             ...(data?.stage2Roles ?? {}),
           });
           setProgress(nextProgress);
-          setError(null);
-          setLoading(false);
-          patchLoadingDebug({ stage2ProgressLoading: false });
+          finishLoading();
           realLoadingDebug("useTeamStage2Progress", "loading false reached", {
             teamId: nextTeamId,
           });
         },
         (listenerError) => {
-          setError("تعذر تحميل تقدم المرحلة الثانية.");
-          setLoading(false);
-          patchLoadingDebug({ stage2ProgressLoading: false });
+          finishLoading("تعذر تحميل تقدم المرحلة الثانية.");
           realLoadingDebug("useTeamStage2Progress", "loading false reached (listener error)", {
             teamId: nextTeamId,
             listenerPath,
@@ -117,6 +144,7 @@ export function useTeamStage2Progress(): TeamStage2ProgressData {
     });
 
     return () => {
+      clearListenerTimeout?.();
       unsubscribeTeamState?.();
       unsubscribeAuth();
       subscribedTeamIdRef.current = null;

@@ -93,16 +93,19 @@ export function Stage3FacilitatorQuestionPanel({
   }
 
   return (
-    <div className="stage3-scene">
-      {closeError ? <ErrorState title="تعذر المتابعة" description={closeError} /> : null}
-
+    <div className="stage3-scene stage3-scene--question">
       {timer?.active && timer.stage === "stage3" && timer.purpose === "answering" ? (
-        <TimerCountdown
-          remainingSeconds={remainingSeconds}
-          isExpired={isExpired}
-          label="وقت الإجابة"
-        />
+        <div className="stage3-answer-timer-corner">
+          <TimerCountdown
+            remainingSeconds={remainingSeconds}
+            isExpired={isExpired}
+            label="وقت الإجابة"
+            variant="compact"
+          />
+        </div>
       ) : null}
+
+      {closeError ? <ErrorState title="تعذر المتابعة" description={closeError} /> : null}
 
       <Stage3QuestionOpenScreen
         question={question}

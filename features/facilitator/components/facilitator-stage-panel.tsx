@@ -1,6 +1,7 @@
 "use client";
 
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
+import { Stage2FacilitatorPanel } from "@/features/stage2/components/stage2-facilitator-panel";
 import { Stage3FacilitatorUnifiedPanel } from "@/features/stage3/components/stage3-facilitator-unified-panel";
 import { Stage3FinishedScreen } from "@/features/stage3/components/stage3-finished-screen";
 import { isStage3Status } from "@/features/stage3/stage3-constants";
@@ -21,6 +22,10 @@ export function FacilitatorStagePanel() {
 
   if (!status) {
     return null;
+  }
+
+  if (status === "stage2_player_turns") {
+    return <Stage2FacilitatorPanel />;
   }
 
   if (isStage3Status(status)) {

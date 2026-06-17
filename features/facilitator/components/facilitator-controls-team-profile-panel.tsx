@@ -1,0 +1,129 @@
+"use client";
+
+import { Save } from "lucide-react";
+import { ErrorState, LoadingState } from "@/components/layout/state-view";
+import { PLAYER_LABELS } from "@/features/facilitator/components/facilitator-controls-constants";
+import type { ControlsConfirmRequest } from "@/features/facilitator/components/facilitator-controls-confirm-card";
+
+interface FacilitatorControlsTeamProfilePanelProps {
+  profileLoading: boolean;
+  adminLoading: boolean;
+  profileError: string | null;
+  teamName: string;
+  onTeamNameChange: (value: string) => void;
+  governorate: string;
+  onGovernorateChange: (value: string) => void;
+  accountEmail: string;
+  onAccountEmailChange: (value: string) => void;
+  accountPassword: string;
+  onAccountPasswordChange: (value: string) => void;
+  playerNames: string[];
+  onPlayerNamesChange: (updater: (current: string[]) => string[]) => void;
+  confirmRequest: ControlsConfirmRequest | null;
+  onSaveProfile: () => void;
+}
+
+export function FacilitatorControlsTeamProfilePanel({
+  profileLoading,
+  adminLoading,
+  profileError,
+  teamName,
+  onTeamNameChange,
+  governorate,
+  onGovernorateChange,
+  accountEmail,
+  onAccountEmailChange,
+  accountPassword,
+  onAccountPasswordChange,
+  playerNames,
+  onPlayerNamesChange,
+  confirmRequest,
+  onSaveProfile,
+}: FacilitatorControlsTeamProfilePanelProps) {
+  return (
+    <div className="facilitator-card">
+      <div className="facilitator-card__head">
+        <Save className="h-5 w-5 text-[#2388C4]" aria-hidden />
+        <div>
+          <h3 className="facilitator-card__title">إدارة الفريق</h3>
+          <p className="facilitator-card__desc">
+            تعديل الاسم والمحافظة واللاعبين وبيانات الدخول.
+          </p>
+        </div>
+      </div>
+
+      {profileLoading || adminLoading ? <LoadingState variant="inline" /> : null}
+      {profileError ? (
+        <ErrorState title="تعذر تحميل ملف الفريق" description={profileError} />
+      ) : null}
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="facilitator-field">
+          <span className="facilitator-field__label">اسم الفريق</span>
+          <input
+            className="facilitator-input"
+            value={teamName}
+            onChange={(event) => onTeamNameChange(event.target.value)}
+          />
+        </label>
+        <label className="facilitator-field">
+          <span className="facilitator-field__label">المحافظة</span>
+          <input
+            className="facilitator-input"
+            value={governorate}
+            onChange={(event) => onGovernorateChange(event.target.value)}
+          />
+        </label>
+        <label className="facilitator-field">
+          <span className="facilitator-field__label">البريد الإلكتروني</span>
+          <input
+            type="email"
+            className="facilitator-input"
+            value={accountEmail}
+            onChange={(event) => onAccountEmailChange(event.target.value)}
+          />
+        </label>
+        <label className="facilitator-field">
+          <span className="facilitator-field__label">كلمة المرور الجديدة</span>
+          <input
+            type="password"
+            className="facilitator-input"
+            value={accountPassword}
+            onChange={(event) => onAccountPasswordChange(event.target.value)}
+            placeholder="6 أحرف على الأقل (اختياري)"
+          />
+        </label>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        {PLAYER_LABELS.map((label, index) => (
+          <label key={label} className="facilitator-field">
+            <span className="facilitator-field__label">{label}</span>
+            <input
+              className="facilitator-input"
+              value={playerNames[index] ?? ""}
+              onChange={(event) =>
+                onPlayerNamesChange((current) => {
+                  const next = [...current];
+                  next[index] = event.target.value;
+                  return next;
+                })
+              }
+            />
+          </label>
+        ))}
+      </div>
+
+      <div className="facilitator-timer__buttons">
+        <button
+          type="button"
+          className="facilitator-btn facilitator-btn--primary"
+          disabled={confirmRequest !== null}
+          onClick={onSaveProfile}
+        >
+          حفظ بيانات الفريق
+        </button>
+      </div>
+    </div>
+  );
+}

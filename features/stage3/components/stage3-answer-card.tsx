@@ -1,21 +1,25 @@
 "use client";
 
-import { CheckCircle2 } from "lucide-react";
 import { CompetitionConfirmButton } from "@/components/competition/competition-confirm-button";
-import { cn } from "@/lib/utils";
+import { GameReadyButton } from "@/components/ui/game-ready-button";
+import { Stage1QuestionCard } from "@/features/stage1/components/stage1-question-card";
 import type { Stage3MockQuestion } from "@/features/stage3/stage3-mock-questions";
+import { cn } from "@/lib/utils";
 
 interface Stage3AnswerCardProps {
   question: Stage3MockQuestion;
   isOwner: boolean;
   selectedAnswer: string | null;
+  answerText: string;
   confirmed: boolean;
   passed: boolean;
   saving: boolean;
   saveError: string | null;
   disabled: boolean;
+  className?: string;
   onSelectAnswer: (answer: string) => void;
-  onConfirm: () => void;
+  onAnswerTextChange: (value: string) => void;
+  onConfirm: (answer: string) => void;
   onPass?: () => void;
 }
 
@@ -23,84 +27,81 @@ export function Stage3AnswerCard({
   question,
   isOwner,
   selectedAnswer,
+  answerText,
   confirmed,
   passed,
   saving,
   saveError,
   disabled,
+  className,
   onSelectAnswer,
+  onAnswerTextChange,
   onConfirm,
   onPass,
 }: Stage3AnswerCardProps) {
+  const interactionLocked = confirmed || passed || saving || disabled;
+
   return (
-    <div className="stage3-answer-zone">
-      <p className="mb-4 text-center text-lg font-black text-[#143A5A]">
+    <div className={cn("stage3-answer-zone stage3-answer-zone--interactive", className)}>
+      <p className="stage3-answer-zone__title">
         {isOwner ? "إجابة صاحب الدور" : "إجابتكم أو التجاوز"}
       </p>
 
-      {disabled && !confirmed ? (
-        <p className="mb-4 rounded-xl border border-[#2388C4]/20 bg-[#E9F6FC]/60 px-4 py-3 text-center text-sm font-bold text-[#143A5A]">
+      {disabled && !confirmed && !passed ? (
+        <p className="mb-4 rounded-xl border border-white/60 bg-white/30 px-4 py-3 text-center text-sm font-bold text-[#143A5A] backdrop-blur-md">
           انتهى وقت الإجابة — بانتظار الميسّر
         </p>
       ) : null}
 
       {!passed ? (
-        <div className="grid gap-3 sm:grid-cols-2">
-          {question.options.map((option) => {
-            const selected = selectedAnswer === option;
-
-            return (
-              <button
-                key={option}
+        <>
+          <Stage1QuestionCard
+            answerText={answerText}
+            arrangeShuffleSeed={`stage3-${question.id}`}
+            confirmed={confirmed}
+            interactionDisabled={disabled || saving}
+            interactionOnly
+            question={question}
+            questionNumber={1}
+            saveError={saveError}
+            saving={saving}
+            selectedAnswer={selectedAnswer}
+            totalQuestions={1}
+            onAnswerTextChange={onAnswerTextChange}
+            onConfirm={(answer) => {
+              if (answer) {
+                onConfirm(answer);
+              }
+            }}
+            onSelectAnswer={onSelectAnswer}
+          />
+          {!isOwner && onPass && !interactionLocked ? (
+            <div className="game-ready-btn-wrap mt-4">
+              <GameReadyButton
                 type="button"
-                className={cn(
-                  "stage3-answer-choice",
-                  selected && "stage3-answer-choice--selected",
-                  (confirmed || saving || disabled) && "cursor-not-allowed opacity-70",
-                )}
-                disabled={confirmed || saving || disabled}
-                onClick={() => onSelectAnswer(option)}
+                className="game-ready-btn--outline"
+                disabled={saving || disabled}
+                onClick={onPass}
               >
-                {option}
-              </button>
-            );
-          })}
-        </div>
+                {saving ? "جاري التسجيل..." : "تجاوز"}
+              </GameReadyButton>
+            </div>
+          ) : null}
+        </>
       ) : null}
 
-      {confirmed ? (
-        <div className="mt-4 rounded-xl border border-[#4F8A10]/25 bg-[#F0FAE6] px-4 py-4 text-center text-base font-bold text-[#4F8A10]">
-          <p className="flex items-center justify-center gap-2">
-            <CheckCircle2 className="h-5 w-5" />
-            {passed ? "تم تسجيل التجاوز" : "تم تأكيد الإجابة"}
-          </p>
-        </div>
-      ) : (
-        <div className="mt-5 space-y-3">
-          {saveError ? (
-            <p className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-center text-sm font-bold text-destructive">
-              {saveError}
-            </p>
-          ) : null}
+      {passed ? (
+        <div className="mt-4">
           <CompetitionConfirmButton
-            disabled={!selectedAnswer || saving || disabled}
-            onClick={onConfirm}
+            buttonClassName="game-ready-btn--outline"
+            confirmed
+            confirmedLabel="تم تسجيل التجاوز"
+            onClick={() => {}}
           >
-            {saving ? "جاري الحفظ..." : "تأكيد الإجابة"}
+            تجاوز
           </CompetitionConfirmButton>
-          {!isOwner && onPass ? (
-            <button
-              type="button"
-              className="w-full rounded-full border border-[#143A5A]/20 bg-white/80 px-6 py-3 text-base font-bold text-[#143A5A] transition hover:bg-[#EEF4F9] disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={saving || disabled}
-              onClick={onPass}
-            >
-              {saving ? "جاري التسجيل..." : "تجاوز"}
-            </button>
-          ) : null}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
-

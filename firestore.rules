@@ -1,0 +1,128 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function teamDocExists() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/teams/$(request.auth.uid));
+    }
+
+    function staffDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function staffDocExists() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isFacilitator() {
+      return isSignedIn()
+        && staffDocExists()
+        && staffDoc().data.role in ['facilitator', 'super_admin'];
+    }
+
+    function isSuperAdmin() {
+      return isSignedIn()
+        && staffDocExists()
+        && staffDoc().data.role == 'super_admin';
+    }
+
+    function boundedScoreDelta(oldScore, newScore) {
+      return newScore is int
+        && oldScore is int
+        && (newScore - oldScore) >= -200
+        && (newScore - oldScore) <= 25;
+    }
+
+    function teamStateScoreUpdateAllowed() {
+      let oldTotal = resource.data.totalScore is int ? resource.data.totalScore : 0;
+      let newTotal = request.resource.data.totalScore is int ? request.resource.data.totalScore : 0;
+      return boundedScoreDelta(oldTotal, newTotal);
+    }
+
+    function teamAnswerCreateAllowed() {
+      let data = request.resource.data;
+      return teamDocExists()
+        && data.teamId == request.auth.uid
+        && data.confirmed == true
+        && data.pointsDelta is int
+        && data.pointsDelta >= -200
+        && data.pointsDelta <= 25
+        && data.isCorrect is bool;
+    }
+
+    function answerReadable() {
+      return isFacilitator()
+        || resource.data.visibleToAudience == true
+        || (teamDocExists() && resource.data.teamId == request.auth.uid);
+    }
+
+    // Team profile (registration)
+    match /teams/{uid} {
+      allow read: if isOwner(uid) || isFacilitator();
+      allow create: if isOwner(uid);
+      allow update: if isOwner(uid) || isFacilitator();
+      allow delete: if isFacilitator();
+    }
+
+    // Staff accounts (facilitator / super_admin / viewer)
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isFacilitator();
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    // Competition data
+    match /competitions/{competitionId} {
+      // Public read for audience screens (gameFlow + timer)
+      match /system/{docId} {
+        allow read: if true;
+        allow write: if isFacilitator();
+      }
+
+      // Rankings visible to audience; teams update own doc with bounded score deltas
+      match /teamStates/{teamId} {
+        allow read: if true;
+        allow create: if isOwner(teamId);
+        allow update: if isFacilitator()
+          || (isOwner(teamId) && teamStateScoreUpdateAllowed());
+        allow delete: if isFacilitator();
+      }
+
+      // Answers: teams submit bounded payloads; audience reads revealed answers
+      match /answers/{answerId} {
+        allow read: if answerReadable();
+        allow create: if isFacilitator() || teamAnswerCreateAllowed();
+        allow update, delete: if isFacilitator();
+      }
+
+      // Session history + edit log (facilitator only)
+      match /history/{sessionId} {
+        allow read, write: if isFacilitator();
+      }
+
+      // Audit trail (facilitator only)
+      match /auditLog/{logId} {
+        allow read, create: if isFacilitator();
+        allow update, delete: if false;
+      }
+
+      // Question banks (teams read during play; facilitator edits)
+      match /questionBanks/{bankId} {
+        allow read: if isSignedIn();
+        allow write: if isFacilitator();
+
+        match /archives/{archiveId} {
+          allow read, write: if isFacilitator();
+        }
+      }
+    }
+  }
+}

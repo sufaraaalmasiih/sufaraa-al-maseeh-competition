@@ -7,6 +7,9 @@ import { cn } from "@/lib/utils";
 interface CompetitionConfirmButtonProps {
   children: React.ReactNode;
   disabled?: boolean;
+  confirmed?: boolean;
+  confirmedLabel?: string;
+  buttonClassName?: string;
   onClick: () => void;
   className?: string;
 }
@@ -14,13 +17,22 @@ interface CompetitionConfirmButtonProps {
 function CompetitionConfirmButtonInner({
   children,
   disabled,
+  confirmed = false,
+  confirmedLabel = "تم تأكيد الإجابة",
+  buttonClassName,
   onClick,
   className,
 }: CompetitionConfirmButtonProps) {
   return (
     <div className={cn("game-ready-btn-wrap", className)}>
-      <GameReadyButton disabled={disabled} type="button" onClick={onClick}>
-        {children}
+      <GameReadyButton
+        className={buttonClassName}
+        disabled={disabled}
+        forcePressed={confirmed}
+        type="button"
+        onClick={onClick}
+      >
+        {confirmed ? confirmedLabel : children}
       </GameReadyButton>
     </div>
   );

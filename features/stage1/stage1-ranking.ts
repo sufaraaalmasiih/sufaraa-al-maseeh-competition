@@ -5,6 +5,9 @@ export interface Stage1RankingTeam {
   ready: boolean;
   competitionIntroReady: boolean;
   stage1IntroReady: boolean;
+  stage2IntroReady: boolean;
+  stage3IntroReady: boolean;
+  stage4IntroReady: boolean;
   stage1Score: number;
   totalScore: number;
   stage1QuestionIndex: number;

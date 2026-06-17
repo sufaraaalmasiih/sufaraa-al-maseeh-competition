@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+import { SuccessParticles } from "@/components/ui/game-ready-button";
 import {
   STAGE3_BOARD_FIELDS,
   STAGE3_BOARD_TITLE,
@@ -13,6 +15,12 @@ export type Stage3BoardVariant = "team" | "audience" | "facilitator";
 
 interface Stage3BoardProps {
   variant?: Stage3BoardVariant;
+  /** Enlarged board for team/audience gameplay */
+  featured?: boolean;
+  /** Render inside a parent gameplay-board-card (no outer glass shell) */
+  embedded?: boolean;
+  /** Hide title row when parent already shows turn/timer header */
+  hideHeader?: boolean;
   /** Owner team may select a question */
   canChoose?: boolean;
   pendingQuestionId?: string | null;
@@ -30,6 +38,9 @@ const difficultyAccentClass: Record<Stage3Difficulty, string> = {
 
 export function Stage3Board({
   variant = "team",
+  featured = false,
+  embedded = false,
+  hideHeader = false,
   canChoose = false,
   pendingQuestionId = null,
   openedQuestionIds = [],
@@ -41,21 +52,30 @@ export function Stage3Board({
 
   return (
     <div
-      className={`stage3-board-shell ${isPresentation ? "stage3-board-shell--presentation" : ""}`}
+      className={[
+        embedded ? "stage3-board-shell" : "gameplay-board-card stage3-board-shell",
+        isPresentation ? "stage3-board-shell--presentation" : "",
+        featured ? "stage3-board-shell--featured" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
     >
-      <header className="stage3-board-head">
-        <div className="stage3-board-head__title">
-          <p className="stage3-board-head__kicker">{STAGE3_NAME}</p>
-          <h2 className="stage3-board-head__name">{STAGE3_BOARD_TITLE}</h2>
-        </div>
-        {ownerTeamName ? (
-          <div className="stage3-board-head__turn">
-            <span>الدور: {ownerTeamName}</span>
+      {!hideHeader ? (
+        <header className="stage3-board-head">
+          <div className="stage3-board-head__title">
+            <p className="stage3-board-head__kicker">{STAGE3_NAME}</p>
+            <h2 className="stage3-board-head__name">{STAGE3_BOARD_TITLE}</h2>
           </div>
-        ) : null}
-      </header>
+          {ownerTeamName ? (
+            <div className="stage3-board-head__turn">
+              <span>الدور: {ownerTeamName}</span>
+            </div>
+          ) : null}
+        </header>
+      ) : null}
 
-      <div className="stage3-jeopardy-board">
+      <div className="stage3-board-body">
+        <div className="stage3-jeopardy-board">
         {STAGE3_BOARD_FIELDS.map((field) => (
           <CategoryColumn
             key={field.key}
@@ -69,6 +89,7 @@ export function Stage3Board({
             onSelectQuestion={onSelectQuestion}
           />
         ))}
+        </div>
       </div>
     </div>
   );
@@ -134,8 +155,18 @@ function QuestionTile({
   isUsed: boolean;
   onSelectQuestion?: (question: Stage3BoardQuestion, fieldLabel: string) => void;
 }) {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [showParticles, setShowParticles] = useState(false);
+
   const isChooseable = canChoose && !isUsed;
   const isLocked = variant === "team" && !canChoose && !isUsed;
+  const showPressed = isPending || showParticles;
+
+  useEffect(() => {
+    if (!isPending) {
+      setShowParticles(false);
+    }
+  }, [isPending]);
 
   const className = [
     "stage3-q-tile",
@@ -144,6 +175,7 @@ function QuestionTile({
     isLocked ? "stage3-q-tile--locked" : "",
     isUsed ? "stage3-q-tile--used" : "",
     isPending ? "stage3-q-tile--pending" : "",
+    showPressed ? "game-ready-btn--pressed" : "",
     isOpened && !isUsed ? "stage3-q-tile--opened" : "",
     variant === "audience" || variant === "facilitator" ? "stage3-q-tile--readonly" : "",
   ]
@@ -156,7 +188,9 @@ function QuestionTile({
   const content = isUsed ? (
     <>
       <span className="stage3-q-tile__label stage3-q-tile__label--used">{label}</span>
-      <span className="stage3-q-tile__used-tag">مُستخدم</span>
+      <span className="stage3-q-tile__pts stage3-q-tile__pts--used" aria-hidden>
+        مستخدم
+      </span>
     </>
   ) : (
     <>
@@ -167,21 +201,38 @@ function QuestionTile({
 
   if (variant === "team") {
     return (
-      <button
-        type="button"
-        className={className}
-        aria-label={isUsed ? `${label} — مُستخدم` : `${label} — ${pointsLabel}`}
-        aria-pressed={isPending}
-        disabled={!isChooseable || isPending}
-        onClick={() => {
-          if (!isChooseable) {
-            return;
+      <>
+        {showParticles ? <SuccessParticles buttonRef={buttonRef} /> : null}
+        <button
+          ref={buttonRef}
+          type="button"
+          className={className}
+          aria-label={
+            isPending
+              ? `${label} — جاري الفتح`
+              : isUsed
+                ? `${label} — مُستخدم`
+                : `${label} — ${pointsLabel}`
           }
-          onSelectQuestion?.(question, fieldLabel);
-        }}
-      >
-        {content}
-      </button>
+          aria-busy={isPending}
+          aria-pressed={showPressed}
+          disabled={!isChooseable}
+          onClick={() => {
+            if (!isChooseable || isPending) {
+              return;
+            }
+
+            setShowParticles(true);
+            window.setTimeout(() => {
+              setShowParticles(false);
+            }, 900);
+
+            onSelectQuestion?.(question, fieldLabel);
+          }}
+        >
+          {content}
+        </button>
+      </>
     );
   }
 

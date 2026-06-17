@@ -4,6 +4,7 @@ export interface Stage2CompleteVerseQuestion {
   verseWithBlank: string;
   correctAnswer: string;
   reference: string;
+  imageUrl?: string;
 }
 
 export interface Stage2CompleteVerseAnswer {

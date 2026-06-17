@@ -1,11 +1,10 @@
 "use client";
 
-import { onSnapshot } from "firebase/firestore";
-import { useEffect, useMemo, useState } from "react";
-import { teamStatesCollectionRef } from "@/firebase/firestore";
+import { useMemo } from "react";
 import { readTeamStageLocks } from "@/features/facilitator/facilitator-team-admin";
 import type { TeamStageLocks } from "@/features/facilitator/team-control-types";
 import { parseTeamStageLocks } from "@/features/facilitator/team-control-types";
+import { useTeamStatesSnapshot } from "@/features/gameflow/team-states-store";
 
 interface AllTeamStageLocksSummary {
   locks: TeamStageLocks;
@@ -14,24 +13,11 @@ interface AllTeamStageLocksSummary {
 }
 
 export function useAllTeamStageLocksSummary(): AllTeamStageLocksSummary {
-  const [rows, setRows] = useState<TeamStageLocks[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    return onSnapshot(
-      teamStatesCollectionRef("main"),
-      (snapshot) => {
-        setRows(snapshot.docs.map((docSnap) => readTeamStageLocks(docSnap.data()?.stageLocks)));
-        setLoading(false);
-      },
-      () => {
-        setRows([]);
-        setLoading(false);
-      },
-    );
-  }, []);
+  const { docs, loading } = useTeamStatesSnapshot("main");
 
   return useMemo(() => {
+    const rows = docs.map((docSnap) => readTeamStageLocks(docSnap.data.stageLocks));
+
     if (rows.length === 0) {
       return { locks: parseTeamStageLocks(null), mixed: false, loading };
     }
@@ -46,5 +32,5 @@ export function useAllTeamStageLocksSummary(): AllTeamStageLocksSummary {
     );
 
     return { locks: first, mixed, loading };
-  }, [loading, rows]);
+  }, [docs, loading]);
 }

@@ -15,6 +15,7 @@ interface Stage1QuestionCardProps {
   confirmed: boolean;
   saving: boolean;
   saveError: string | null;
+  interactionDisabled?: boolean;
   interactionOnly?: boolean;
   onSelectAnswer: (answer: string) => void;
   onAnswerTextChange: (value: string) => void;
@@ -31,6 +32,7 @@ export function Stage1QuestionCard({
   confirmed,
   saving,
   saveError,
+  interactionDisabled = false,
   interactionOnly = false,
   onSelectAnswer,
   onAnswerTextChange,
@@ -40,6 +42,7 @@ export function Stage1QuestionCard({
     return (
       <Stage1ArrangeQuestionCard
         confirmed={confirmed}
+        interactionDisabled={interactionDisabled}
         question={question}
         questionNumber={questionNumber}
         saveError={saveError}
@@ -57,6 +60,7 @@ export function Stage1QuestionCard({
       <Stage1TextQuestionCard
         answerText={answerText}
         confirmed={confirmed}
+        interactionDisabled={interactionDisabled}
         question={question}
         questionNumber={questionNumber}
         interactionOnly={interactionOnly}
@@ -72,6 +76,7 @@ export function Stage1QuestionCard({
   return (
     <Stage1ChoiceQuestionCard
       confirmed={confirmed}
+      interactionDisabled={interactionDisabled}
       question={question}
       questionNumber={questionNumber}
       interactionOnly={interactionOnly}

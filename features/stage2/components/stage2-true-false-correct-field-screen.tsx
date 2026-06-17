@@ -4,16 +4,14 @@ import { useEffect, useState } from "react";
 import { ArenaLayout } from "@/components/competition/arena-layout";
 import { StepJourney } from "@/components/competition/step-journey";
 import { QuestionPrompt } from "@/components/competition/question-prompt";
+import { QuestionTransition } from "@/components/motion/question-transition";
 import { EmptyState } from "@/components/layout/empty-state";
 import { useCompetitionTimer } from "@/features/gameflow/use-competition-timer";
 import { Stage2TrueFalseCorrectQuestionCard } from "@/features/stage2/components/stage2-true-false-correct-question-card";
 import { confirmStage2TrueFalseCorrectAnswer } from "@/features/stage2/confirm-stage2-true-false-correct-answer";
-import { STAGE2_QUESTION_ADVANCE_MS } from "@/features/stage2/stage2-constants";
 import type { Stage2TrueFalseChoice } from "@/features/stage2/stage2-true-false-correct-types";
-import {
-  STAGE2_TRUE_FALSE_CORRECT_QUESTION_COUNT,
-  stage2TrueFalseCorrectMockQuestions,
-} from "@/features/stage2/stage2-true-false-correct-mock-questions";
+import { getActiveStage2TrueFalseQuestions } from "@/features/facilitator/question-bank-runtime-cache";
+import { Stage2FieldWaitingScreen } from "@/features/stage2/components/stage2-field-waiting-screen";
 
 interface Stage2TrueFalseCorrectFieldScreenProps {
   assignedPlayerName: string;
@@ -36,9 +34,10 @@ export function Stage2TrueFalseCorrectFieldScreen({
     timer?.active && timer.stage === "stage2" && timer.purpose === "answering",
   );
   const answeringClosed = Boolean(hasStage2AnsweringTimer && isExpired);
-  const currentQuestion = stage2TrueFalseCorrectMockQuestions[questionIndex];
-  const trueFalseCorrectComplete =
-    questionIndex >= STAGE2_TRUE_FALSE_CORRECT_QUESTION_COUNT;
+  const trueFalseQuestions = getActiveStage2TrueFalseQuestions();
+  const questionCount = trueFalseQuestions.length;
+  const currentQuestion = trueFalseQuestions[questionIndex];
+  const trueFalseCorrectComplete = questionIndex >= questionCount;
 
   useEffect(() => {
     setQuestionIndex(trueFalseCorrectQuestionIndex);
@@ -54,14 +53,6 @@ export function Stage2TrueFalseCorrectFieldScreen({
     setConfirmed(false);
     setSaveError(null);
   }, [questionIndex]);
-
-  function goToNextQuestion() {
-    setQuestionIndex((current) => current + 1);
-    setSelectedChoice(null);
-    setCorrectionText("");
-    setConfirmed(false);
-    setSaveError(null);
-  }
 
   async function confirmTrueFalseCorrectAnswer() {
     if (
@@ -89,7 +80,6 @@ export function Stage2TrueFalseCorrectFieldScreen({
       });
       setConfirmed(true);
       setSaving(false);
-      window.setTimeout(goToNextQuestion, STAGE2_QUESTION_ADVANCE_MS);
     } catch {
       setSaveError("تعذر حفظ الإجابة. تحقق من الاتصال وحاول مرة أخرى.");
       setSaving(false);
@@ -101,26 +91,21 @@ export function Stage2TrueFalseCorrectFieldScreen({
   }
 
   if (trueFalseCorrectComplete || !currentQuestion) {
-    return (
-      <div className="arena-scene items-center justify-center">
-        <p className="arena-question-text text-2xl sm:text-3xl">
-          انتهت أسئلة صح أو خطأ، بانتظار توجيه الميسر
-        </p>
-      </div>
-    );
+    return <Stage2FieldWaitingScreen title="انتهت أسئلة صح أو خطأ" />;
   }
 
   return (
-    <ArenaLayout
-      question={
-        <QuestionPrompt reference={currentQuestion.reference} size="arena">
+    <QuestionTransition questionKey={`stage2-tf-q-${questionIndex}`}>
+      <ArenaLayout
+        question={
+        <QuestionPrompt reference={currentQuestion.reference} imageUrl={currentQuestion.imageUrl} size="arena">
           {currentQuestion.statement}
         </QuestionPrompt>
       }
       progress={
         <StepJourney
           current={questionIndex + 1}
-          total={STAGE2_TRUE_FALSE_CORRECT_QUESTION_COUNT}
+          total={questionCount}
         />
       }
       board={
@@ -147,5 +132,6 @@ export function Stage2TrueFalseCorrectFieldScreen({
         />
       }
     />
+    </QuestionTransition>
   );
 }

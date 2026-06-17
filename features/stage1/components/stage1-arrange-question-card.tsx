@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CompetitionAnswerSuccess } from "@/components/competition/competition-answer-success";
 import { CompetitionConfirmButton } from "@/components/competition/competition-confirm-button";
 import { QuizChoiceCard } from "@/components/competition/quiz-choice-card";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +21,7 @@ interface Stage1ArrangeQuestionCardProps {
   confirmed: boolean;
   saving: boolean;
   saveError: string | null;
+  interactionDisabled?: boolean;
   interactionOnly?: boolean;
   onConfirm: (answer: string) => void;
 }
@@ -34,6 +34,7 @@ export function Stage1ArrangeQuestionCard({
   confirmed,
   saving,
   saveError,
+  interactionDisabled = false,
   interactionOnly = false,
   onConfirm,
 }: Stage1ArrangeQuestionCardProps) {
@@ -55,7 +56,7 @@ export function Stage1ArrangeQuestionCard({
   }, [question.id]);
 
   function togglePart(displayIndex: number) {
-    if (confirmed || saving) {
+    if (confirmed || saving || interactionDisabled) {
       return;
     }
 
@@ -74,7 +75,7 @@ export function Stage1ArrangeQuestionCard({
   }
 
   function resetOrder() {
-    if (confirmed || saving) {
+    if (confirmed || saving || interactionDisabled) {
       return;
     }
 
@@ -117,7 +118,7 @@ export function Stage1ArrangeQuestionCard({
           return (
             <QuizChoiceCard
               key={`${question.id}-arrange-${index}`}
-              disabled={confirmed || saving}
+              disabled={confirmed || saving || interactionDisabled}
               selected={selected}
               onClick={() => togglePart(index)}
             >
@@ -127,31 +128,29 @@ export function Stage1ArrangeQuestionCard({
         })}
       </div>
 
-      {confirmed ? (
-        <CompetitionAnswerSuccess />
-      ) : (
-        <>
-          {saveError ? (
-            <p className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-center text-sm font-bold text-destructive">
-              {saveError}
-            </p>
-          ) : null}
-          <CompetitionConfirmButton
-            disabled={!ready || saving}
-            onClick={() => onConfirm(formatStage1ArrangeSubmission(picked))}
-          >
-            {saving ? "جاري الحفظ..." : "تأكيد الترتيب"}
-          </CompetitionConfirmButton>
-          <button
-            className="text-center text-xs font-bold text-[#143A5A]/50 transition-colors hover:text-[#2388C4] disabled:opacity-40"
-            disabled={confirmed || saving || pickedIndices.length === 0}
-            type="button"
-            onClick={resetOrder}
-          >
-            إعادة الترتيب
-          </button>
-        </>
-      )}
+      {!confirmed && saveError ? (
+        <p className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-center text-sm font-bold text-destructive">
+          {saveError}
+        </p>
+      ) : null}
+      <CompetitionConfirmButton
+        confirmed={confirmed}
+        confirmedLabel="تم تأكيد الترتيب"
+        disabled={!ready || saving || interactionDisabled}
+        onClick={() => onConfirm(formatStage1ArrangeSubmission(picked))}
+      >
+        {saving ? "جاري الحفظ..." : "تأكيد الترتيب"}
+      </CompetitionConfirmButton>
+      {!confirmed ? (
+        <button
+          className="text-center text-xs font-bold text-[#143A5A]/50 transition-colors hover:text-[#2388C4] disabled:opacity-40"
+          disabled={saving || pickedIndices.length === 0}
+          type="button"
+          onClick={resetOrder}
+        >
+          إعادة الترتيب
+        </button>
+      ) : null}
     </div>
   );
 

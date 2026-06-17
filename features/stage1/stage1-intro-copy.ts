@@ -1,19 +1,38 @@
-import { COMPETITION_INTRO_SUMMARY } from "@/features/gameflow/competition-intro-copy";
+import { DEFAULT_COMPETITION_CONTENT } from "@/features/competition-content/competition-content-defaults";
+import { getCompetitionContent } from "@/features/competition-content/competition-content-runtime";
 
-export const STAGE1_INTRO_VIDEO_ID = "0rC6j13eyd4";
+export const STAGE1_INTRO_VIDEO_ID = DEFAULT_COMPETITION_CONTENT.stages.stage1.videoId;
 
-export const STAGE1_INTRO_COPY = {
-  competitionName: COMPETITION_INTRO_SUMMARY.title,
-  competitionSlogan: COMPETITION_INTRO_SUMMARY.slogan,
-  eyebrow: "المرحلة الأولى",
-  stageName: "اجمعوا الكنوز",
-  lead: "سباق وقت لجمع أكبر عدد من النقاط من بنك أسئلة كتابي متنوع.",
-  details: [
-    "7 دقائق — حتى 50 سؤالاً.",
-    "5 نقاط لكل إجابة صحيحة.",
-    "اختر من متعدد، فراغات، ماذا ينقص، ورتّب.",
-    "تتوقف الإجابات عند انتهاء الوقت أو إكمال البنك.",
-  ],
-  videoTitle: "شرح المرحلة الأولى — اجمعوا الكنوز",
-  hint: "بانتظار بدء الميسر للمرحلة الأولى.",
-} as const;
+function getStage1Copy() {
+  const content = getCompetitionContent();
+  const stage1 = content.stages.stage1;
+  return {
+    competitionName: content.brand.title,
+    competitionSlogan: content.brand.slogan,
+    eyebrow: stage1.eyebrow,
+    stageName: stage1.name,
+    lead: stage1.lead,
+    details: stage1.rules,
+    videoTitle: stage1.videoTitle,
+    hint: stage1.hint,
+  };
+}
+
+export const STAGE1_INTRO_COPY = new Proxy(
+  {
+    competitionName: DEFAULT_COMPETITION_CONTENT.brand.title,
+    competitionSlogan: DEFAULT_COMPETITION_CONTENT.brand.slogan,
+    eyebrow: DEFAULT_COMPETITION_CONTENT.stages.stage1.eyebrow,
+    stageName: DEFAULT_COMPETITION_CONTENT.stages.stage1.name,
+    lead: DEFAULT_COMPETITION_CONTENT.stages.stage1.lead,
+    details: DEFAULT_COMPETITION_CONTENT.stages.stage1.rules,
+    videoTitle: DEFAULT_COMPETITION_CONTENT.stages.stage1.videoTitle,
+    hint: DEFAULT_COMPETITION_CONTENT.stages.stage1.hint,
+  },
+  {
+    get(_target, prop) {
+      const copy = getStage1Copy();
+      return copy[prop as keyof ReturnType<typeof getStage1Copy>];
+    },
+  },
+);

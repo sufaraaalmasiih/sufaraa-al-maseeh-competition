@@ -1,32 +1,29 @@
 "use client";
 
-import { TimerCountdown } from "@/features/gameflow/components/timer-countdown";
-import { GameFlowPlaceholder } from "@/features/gameflow/components/gameflow-placeholder";
+import { motion } from "framer-motion";
+import { useGameFlow } from "@/features/gameflow/use-game-flow";
 import { useCompetitionTimer } from "@/features/gameflow/use-competition-timer";
+import { Stage2ReadingPanel } from "@/features/stage2/components/stage2-reading-panel";
 
 export function AudienceStage2Reading() {
-  const { timer, remainingSeconds, isExpired } = useCompetitionTimer();
+  const { timer } = useCompetitionTimer();
+  const { stage2ReadingReference, stage2ReadingPassage } = useGameFlow();
   const hasReadingTimer = Boolean(
     timer?.active && timer.stage === "stage2" && timer.purpose === "reading",
   );
 
   return (
-    <div className="space-y-6">
-      <GameFlowPlaceholder
-        title="الفرق تقرأ المرجع الكتابي"
-        description="مرحلة فتشوا الكتب"
+    <motion.div
+      className="audience-stage2-reading"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+    >
+      <Stage2ReadingPanel
+        reference={stage2ReadingReference}
+        passage={stage2ReadingPassage}
+        hasReadingTimer={hasReadingTimer}
       />
-      {hasReadingTimer ? (
-        <TimerCountdown
-          remainingSeconds={remainingSeconds}
-          isExpired={isExpired}
-          label="وقت قراءة المرجع"
-        />
-      ) : (
-        <p className="rounded-lg border border-primary/15 bg-white px-5 py-4 text-center text-base font-bold text-[#143A5A]">
-          بانتظار بدء مؤقت القراءة من الميسر
-        </p>
-      )}
-    </div>
+    </motion.div>
   );
 }

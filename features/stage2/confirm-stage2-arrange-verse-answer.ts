@@ -8,7 +8,12 @@ import {
   timerRef,
 } from "@/firebase/firestore";
 import { isStage2ArrangeOrderCorrect } from "@/features/stage2/stage2-arrange";
+import { getAuthoritativeStage2ArrangeVerseQuestion } from "@/features/facilitator/question-bank-runtime-cache";
 import type { Stage2ArrangeVerseQuestion } from "@/features/stage2/stage2-arrange-verse-types";
+import {
+  assertAnsweringTimerOpen,
+  assertCompetitionNotFrozen,
+} from "@/lib/competition-guards";
 
 const MAIN_COMPETITION_ID = "main";
 const STAGE2_ARRANGE_VERSE_FIELD = "arrangeVerse";
@@ -71,22 +76,20 @@ export async function confirmStage2ArrangeVerseAnswer({
     ]);
 
     const gameFlow = gameFlowSnapshot.data();
+    assertCompetitionNotFrozen(gameFlow);
+
     if (gameFlow?.status !== "stage2_player_turns") {
       throw new Error("Stage 2 is not accepting arrange verse answers.");
     }
 
     if (timerSnapshot.exists()) {
       const timer = timerSnapshot.data();
-      const timerExpired =
-        timer.active === true &&
-        timer.stage === "stage2" &&
-        timer.purpose === "answering" &&
-        typeof timer.endsAtMs === "number" &&
-        timer.endsAtMs <= Date.now();
-
-      if (timerExpired) {
-        throw new Error("Stage 2 answering timer expired.");
-      }
+      assertAnsweringTimerOpen(
+        timer,
+        "stage2",
+        "answering",
+        "Stage 2 answering timer expired.",
+      );
     }
 
     if (answerSnapshot.exists() && answerSnapshot.data().confirmed === true) {
@@ -114,9 +117,11 @@ export async function confirmStage2ArrangeVerseAnswer({
         : 0;
     const currentTotalScore =
       typeof teamState.totalScore === "number" ? teamState.totalScore : 0;
+    const scoredQuestion =
+      getAuthoritativeStage2ArrangeVerseQuestion(question.id) ?? question;
     const isCorrect = isArrangeVerseOrderCorrect(
       orderedFragments,
-      question.correctOrder,
+      scoredQuestion.correctOrder,
     );
     const pointsDelta = isCorrect ? CORRECT_ANSWER_POINTS : 0;
 

@@ -5,12 +5,11 @@ import { useEffect, useMemo, useState } from "react";
 import { ArenaLayout } from "@/components/competition/arena-layout";
 import { StepJourney } from "@/components/competition/step-journey";
 import { QuestionPrompt } from "@/components/competition/question-prompt";
+import { QuestionTransition } from "@/components/motion/question-transition";
 import { EmptyState } from "@/components/layout/empty-state";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
-import { TimerCountdown } from "@/features/gameflow/components/timer-countdown";
 import { useCompetitionTimer } from "@/features/gameflow/use-competition-timer";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
-import { Stage1BlessingWaitScreen } from "@/features/stage1/components/stage1-blessing-wait-screen";
 import { Stage1QuestionCard } from "@/features/stage1/components/stage1-question-card";
 import { STAGE1_MID_QUESTION_ADVANCE_MS } from "@/features/stage1/stage1-constants";
 import { confirmStage1Answer } from "@/features/stage1/confirm-stage1-answer";
@@ -161,63 +160,32 @@ export function Stage1RunningScreen() {
   }
 
   if (progressLoading) {
-    return <LoadingState waitingComponent="Stage1RunningScreen:useStage1TeamProgress" />;
+    return <LoadingState variant="page" waitingComponent="Stage1RunningScreen:useStage1TeamProgress" />;
   }
 
   if (progressError) {
     return <ErrorState title="تعذر تحميل التقدم" description={progressError} />;
   }
 
-  if (answeringClosed) {
-    return (
-      <section className="space-y-6">
-        {hasStage1Timer ? (
-          <TimerCountdown
-            remainingSeconds={remainingSeconds}
-            isExpired={isExpired}
-            paused={timer?.paused}
-          />
-        ) : null}
-        <EmptyState title="انتهى وقت المرحلة، بانتظار توجيه الميسر" />
-      </section>
-    );
+  if (bankCompleted) {
+    return null;
   }
 
-  if (bankCompleted) {
-    return (
-      <section className="flex w-full flex-col items-center gap-6">
-        {hasStage1Timer ? (
-          <TimerCountdown
-            remainingSeconds={remainingSeconds}
-            isExpired={isExpired}
-            paused={timer?.paused}
-          />
-        ) : null}
-        <Stage1BlessingWaitScreen stage1Score={stage1Score} />
-      </section>
-    );
+  if (answeringClosed) {
+    return <EmptyState title="انتهى وقت المرحلة، بانتظار توجيه الميسر" />;
   }
 
   if (!currentQuestion) {
-    return (
-      <section className="space-y-6">
-        {hasStage1Timer ? (
-          <TimerCountdown
-            remainingSeconds={remainingSeconds}
-            isExpired={isExpired}
-            paused={timer?.paused}
-          />
-        ) : null}
-        <EmptyState title="انتهت أسئلة المرحلة، بانتظار توجيه الميسر" />
-      </section>
-    );
+    return <EmptyState title="انتهت أسئلة المرحلة، بانتظار توجيه الميسر" />;
   }
 
   return (
-    <ArenaLayout
-      question={
+    <QuestionTransition questionKey={`stage1-q-${effectiveIndex}`}>
+      <ArenaLayout
+        question={
         <QuestionPrompt
           reference={"reference" in currentQuestion ? currentQuestion.reference : undefined}
+          imageUrl={currentQuestion.imageUrl}
           size="arena"
         >
           {currentQuestion.prompt}
@@ -248,5 +216,6 @@ export function Stage1RunningScreen() {
         />
       }
     />
+    </QuestionTransition>
   );
 }

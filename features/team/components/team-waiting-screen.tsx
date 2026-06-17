@@ -60,17 +60,23 @@ export function TeamWaitingScreen() {
   }
 
   if (loading) {
-    return <WaitingMessage title="جاري التحميل..." />;
+    return (
+      <div className="team-waiting-screen">
+        <WaitingMessage title="جاري التحميل..." />
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <WaitingMessage title="تعذر تحميل بيانات الفريق" description={error} tone="error" />
+      <div className="team-waiting-screen">
+        <WaitingMessage title="تعذر تحميل بيانات الفريق" description={error} tone="error" />
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="team-waiting-screen">
       <div className="team-waiting-screen__logo-wrap">
         <img
           src={competitionLogo.src}
@@ -122,7 +128,7 @@ export function TeamWaitingScreen() {
           {saving ? "جاري التسجيل..." : ready ? "تم التسجيل" : "جاهز"}
         </GameReadyButton>
       </div>
-    </>
+    </div>
   );
 }
 

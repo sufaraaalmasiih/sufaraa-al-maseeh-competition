@@ -9,6 +9,10 @@ import {
 import { startStage2ReadingTimerDoc } from "@/features/gameflow/stage2-reading-timer";
 import { startStage2AnsweringTimerDoc } from "@/features/gameflow/stage2-answering-timer";
 import { fetchTimerDurations } from "@/features/facilitator/facilitator-timer-settings";
+import {
+  prepareStage1QuestionSession,
+  prepareStage2QuestionSession,
+} from "@/features/facilitator/prepare-stage-question-session";
 import { fetchFinalResultTeams } from "@/features/facilitator/use-final-results";
 import type { GameFlowStatus } from "@/types";
 
@@ -41,7 +45,7 @@ async function startStage1TimerDoc(seconds: number, now = Date.now()) {
 /**
  * Central GameFlow transition. Applies documented side effects:
  * - entering stage2_reading auto-starts the reading timer
- * - entering stage2_player_turns stops any running timer
+ * - entering stage2_player_turns auto-starts the field answering timer
  * - entering stage3_board clears the active question
  */
 export async function setGameFlowStatus(
@@ -69,12 +73,15 @@ export async function setGameFlowStatus(
   if (nextStatus === "stage1_running" || nextStatus === "stage2_reading") {
     const durations = await fetchTimerDurations();
     if (nextStatus === "stage1_running") {
+      await prepareStage1QuestionSession();
       writes.push(startStage1TimerDoc(durations.stage1));
     } else {
+      await prepareStage2QuestionSession();
       writes.push(startStage2ReadingTimerDoc(durations.stage2Reading));
     }
   } else if (nextStatus === "stage2_player_turns") {
-    writes.push(stopTimerDoc());
+    const durations = await fetchTimerDurations();
+    writes.push(startStage2AnsweringTimerDoc(durations.stage2Turn));
   }
 
   await Promise.all(writes);
@@ -178,6 +185,27 @@ export async function resumeTimer(now = Date.now()): Promise<void> {
     },
     { merge: true },
   );
+}
+
+/** Freeze competition: pause timer + show banner on all screens. */
+export async function freezeCompetition(): Promise<void> {
+  await Promise.all([
+    updateDoc(gameFlowRef, { competitionFrozen: true }),
+    pauseTimer(),
+  ]);
+}
+
+/** Resume competition after facilitator unfreezes. */
+export async function unfreezeCompetition(): Promise<void> {
+  const snapshot = await getDoc(timerRef);
+  const timer = snapshot.data();
+  const wasPaused = timer?.paused === true;
+
+  await updateDoc(gameFlowRef, { competitionFrozen: false });
+
+  if (wasPaused) {
+    await resumeTimer();
+  }
 }
 
 export async function resetTimer(now = Date.now()): Promise<void> {

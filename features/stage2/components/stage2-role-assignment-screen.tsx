@@ -14,6 +14,7 @@ import {
   type Stage2Roles,
 } from "@/features/stage2/stage2-types";
 import { useTeamStage2Data } from "@/features/stage2/use-team-stage2-data";
+import { cn } from "@/lib/utils";
 import type { TeamPlayer } from "@/types";
 
 function getPlayersForField(
@@ -49,7 +50,7 @@ export function Stage2RoleAssignmentScreen() {
   }, [roles]);
 
   if (loading) {
-    return <LoadingState />;
+    return <LoadingState variant="page" />;
   }
 
   if (error) {
@@ -58,15 +59,13 @@ export function Stage2RoleAssignmentScreen() {
 
   if (roles.locked) {
     return (
-      <div className="gameplay-stack">
-        <div className="gameplay-board-card mx-auto max-w-2xl space-y-4 px-6 py-8 text-center">
-          <div aria-hidden className="competition-stage-screen__icon mx-auto mt-0">
-            <span className="text-3xl font-black">✓</span>
+      <div className="stage2-role-assignment-screen">
+        <article className="stage2-role-assignment-screen__card stage2-role-assignment-screen__card--locked">
+          <div aria-hidden className="stage2-role-assignment-screen__success-icon">
+            <span>✓</span>
           </div>
-          <p className="competition-stage-screen__title mt-0 text-2xl sm:text-3xl">
-            تم تثبيت توزيع المجالات
-          </p>
-        </div>
+          <p className="stage2-role-assignment-screen__locked-title">تم تثبيت توزيع المجالات</p>
+        </article>
         <Stage2RoleSummary roles={roles} />
       </div>
     );
@@ -101,56 +100,78 @@ export function Stage2RoleAssignmentScreen() {
   }
 
   function selectPlayer(field: Stage2RoleKey, playerName: string) {
-    setSelection((current) => ({ ...current, [field]: playerName }));
+    setSelection((current) => ({
+      ...current,
+      [field]: current[field] === playerName ? "" : playerName,
+    }));
     setSaveError(null);
   }
 
   return (
-    <div className="gameplay-stack">
+    <div className="stage2-role-assignment-screen">
       <StageHeaderBar
         segments={[
           { text: "فتشوا الكتب", accent: true },
           { text: "توزيع المجالات" },
         ]}
       />
-      <p className="text-center text-lg font-black text-[#143A5A] sm:text-xl">
-        اختاروا اللاعب لكل مجال
-      </p>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {stage2RoleFields.map((field) => (
-          <label
-            key={field.key}
-            className="glass-card p-4"
-          >
-            <span className="mb-2 block text-sm font-black text-[#4F8A10]">
-              {field.label}
-            </span>
-            <select
-              className="motion-fast h-12 w-full rounded-xl border border-white/70 bg-white/60 px-3 text-base font-bold text-[#143A5A] backdrop-blur-lg"
-              value={selection[field.key]}
-              onChange={(event) => selectPlayer(field.key, event.target.value)}
-            >
-              <option value="">اختر اللاعب</option>
-              {getPlayersForField(field.key, selection, players).map((player) => (
-                <option key={`${field.key}-${player.name}`} value={player.name}>
-                  {player.name}
-                  {player.type === "substitute" ? " - بديل" : ""}
-                </option>
-              ))}
-            </select>
-          </label>
-        ))}
-      </div>
-      {players.length === 0 ? (
-        <p className="glass-card px-4 py-3 text-center text-sm font-bold text-[#143A5A]">
-          لا توجد أسماء لاعبين متاحة لهذا الفريق.
-        </p>
-      ) : null}
-      {saveError ? (
-        <p className="glass-card px-4 py-3 text-sm font-bold text-destructive">
-          {saveError}
-        </p>
-      ) : null}
+
+      <article className="stage2-role-assignment-screen__card">
+        <p className="stage2-role-assignment-screen__title">اختاروا اللاعب لكل مجال</p>
+
+        <div className="stage2-role-assignment-screen__grid">
+          {stage2RoleFields.map((field) => {
+            const availablePlayers = getPlayersForField(field.key, selection, players);
+            const selectedName = selection[field.key];
+
+            return (
+              <section key={field.key} className="stage2-role-field">
+                <h3 className="stage2-role-field__label">{field.label}</h3>
+                {availablePlayers.length === 0 ? (
+                  <p className="stage2-role-field__empty">لا يوجد لاعبون متاحون لهذا المجال</p>
+                ) : (
+                  <div className="stage2-role-field__players" role="listbox" aria-label={field.label}>
+                    {availablePlayers.map((player) => {
+                      const isSelected = selectedName === player.name;
+
+                      return (
+                        <button
+                          key={`${field.key}-${player.name}`}
+                          type="button"
+                          role="option"
+                          aria-selected={isSelected}
+                          className={cn(
+                            "stage2-role-player-chip",
+                            isSelected && "stage2-role-player-chip--selected",
+                            player.type === "substitute" && "stage2-role-player-chip--substitute",
+                          )}
+                          onClick={() => selectPlayer(field.key, player.name)}
+                        >
+                          <span className="stage2-role-player-chip__name">{player.name}</span>
+                          {player.type === "substitute" ? (
+                            <span className="stage2-role-player-chip__badge">بديل</span>
+                          ) : null}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+            );
+          })}
+        </div>
+
+        {players.length === 0 ? (
+          <p className="stage2-role-assignment-screen__notice">
+            لا توجد أسماء لاعبين متاحة لهذا الفريق.
+          </p>
+        ) : null}
+
+        {saveError ? (
+          <p className="stage2-role-assignment-screen__error">{saveError}</p>
+        ) : null}
+      </article>
+
       <CompetitionConfirmButton
         disabled={!allUniqueSelected || saving}
         onClick={saveRoles}

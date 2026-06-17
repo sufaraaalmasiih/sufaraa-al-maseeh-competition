@@ -1,11 +1,13 @@
 "use client";
 
 import { BookOpen } from "lucide-react";
+import { QuestionImage } from "@/components/competition/question-image";
 import { cn } from "@/lib/utils";
 
 interface QuestionPromptProps {
   children: React.ReactNode;
   reference?: string;
+  imageUrl?: string;
   className?: string;
   size?: "default" | "large" | "verse" | "hero" | "arena" | "arena-verse";
 }
@@ -13,6 +15,7 @@ interface QuestionPromptProps {
 export function QuestionPrompt({
   children,
   reference,
+  imageUrl,
   className,
   size = "default",
 }: QuestionPromptProps) {
@@ -56,6 +59,7 @@ export function QuestionPrompt({
           {reference}
         </p>
       ) : null}
+      <QuestionImage url={imageUrl} className="mt-4" />
     </div>
   );
 }

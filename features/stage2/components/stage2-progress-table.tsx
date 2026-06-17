@@ -27,7 +27,7 @@ export function Stage2ProgressTable() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {loading ? <LoadingState /> : null}
+        {loading ? <LoadingState variant="inline" /> : null}
         {error ? <ErrorState title="تعذر تحميل التقدم" description={error} /> : null}
         {!loading && !error && teams.length === 0 ? (
           <EmptyState title="لا توجد فرق مسجلة حتى الآن." />
@@ -41,7 +41,7 @@ export function Stage2ProgressTable() {
                   <th className="px-4 py-3 font-bold">المجال الحالي</th>
                   <th className="px-4 py-3 font-bold">رقم المجال</th>
                   <th className="px-4 py-3 font-bold">المتسابق</th>
-                  <th className="px-4 py-3 font-bold">سؤال التوصيل</th>
+                  <th className="px-4 py-3 font-bold">رقم السؤال</th>
                   <th className="px-4 py-3 font-bold">نقاط المرحلة الثانية</th>
                   <th className="px-4 py-3 font-bold">المجموع</th>
                   <th className="px-4 py-3 font-bold">الحالة</th>

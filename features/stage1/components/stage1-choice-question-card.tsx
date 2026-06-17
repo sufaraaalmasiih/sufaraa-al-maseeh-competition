@@ -1,6 +1,5 @@
 "use client";
 
-import { CompetitionAnswerSuccess } from "@/components/competition/competition-answer-success";
 import { CompetitionConfirmButton } from "@/components/competition/competition-confirm-button";
 import { QuizChoiceCard } from "@/components/competition/quiz-choice-card";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +15,7 @@ interface Stage1ChoiceQuestionCardProps {
   confirmed: boolean;
   saving: boolean;
   saveError: string | null;
+  interactionDisabled?: boolean;
   interactionOnly?: boolean;
   onSelectAnswer: (answer: string) => void;
   onConfirm: () => void;
@@ -29,6 +29,7 @@ export function Stage1ChoiceQuestionCard({
   confirmed,
   saving,
   saveError,
+  interactionDisabled = false,
   interactionOnly = false,
   onSelectAnswer,
   onConfirm,
@@ -39,7 +40,7 @@ export function Stage1ChoiceQuestionCard({
         {question.options.map((option, index) => (
           <QuizChoiceCard
             key={`${question.id}-${option}-${index}`}
-            disabled={confirmed || saving}
+            disabled={confirmed || saving || interactionDisabled}
             selected={selectedAnswer === option}
             onClick={() => onSelectAnswer(option)}
           >
@@ -48,20 +49,18 @@ export function Stage1ChoiceQuestionCard({
         ))}
       </div>
 
-      {confirmed ? (
-        <CompetitionAnswerSuccess />
-      ) : (
-        <>
-          {saveError ? (
-            <p className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-center text-sm font-bold text-destructive">
-              {saveError}
-            </p>
-          ) : null}
-          <CompetitionConfirmButton disabled={!selectedAnswer || saving} onClick={onConfirm}>
-            {saving ? "جاري الحفظ..." : "تأكيد الإجابة"}
-          </CompetitionConfirmButton>
-        </>
-      )}
+      {!confirmed && saveError ? (
+        <p className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-center text-sm font-bold text-destructive">
+          {saveError}
+        </p>
+      ) : null}
+      <CompetitionConfirmButton
+        confirmed={confirmed}
+        disabled={!selectedAnswer || saving || interactionDisabled}
+        onClick={onConfirm}
+      >
+        {saving ? "جاري الحفظ..." : "تأكيد الإجابة"}
+      </CompetitionConfirmButton>
     </div>
   );
 

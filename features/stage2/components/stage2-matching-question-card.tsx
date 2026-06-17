@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CompetitionAnswerSuccess } from "@/components/competition/competition-answer-success";
+import { ArrowLeft } from "lucide-react";
 import { CompetitionConfirmButton } from "@/components/competition/competition-confirm-button";
-import { MatchingCard } from "@/components/competition/matching-card";
+import { MatchingCard, type MatchingPairTone } from "@/components/competition/matching-card";
 import { QuestionPrompt } from "@/components/competition/question-prompt";
 import type { Stage2MatchingPairings } from "@/features/stage2/stage2-matching";
 import { seededShuffleStage1Parts } from "@/features/stage1/stage1-arrange";
@@ -20,8 +20,8 @@ interface Stage2MatchingQuestionCardProps {
   onConfirm: (pairings: Stage2MatchingPairings) => void;
 }
 
-function getPairTone(pairIndex: number): "blue" | "green" {
-  return pairIndex % 2 === 0 ? "blue" : "green";
+function getPairTone(pairIndex: number): MatchingPairTone {
+  return Math.min(pairIndex, 4) as MatchingPairTone;
 }
 
 export function Stage2MatchingQuestionCard({
@@ -137,9 +137,9 @@ export function Stage2MatchingQuestionCard({
   const isLocked = confirmed || disabled || saving;
 
   return (
-    <div className="space-y-4">
+    <div className="gameplay-matching-zone space-y-3">
       {hideQuestion ? null : (
-        <QuestionPrompt reference={question.reference} size="hero">
+        <QuestionPrompt reference={question.reference} imageUrl={question.imageUrl} size="hero">
           {question.prompt}
         </QuestionPrompt>
       )}
@@ -156,19 +156,20 @@ export function Stage2MatchingQuestionCard({
               <MatchingCard
                 key={`${question.id}-left-${pair.left}`}
                 disabled={isLocked}
-                pairTone={pairIndex !== null ? getPairTone(pairIndex) : "blue"}
+                pairTone={pairIndex !== null ? getPairTone(pairIndex) : 0}
                 paired={paired}
                 selected={isSelected}
-                className="flex items-center justify-between gap-2 text-right"
+                className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center"
                 onClick={() => {
                   if (pairedRight) handleUnpair(pair.left);
                   else handleLeftClick(pair.left);
                 }}
               >
-                <span className="min-w-0 flex-1 leading-snug">{pair.left}</span>
+                <span className="leading-snug">{pair.left}</span>
                 {pairedRight ? (
-                  <span className="shrink-0 rounded-lg bg-white/80 px-2 py-1 text-sm font-black text-[#4F8A10]">
-                    ✓ {pairedRight}
+                  <span className="matching-card-pair-link inline-flex shrink-0 items-center gap-1 rounded-lg bg-white/80 px-2 py-0.5 text-xs font-black sm:text-sm">
+                    <ArrowLeft className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} aria-hidden />
+                    <span>{pairedRight}</span>
                   </span>
                 ) : null}
               </MatchingCard>
@@ -187,9 +188,9 @@ export function Stage2MatchingQuestionCard({
               <MatchingCard
                 key={`${question.id}-right-${right}-${index}`}
                 disabled={isLocked}
-                pairTone={pairIndex !== null ? getPairTone(pairIndex) : "blue"}
+                pairTone={pairIndex !== null ? getPairTone(pairIndex) : 0}
                 paired={paired}
-                className="flex items-center justify-end text-right"
+                className="flex items-center justify-center text-center"
                 onClick={() => handleRightClick(right)}
               >
                 <span className="leading-snug">{right}</span>
@@ -199,27 +200,20 @@ export function Stage2MatchingQuestionCard({
         </div>
       </div>
 
-      {confirmed ? (
-        <CompetitionAnswerSuccess />
-      ) : (
-        <>
-          {saveError ? (
-            <p className="glass-card px-3 py-2 text-sm font-bold text-destructive">{saveError}</p>
-          ) : null}
-          {validationError ? (
-            <p className="glass-card px-3 py-2 text-sm font-bold text-destructive">
-              {validationError}
-            </p>
-          ) : null}
-          <CompetitionConfirmButton
-            className="mx-auto"
-            disabled={disabled || saving || !allPaired}
-            onClick={handleConfirm}
-          >
-            {saving ? "جاري الحفظ..." : "تأكيد التوصيل"}
-          </CompetitionConfirmButton>
-        </>
-      )}
+      {!confirmed && saveError ? (
+        <p className="glass-card px-3 py-2 text-sm font-bold text-destructive">{saveError}</p>
+      ) : null}
+      {!confirmed && validationError ? (
+        <p className="glass-card px-3 py-2 text-sm font-bold text-destructive">{validationError}</p>
+      ) : null}
+      <CompetitionConfirmButton
+        className="mx-auto"
+        confirmed={confirmed}
+        disabled={disabled || saving || !allPaired}
+        onClick={handleConfirm}
+      >
+        {saving ? "جاري الحفظ..." : "تأكيد التوصيل"}
+      </CompetitionConfirmButton>
     </div>
   );
 }

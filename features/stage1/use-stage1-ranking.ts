@@ -1,13 +1,12 @@
 "use client";
 
-import { onSnapshot } from "firebase/firestore";
-import { useEffect, useState } from "react";
-import { teamStatesCollectionRef } from "@/firebase/firestore";
+import { useMemo } from "react";
 import {
   rankStage1Teams,
   type RankedStage1Team,
   type Stage1RankingTeam,
 } from "@/features/stage1/stage1-ranking";
+import { useTeamStatesSnapshot } from "@/features/gameflow/team-states-store";
 
 function normalizeTeamState(
   id: string,
@@ -25,6 +24,9 @@ function normalizeTeamState(
     ready: data.ready === true,
     competitionIntroReady: readiness?.competitionIntro === true,
     stage1IntroReady: readiness?.stage1Intro === true,
+    stage2IntroReady: readiness?.stage2Intro === true,
+    stage3IntroReady: readiness?.stage3Intro === true,
+    stage4IntroReady: readiness?.stage4Intro === true,
     stage1Score: typeof stageScores?.stage1 === "number" ? stageScores.stage1 : 0,
     totalScore: typeof data.totalScore === "number" ? data.totalScore : 0,
     stage1QuestionIndex:
@@ -35,28 +37,15 @@ function normalizeTeamState(
 }
 
 export function useStage1Ranking() {
-  const [teams, setTeams] = useState<RankedStage1Team[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { docs, loading, error } = useTeamStatesSnapshot("main");
 
-  useEffect(() => {
-    return onSnapshot(
-      teamStatesCollectionRef("main"),
-      (snapshot) => {
-        setTeams(
-          rankStage1Teams(
-            snapshot.docs.map((item) => normalizeTeamState(item.id, item.data())),
-          ),
-        );
-        setError(null);
-        setLoading(false);
-      },
-      () => {
-        setError("تعذر تحميل ترتيب المرحلة الأولى.");
-        setLoading(false);
-      },
-    );
-  }, []);
+  const teams = useMemo(
+    () =>
+      rankStage1Teams(
+        docs.map((item) => normalizeTeamState(item.id, item.data)),
+      ),
+    [docs],
+  );
 
   return { teams, loading, error };
 }

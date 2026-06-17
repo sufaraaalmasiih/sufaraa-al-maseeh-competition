@@ -1,6 +1,7 @@
 "use client";
 
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
+import { AnimatedRankingRow } from "@/components/motion/animated-ranking-row";
 import type { Stage4RankedTeam } from "@/features/stage4/use-stage4-ranking";
 import { STAGE4_NAME } from "@/features/stage4/stage4-constants";
 import { cn } from "@/lib/utils";
@@ -11,6 +12,7 @@ interface Stage4RankingTableProps {
   error: string | null;
   variant?: "team" | "facilitator" | "audience";
   embedded?: boolean;
+  animate?: boolean;
 }
 
 export function Stage4RankingTable({
@@ -19,62 +21,80 @@ export function Stage4RankingTable({
   error,
   variant = "facilitator",
   embedded = false,
+  animate = false,
 }: Stage4RankingTableProps) {
   if (loading) {
-    return <LoadingState />;
+    return <LoadingState variant="page" />;
   }
 
   if (error) {
     return <ErrorState title="تعذر تحميل الترتيب" description={error} />;
   }
 
-  if (variant === "team") {
-    return (
-      <div className={cn("competition-ranking-panel", embedded ? "mt-0" : "mt-6")}>
+  if (variant === "team" || variant === "audience") {
+    const panel = (
+      <div
+        className={cn(
+          "competition-ranking-panel",
+          embedded && "competition-ranking-panel--embedded",
+          !embedded && "mt-6",
+        )}
+      >
         <div className="competition-ranking-panel__header">
-          <h3 className="competition-ranking-panel__title">ترتيب {STAGE4_NAME}</h3>
-          <p className="competition-ranking-panel__desc">حسب نقاط المرحلة الرابعة</p>
+          {!embedded ? (
+            <>
+              <p className="competition-ranking-panel__kicker">{STAGE4_NAME}</p>
+              <h3 className="competition-ranking-panel__title">ترتيب {STAGE4_NAME}</h3>
+              <p className="competition-ranking-panel__desc">
+                {variant === "audience"
+                  ? "عرض مباشر للجمهور — حسب نقاط المرحلة الرابعة"
+                  : "حسب نقاط المرحلة الرابعة"}
+              </p>
+            </>
+          ) : null}
         </div>
-        {teams.map((team, index) => {
-          const rank = index + 1;
-          return (
-            <div
-              key={team.teamId}
-              className={cn(
-                "competition-ranking-row",
-                rank === 1 && "competition-ranking-row--gold",
-                rank === 2 && "competition-ranking-row--silver",
-                rank === 3 && "competition-ranking-row--bronze",
-              )}
-            >
-              <span className="competition-ranking-row__rank">{rank}</span>
-              <div className="min-w-0 text-right">
-                <p className="truncate text-base font-black text-[#143A5A] sm:text-lg">
-                  {team.teamName}
-                </p>
-                <p className="text-xs font-semibold sm:text-sm" style={{ color: "rgba(20,58,90,0.55)" }}>
-                  المجموع: {team.totalScore} — التسلسل: {team.streak}
-                </p>
-              </div>
-              <p className="text-2xl font-black text-[#2388C4] sm:text-3xl">{team.stage4Score}</p>
-            </div>
-          );
-        })}
+        <div className="competition-ranking-scroll competition-ranking-scroll--cards">
+          {teams.map((team, index) => {
+            const rank = index + 1;
+            return (
+              <AnimatedRankingRow
+                key={team.teamId}
+                index={index}
+                animate={animate}
+                className={cn(
+                  "competition-ranking-row competition-ranking-row--card",
+                  rank === 1 && "competition-ranking-row--gold",
+                  rank === 2 && "competition-ranking-row--silver",
+                  rank === 3 && "competition-ranking-row--bronze",
+                )}
+              >
+                <span className="competition-ranking-row__rank">{rank}</span>
+                <div className="competition-ranking-row__team">
+                  <p className="competition-ranking-row__name">{team.teamName}</p>
+                  <p className="competition-ranking-row__meta">
+                    المجموع: {team.totalScore} — التسلسل: {team.streak}
+                  </p>
+                </div>
+                <div className="competition-ranking-row__score">
+                  <span className="competition-ranking-row__score-label">نقاط المرحلة</span>
+                  <span className="competition-ranking-row__score-value">{team.stage4Score}</span>
+                </div>
+              </AnimatedRankingRow>
+            );
+          })}
+        </div>
       </div>
     );
+
+    return panel;
   }
 
   return (
     <div className="glass-card-premium mt-6 overflow-hidden p-0">
       <div className="border-b px-5 py-4" style={{ borderBottomColor: "rgba(20,58,90,0.08)" }}>
         <h3 className="text-lg font-black text-[#143A5A]">ترتيب {STAGE4_NAME}</h3>
-        {variant === "audience" ? (
-          <p className="mt-1 text-sm font-semibold" style={{ color: "rgba(20,58,90,0.55)" }}>
-            عرض مباشر للجمهور
-          </p>
-        ) : null}
       </div>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto competition-ranking-scroll">
         <table className="w-full min-w-[640px] text-right text-sm">
           <thead className="bg-[#F3FAFF] text-[#143A5A]">
             <tr>

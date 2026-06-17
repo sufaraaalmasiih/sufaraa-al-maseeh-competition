@@ -9,7 +9,7 @@ import { finishStage, setGameFlowStatus } from "@/features/facilitator/facilitat
  * Headless watcher that auto-advances the timed phases of stages 1 and 2 when
  * their central timer expires, mirroring the stage-3 automation:
  * - stage1_running + stage1 timer ends → finish stage 1.
- * - stage2_reading + reading timer ends → move to the answering turns.
+ * - stage2_reading + reading timer ends → move to the answering turns (starts field timer).
  *
  * A paused timer never reports as expired, so this stays idle while paused.
  * The actions are status-targeted setDoc/updateDoc writes, so a repeated call

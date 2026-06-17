@@ -20,6 +20,22 @@ export const timerRef = doc(
   "timer",
 );
 
+export const competitionSessionRef = doc(
+  firestore,
+  "competitions",
+  "main",
+  "system",
+  "session",
+);
+
+export const audienceDisplayRef = doc(
+  firestore,
+  "competitions",
+  "main",
+  "system",
+  "audienceDisplay",
+);
+
 export const teamRef = (uid: string) => doc(firestore, "teams", uid);
 export const userRef = (uid: string) => doc(firestore, "users", uid);
 export const answersCollectionRef = (competitionId: string) =>
@@ -43,6 +59,10 @@ export function buildInitialTeamStateDocument(
     ready: false,
     readiness: {
       competitionIntro: false,
+      stage1Intro: false,
+      stage2Intro: false,
+      stage3Intro: false,
+      stage4Intro: false,
       stage1: false,
       stage2: false,
       stage3: false,

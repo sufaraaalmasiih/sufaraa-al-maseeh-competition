@@ -32,7 +32,7 @@ export function FacilitatorLiveResultsTable({
         </div>
       </div>
 
-      {loading ? <LoadingState /> : null}
+      {loading ? <LoadingState variant="inline" /> : null}
       {error ? <ErrorState title="تعذر تحميل النتائج" description={error} /> : null}
       {!loading && !error && teams.length === 0 ? (
         <EmptyState title="لا توجد فرق مسجلة حتى الآن." />

@@ -1,34 +1,35 @@
 "use client";
 
-import { TimerCountdown } from "@/features/gameflow/components/timer-countdown";
-import { useCompetitionTimer } from "@/features/gameflow/use-competition-timer";
+import { motion } from "framer-motion";
 import { Stage1RankingTable } from "@/features/stage1/components/stage1-ranking-table";
 import { useStage1Ranking } from "@/features/stage1/use-stage1-ranking";
 
 export function AudienceStage1Running() {
-  const { timer, remainingSeconds, isExpired } = useCompetitionTimer();
   const { teams, loading, error } = useStage1Ranking();
-  const hasStage1Timer = Boolean(timer?.active && timer.stage === "stage1");
 
   return (
-    <div className="space-y-6">
-      {hasStage1Timer ? (
-        <TimerCountdown
-          remainingSeconds={remainingSeconds}
-          isExpired={isExpired}
-          label="وقت المرحلة الأولى"
-        />
-      ) : (
-        <div className="rounded-lg border border-primary/10 bg-white px-5 py-4 text-center text-base font-bold text-[#143A5A] shadow-[0_10px_28px_rgba(20,58,90,0.06)]">
-          المرحلة الأولى قيد التنفيذ. لا يوجد مؤقت نشط حالياً.
-        </div>
-      )}
-      <Stage1RankingTable
-        teams={teams}
-        loading={loading}
-        error={error}
-        variant="audience"
-      />
-    </div>
+    <motion.div
+      className="gameplay-scene gameplay-scene--centered audience-live-scene"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.32 }}
+    >
+      <div className="gameplay-flow">
+        <section className="gameplay-board-card">
+          <header className="audience-live-panel__section-head">
+            <p className="audience-live-panel__eyebrow">الترتيب المباشر</p>
+            <h2 className="audience-live-panel__title">اجمعوا الكنوز</h2>
+          </header>
+          <Stage1RankingTable
+            teams={teams}
+            loading={loading}
+            error={error}
+            variant="audience"
+            hideHeader
+            animate
+          />
+        </section>
+      </div>
+    </motion.div>
   );
 }

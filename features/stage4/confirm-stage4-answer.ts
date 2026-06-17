@@ -10,6 +10,7 @@ import { buildStage4AnswerId } from "@/features/stage4/stage4-answer-id";
 import { buildStage4AnswerPayload } from "@/features/stage4/stage4-answer-payload";
 import type { ConfirmStage4AnswerResult } from "@/features/stage4/stage4-answer-types";
 import { validateStage4Answer } from "@/features/stage4/stage4-answer-validation";
+import { getAuthoritativeStage4Question } from "@/features/facilitator/question-bank-runtime-cache";
 import { getStage4MockQuestion } from "@/features/stage4/stage4-mock-questions";
 import { parseStage4QuestionMetadata } from "@/features/stage4/stage4-question-metadata";
 import { assertTeamStageUnlocked } from "@/features/facilitator/team-control-types";
@@ -18,6 +19,7 @@ import {
   computeStage4PointsForCorrect,
   resolveStage4StreakAfterAnswer,
 } from "@/features/stage4/stage4-scoring";
+import { assertCompetitionNotFrozen } from "@/lib/competition-guards";
 
 const MAIN_COMPETITION_ID = "main";
 
@@ -70,6 +72,7 @@ export async function confirmStage4Answer({
     }
 
     const gameFlow = gameFlowSnapshot.data();
+    assertCompetitionNotFrozen(gameFlow);
 
     if (gameFlow?.status !== "stage4_question_open") {
       throw new Error("Stage 4 is not accepting answers.");
@@ -128,7 +131,9 @@ export async function confirmStage4Answer({
       typeof teamState.totalScore === "number" ? teamState.totalScore : 0;
     const streakBefore = readStage4Streak(teamState);
 
-    const mockQuestion = getStage4MockQuestion(activeQuestion.id);
+    const mockQuestion =
+      getAuthoritativeStage4Question(activeQuestion.id) ??
+      getStage4MockQuestion(activeQuestion.id);
     const isCorrect = passed
       ? false
       : validateStage4Answer(mockQuestion ?? activeQuestion, answer);

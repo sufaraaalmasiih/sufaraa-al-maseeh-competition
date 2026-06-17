@@ -4,6 +4,7 @@ out
 dist
 .env*.local
 .vercel
+.netlify
 *.tsbuildinfo
 .npm-cache
 *.log

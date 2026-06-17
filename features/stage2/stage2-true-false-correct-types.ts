@@ -6,6 +6,7 @@ export interface Stage2TrueFalseCorrectQuestion {
   correctIsTrue: boolean;
   expectedCorrection?: string;
   reference: string;
+  imageUrl?: string;
 }
 
 export interface Stage2TrueFalseCorrectAnswer {

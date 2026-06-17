@@ -6,6 +6,7 @@ import { UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { stampCompetitionReauthEpoch } from "@/features/competition-session/competition-session-controls";
 import { registerTeam, TeamStateCreateError } from "@/firebase/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +45,7 @@ export function RegisterForm() {
       if (logoUploadFailed) {
         console.warn("Team registration continued without the optional logo.");
       }
+      await stampCompetitionReauthEpoch();
       router.push("/team");
     } catch (error) {
       setFormError(getRegistrationErrorMessage(error));
@@ -58,10 +60,11 @@ export function RegisterForm() {
       description="أنشئ حساب الفريق الأساسي للمشاركة في المسابقة."
       switchHref="/team-login"
       switchLabel="لديك حساب بالفعل؟ تسجيل الدخول"
+      variant="form-wide"
     >
-      <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+      <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
         <FieldError message={formError} />
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="responsive-grid-2">
           <FormField label="اسم الفريق" error={errors.teamName?.message}>
             <Input {...register("teamName")} />
           </FormField>
@@ -80,7 +83,7 @@ export function RegisterForm() {
           </FormField>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="responsive-grid-2">
           {playerFields.map(([name, label]) => (
             <FormField key={name} label={label} error={errors[name]?.message}>
               <Input {...register(name)} />
@@ -92,7 +95,7 @@ export function RegisterForm() {
           <Input type="file" accept="image/*" {...register("logo")} />
         </FormField>
 
-        <Button className="w-full" size="lg" disabled={isRegistering}>
+        <Button className="auth-form__submit" size="lg" disabled={isRegistering}>
           <UserPlus className="h-5 w-5" />
           {isRegistering ? "جاري إنشاء الفريق..." : "إنشاء الفريق"}
         </Button>

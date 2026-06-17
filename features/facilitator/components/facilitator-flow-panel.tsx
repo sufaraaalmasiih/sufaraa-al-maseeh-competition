@@ -6,6 +6,7 @@ import { ErrorState, LoadingState } from "@/components/layout/state-view";
 import { useCompetitionTimer } from "@/features/gameflow/use-competition-timer";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
 import { useStage1Ranking } from "@/features/stage1/use-stage1-ranking";
+import { isTeamReadyForReadiness } from "@/features/facilitator/facilitator-readiness";
 import {
   finishStage,
   setGameFlowStatus,
@@ -20,6 +21,7 @@ import {
   shouldShowPhaseCanvas,
 } from "@/features/facilitator/facilitator-stage-workspace";
 import { FacilitatorCommandDeck } from "@/features/facilitator/components/facilitator-command-deck";
+import { FacilitatorCompetitionFreeze } from "@/features/facilitator/components/facilitator-competition-freeze";
 import { FacilitatorPhaseCanvas } from "@/features/facilitator/components/facilitator-phase-canvas";
 import { FacilitatorScoreboard } from "@/features/facilitator/components/facilitator-scoreboard";
 import { FacilitatorSessionStartDialog } from "@/features/facilitator/components/facilitator-session-start-dialog";
@@ -35,6 +37,7 @@ export function FacilitatorFlowPanel() {
     stage3OwnerTeamId,
     stage4QuestionIndex,
     stage4QuestionCount,
+    competitionFrozen,
     loading,
     error,
   } = useGameFlow();
@@ -78,13 +81,11 @@ export function FacilitatorFlowPanel() {
   const stackScoreboard = status ? hasFacilitatorStageWorkspace(status) : false;
 
   const readyCount = useMemo(() => {
-    if (plan.readinessKey === "competitionIntro") {
-      return teams.filter((team) => team.competitionIntroReady).length;
+    if (!plan.readinessKey) {
+      return null;
     }
-    if (plan.readinessKey === "stage1Intro") {
-      return teams.filter((team) => team.stage1IntroReady).length;
-    }
-    return null;
+
+    return teams.filter((team) => isTeamReadyForReadiness(team, plan.readinessKey)).length;
   }, [plan.readinessKey, teams]);
 
   async function runAdvance(activePlan: FacilitatorPhasePlan) {
@@ -129,7 +130,7 @@ export function FacilitatorFlowPanel() {
   }
 
   if (loading) {
-    return <LoadingState waitingComponent="FacilitatorFlowPanel:useGameFlow" />;
+    return <LoadingState variant="page" waitingComponent="FacilitatorFlowPanel:useGameFlow" />;
   }
 
   if (error) {
@@ -161,6 +162,8 @@ export function FacilitatorFlowPanel() {
         totalTeams={teams.length}
         onAdvance={handleAdvance}
       />
+
+      <FacilitatorCompetitionFreeze frozen={competitionFrozen} />
 
       <div className={cn("flow-cockpit__grid", stackScoreboard && "flow-cockpit__grid--stacked")}>
         <section className="flow-cockpit__main">

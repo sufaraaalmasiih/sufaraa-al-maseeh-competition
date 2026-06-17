@@ -8,7 +8,8 @@ import {
   timerRef,
 } from "@/firebase/firestore";
 import { buildStage3AnswerId } from "@/features/stage3/stage3-answer-id";
-import { getStage3MockQuestion } from "@/features/stage3/stage3-mock-questions";
+import { evaluateStage1Answer } from "@/features/stage1/stage1-answer-validation";
+import { getStage3MockQuestionForScoring } from "@/features/stage3/stage3-mock-questions";
 import type { ConfirmStage3AnswerResult } from "@/features/stage3/stage3-answer-types";
 import { parseStage3QuestionMetadata } from "@/features/stage3/stage3-question-metadata";
 import { buildStage3AnswerPayload } from "@/features/stage3/stage3-answer-payload";
@@ -16,6 +17,10 @@ import {
   computeStage3PointsDelta,
   resolveStage3AnswerOutcome,
 } from "@/features/stage3/stage3-scoring";
+import {
+  assertAnsweringTimerOpen,
+  assertCompetitionNotFrozen,
+} from "@/lib/competition-guards";
 const MAIN_COMPETITION_ID = "main";
 
 interface ConfirmStage3AnswerInput {
@@ -49,6 +54,7 @@ export async function confirmStage3Answer({
     ]);
 
     const gameFlow = gameFlowSnapshot.data();
+    assertCompetitionNotFrozen(gameFlow);
 
     if (gameFlow?.status !== "stage3_question_open") {
       throw new Error("Stage 3 is not accepting answers.");
@@ -82,18 +88,18 @@ export async function confirmStage3Answer({
       throw new Error("Stage 3 answer window is not active.");
     }
 
-    const timerExpired =
-      typeof timer.endsAtMs === "number" && timer.endsAtMs <= Date.now();
-
-    if (timerExpired) {
-      throw new Error("Stage 3 answer timer expired.");
-    }
+    assertAnsweringTimerOpen(
+      timer,
+      "stage3",
+      "answering",
+      "Stage 3 answer timer expired.",
+    );
 
     if (timer.active !== true) {
       throw new Error("Stage 3 answer window is not active.");
     }
 
-    const mockQuestion = getStage3MockQuestion(activeQuestion.id);
+    const mockQuestion = getStage3MockQuestionForScoring(activeQuestion.id);
 
     if (!mockQuestion && !passed) {
       throw new Error("Question content not found.");
@@ -133,7 +139,11 @@ export async function confirmStage3Answer({
     const currentTotalScore =
       typeof teamState.totalScore === "number" ? teamState.totalScore : 0;
 
-    const isCorrect = passed ? false : answer === mockQuestion?.correctAnswer;
+    const isCorrect = passed
+      ? false
+      : mockQuestion
+        ? evaluateStage1Answer(mockQuestion, answer)
+        : false;
     const outcome = resolveStage3AnswerOutcome(passed, isCorrect);
     const pointsDelta = computeStage3PointsDelta(
       isOwner,

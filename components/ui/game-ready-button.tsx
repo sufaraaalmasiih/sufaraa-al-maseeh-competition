@@ -8,11 +8,12 @@ import { cn } from "@/lib/utils";
 
 interface GameReadyButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  forcePressed?: boolean;
   onSuccess?: () => void;
   successDuration?: number;
 }
 
-function SuccessParticles({
+export function SuccessParticles({
   buttonRef,
 }: {
   buttonRef: React.RefObject<HTMLButtonElement | null>;
@@ -50,10 +51,11 @@ function SuccessParticles({
   );
 }
 
-function GameReadyButton({
+export function GameReadyButton({
   children,
   className,
   disabled,
+  forcePressed = false,
   onClick,
   onSuccess,
   successDuration = 900,
@@ -62,9 +64,10 @@ function GameReadyButton({
 }: GameReadyButtonProps) {
   const [showParticles, setShowParticles] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const isPressed = forcePressed || showParticles;
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    if (disabled) {
+    if (disabled || forcePressed) {
       return;
     }
 
@@ -84,13 +87,9 @@ function GameReadyButton({
       <button
         ref={buttonRef}
         type={type}
-        disabled={disabled}
+        disabled={disabled || forcePressed}
         onClick={handleClick}
-        className={cn(
-          "game-ready-btn",
-          showParticles && "game-ready-btn--pressed",
-          className,
-        )}
+        className={cn("game-ready-btn", isPressed && "game-ready-btn--pressed", className)}
         {...props}
       >
         <span className="game-ready-btn__label">{children}</span>
@@ -98,5 +97,3 @@ function GameReadyButton({
     </>
   );
 }
-
-export { GameReadyButton };

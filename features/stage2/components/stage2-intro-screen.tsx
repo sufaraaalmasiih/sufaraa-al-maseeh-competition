@@ -1,29 +1,20 @@
-import { STAGE2_NAME } from "@/features/stage2/stage2-constants";
+"use client";
 
-const RULES = [
-  "قراءة المرجع لمدة 3 دقائق",
-  "أربعة مجالات يوزعها الفريق",
-  "كل إجابة صحيحة = 15 نقطة",
-  "لا يوجد خصم على الإجابات الخاطئة",
-];
+import { StageIntroContent } from "@/features/stage/components/stage-intro-content";
+import { useCompetitionContent } from "@/features/competition-content/competition-content-runtime";
 
-export function Stage2IntroScreen() {
+interface Stage2IntroScreenProps {
+  showTeamMeta?: boolean;
+}
+
+export function Stage2IntroScreen({ showTeamMeta = false }: Stage2IntroScreenProps) {
+  const content = useCompetitionContent();
+
   return (
-    <section className="competition-stage-intro-wrap">
-      <div className="competition-stage-intro-card">
-        <span className="competition-stage-screen__badge">{STAGE2_NAME}</span>
-        <h2 className="competition-stage-intro-card__title">جاهزون للتحدي؟</h2>
-        <p className="competition-stage-intro-card__lead">
-          اختبار الفهم والتركيز في نص من الكتاب المقدس
-        </p>
-        <ul className="competition-stage-rules">
-          {RULES.map((rule) => (
-            <li key={rule} className="competition-stage-rule">
-              {rule}
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
+    <StageIntroContent
+      stage="stage2"
+      showTeamMeta={showTeamMeta}
+      footer={<p className="stage1-intro-screen__hint">{content.stages.stage2.hint}</p>}
+    />
   );
 }

@@ -4,6 +4,9 @@ import type { GameFlowStatus } from "@/types";
 
 /** True when the flow tab renders a dedicated stage workspace (board, stage 4 panel, finished screens). */
 export function hasFacilitatorStageWorkspace(status: GameFlowStatus): boolean {
+  if (status === "stage2_player_turns") {
+    return true;
+  }
   if (isStage3Status(status) && status !== "stage3_intro") {
     return true;
   }

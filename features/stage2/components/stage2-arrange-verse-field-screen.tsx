@@ -4,15 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { ArenaLayout } from "@/components/competition/arena-layout";
 import { StepJourney } from "@/components/competition/step-journey";
 import { QuestionPrompt } from "@/components/competition/question-prompt";
+import { QuestionTransition } from "@/components/motion/question-transition";
 import { EmptyState } from "@/components/layout/empty-state";
 import { useCompetitionTimer } from "@/features/gameflow/use-competition-timer";
 import { Stage2ArrangeVerseQuestionCard } from "@/features/stage2/components/stage2-arrange-verse-question-card";
 import { confirmStage2ArrangeVerseAnswer } from "@/features/stage2/confirm-stage2-arrange-verse-answer";
-import { STAGE2_QUESTION_ADVANCE_MS } from "@/features/stage2/stage2-constants";
-import {
-  STAGE2_ARRANGE_VERSE_QUESTION_COUNT,
-  stage2ArrangeVerseMockQuestions,
-} from "@/features/stage2/stage2-arrange-verse-mock-questions";
+import { Stage2FieldWaitingScreen } from "@/features/stage2/components/stage2-field-waiting-screen";
+import { getActiveStage2ArrangeVerseQuestions } from "@/features/facilitator/question-bank-runtime-cache";
 
 interface Stage2ArrangeVerseFieldScreenProps {
   assignedPlayerName: string;
@@ -35,8 +33,10 @@ export function Stage2ArrangeVerseFieldScreen({
     timer?.active && timer.stage === "stage2" && timer.purpose === "answering",
   );
   const answeringClosed = Boolean(hasStage2AnsweringTimer && isExpired);
-  const currentQuestion = stage2ArrangeVerseMockQuestions[questionIndex];
-  const arrangeVerseComplete = questionIndex >= STAGE2_ARRANGE_VERSE_QUESTION_COUNT;
+  const arrangeVerseQuestions = getActiveStage2ArrangeVerseQuestions();
+  const questionCount = arrangeVerseQuestions.length;
+  const currentQuestion = arrangeVerseQuestions[questionIndex];
+  const arrangeVerseComplete = questionIndex >= questionCount;
 
   const shuffleSeed = useMemo(
     () => `${teamId ?? "team"}|${currentQuestion?.id ?? questionIndex}`,
@@ -48,12 +48,6 @@ export function Stage2ArrangeVerseFieldScreen({
     setConfirmed(false);
     setSaveError(null);
   }, [arrangeVerseQuestionIndex]);
-
-  function goToNextQuestion() {
-    setQuestionIndex((current) => current + 1);
-    setConfirmed(false);
-    setSaveError(null);
-  }
 
   async function handleConfirm(orderedFragments: string[]) {
     if (answeringClosed || confirmed || saving || !currentQuestion) {
@@ -70,7 +64,6 @@ export function Stage2ArrangeVerseFieldScreen({
       });
       setConfirmed(true);
       setSaving(false);
-      window.setTimeout(goToNextQuestion, STAGE2_QUESTION_ADVANCE_MS);
     } catch {
       setSaveError("تعذر حفظ الإجابة. تحقق من الاتصال وحاول مرة أخرى.");
       setSaving(false);
@@ -82,26 +75,21 @@ export function Stage2ArrangeVerseFieldScreen({
   }
 
   if (arrangeVerseComplete || !currentQuestion) {
-    return (
-      <div className="arena-scene items-center justify-center">
-        <p className="arena-question-text text-2xl sm:text-3xl">
-          انتهت أسئلة ترتيب الآيات، بانتظار توجيه الميسر
-        </p>
-      </div>
-    );
+    return <Stage2FieldWaitingScreen title="انتهت أسئلة ترتيب الآيات" />;
   }
 
   return (
-    <ArenaLayout
-      question={
-        <QuestionPrompt reference={currentQuestion.reference} size="arena">
+    <QuestionTransition questionKey={`stage2-arrange-q-${questionIndex}`}>
+      <ArenaLayout
+        question={
+        <QuestionPrompt reference={currentQuestion.reference} imageUrl={currentQuestion.imageUrl} size="arena">
           {currentQuestion.prompt}
         </QuestionPrompt>
       }
       progress={
         <StepJourney
           current={questionIndex + 1}
-          total={STAGE2_ARRANGE_VERSE_QUESTION_COUNT}
+          total={questionCount}
         />
       }
       board={
@@ -119,5 +107,6 @@ export function Stage2ArrangeVerseFieldScreen({
         />
       }
     />
+    </QuestionTransition>
   );
 }

@@ -3,11 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "set NEXT_TEST_WASM=1&& set NEXT_TEST_WASM_DIR=node_modules\\@next\\swc-wasm-nodejs&& set NEXT_SWC_CACHE_DIR=.next-swc-cache&& next dev",
+    "dev": "set NEXT_TEST_WASM=1&& set NEXT_TEST_WASM_DIR=node_modules\\@next\\swc-wasm-nodejs&& set NEXT_SWC_CACHE_DIR=.next-swc-cache&& next dev -p 3000",
+    "dev:clean": "node -e \"const fs=require('fs');['.next','.next-swc-cache'].forEach((d)=>fs.rmSync(d,{recursive:true,force:true}));\" && npm run dev",
     "build": "set NEXT_TEST_WASM=1&& set NEXT_TEST_WASM_DIR=node_modules\\@next\\swc-wasm-nodejs&& set NEXT_SWC_CACHE_DIR=.next-swc-cache&& next build",
+    "build:netlify": "next build",
     "start": "next start",
     "lint": "set NEXT_TEST_WASM=1&& set NEXT_TEST_WASM_DIR=node_modules\\@next\\swc-wasm-nodejs&& set NEXT_SWC_CACHE_DIR=.next-swc-cache&& next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "generate:questions-template": "npx --yes tsx scripts/build-professional-questions-template.ts && npx --yes tsx scripts/verify-question-type-alignment.ts",
+    "firebase:deploy": "firebase deploy --only firestore:rules,firestore:indexes,storage --project sufaraaalmasiih-53478",
+    "firebase:seed": "node scripts/seed-firestore-bootstrap.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -15,6 +22,7 @@
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-tabs": "^1.1.13",
     "class-variance-authority": "^0.7.1",
+    "cloudinary": "^2.10.0",
     "clsx": "^2.1.1",
     "firebase": "^12.6.0",
     "framer-motion": "^12.40.0",
@@ -30,6 +38,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@netlify/plugin-nextjs": "^5.15.11",
     "@next/swc-wasm-nodejs": "^15.5.18",
     "@types/node": "^22",
     "@types/react": "^19",
@@ -37,8 +46,11 @@
     "autoprefixer": "^10.4.20",
     "eslint": "^9",
     "eslint-config-next": "^15.0.0",
+    "exceljs": "^4.4.0",
+    "firebase-admin": "^14.0.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.9"
   }
 }

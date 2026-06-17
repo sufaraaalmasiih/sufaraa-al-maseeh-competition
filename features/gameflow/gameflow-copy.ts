@@ -1,57 +1,29 @@
 import type { GameFlowStatus } from "@/types";
+import { getCompetitionContent } from "@/features/competition-content/competition-content-runtime";
+import { DEFAULT_COMPETITION_CONTENT } from "@/features/competition-content/competition-content-defaults";
 
-export const gameFlowLabels: Record<GameFlowStatus, string> = {
-  waiting_players: "في انتظار الفرق",
-  competition_intro: "مقدمة المسابقة — شرح المراحل الأربع",
-  stage1_intro: "شرح المرحلة الأولى: اجمعوا الكنوز",
-  stage1_running: "مرحلة اجمعوا الكنوز قيد التنفيذ",
-  stage1_finished: "انتهت مرحلة اجمعوا الكنوز، بانتظار توجيه الميسر",
-  stage2_intro: "شرح مرحلة فتشوا الكتب",
-  stage2_role_assignment: "توزيع مجالات مرحلة فتشوا الكتب",
-  stage2_reading: "قراءة مرجع مرحلة فتشوا الكتب",
-  stage2_player_turns: "أسئلة مرحلة فتشوا الكتب",
-  stage2_finished: "انتهت مرحلة فتشوا الكتب، بانتظار توجيه الميسر",
-  stage3_intro: "شرح مرحلة على المحك",
-  stage3_board: "لوحة على المحك",
-  stage3_question_open: "سؤال على المحك — الإجابة",
-  stage3_answer_closed: "على المحك — تم إغلاق الإجابات",
-  stage3_reveal: "مرحلة على المحك — الإعلان",
-  stage3_results_done: "على المحك — انتهى العرض",
-  stage3_finished: "انتهت مرحلة على المحك، بانتظار توجيه الميسر",
-  stage4_intro: "شرح مرحلة اثبتوا بالحق",
-  stage4_waiting_question: "اثبتوا بالحق — بانتظار السؤال",
-  stage4_question_open: "اثبتوا بالحق — السؤال مفتوح",
-  stage4_answers_closed: "اثبتوا بالحق — تم إغلاق الإجابات",
-  stage4_reveal: "اثبتوا بالحق — الإعلان",
-  stage4_finished: "انتهت مرحلة اثبتوا بالحق",
-  final_results: "النتائج النهائية",
-  podium: "منصة الفائزين",
-};
+function createStatusLabelProxy(
+  pick: (status: GameFlowStatus) => string,
+): Record<GameFlowStatus, string> {
+  return new Proxy({} as Record<GameFlowStatus, string>, {
+    get(_target, prop) {
+      if (typeof prop !== "string") {
+        return undefined;
+      }
+      return pick(prop as GameFlowStatus);
+    },
+  });
+}
 
-export const audienceGameFlowLabels: Record<GameFlowStatus, string> = {
-  waiting_players: "ننتظر انضمام الفرق",
-  competition_intro: "أهلاً بكم في مسابقة سفراء المسيح — أربع مراحل كتابية",
-  stage1_intro: "شرح المرحلة الأولى: اجمعوا الكنوز",
-  stage1_running: "المرحلة الأولى قيد التنفيذ",
-  stage1_finished: "انتهت المرحلة الأولى",
-  stage2_intro: "فتشوا الكتب",
-  stage2_role_assignment: "الفرق توزع المجالات على المتسابقين",
-  stage2_reading: "الفرق تقرأ المرجع الكتابي",
-  stage2_player_turns: "أسئلة مرحلة فتشوا الكتب قيد التنفيذ",
-  stage2_finished: "انتهت مرحلة فتشوا الكتب",
-  stage3_intro: "شرح مرحلة على المحك",
-  stage3_board: "لوحة على المحك",
-  stage3_question_open: "سؤال على المحك — الإجابة",
-  stage3_answer_closed: "تم إغلاق الإجابات",
-  stage3_reveal: "مرحلة على المحك — الإعلان",
-  stage3_results_done: "انتهى عرض الإجابات",
-  stage3_finished: "انتهت مرحلة على المحك",
-  stage4_intro: "شرح مرحلة اثبتوا بالحق",
-  stage4_waiting_question: "اثبتوا بالحق — بانتظار السؤال",
-  stage4_question_open: "اثبتوا بالحق — السؤال مفتوح",
-  stage4_answers_closed: "اثبتوا بالحق — تم إغلاق الإجابات",
-  stage4_reveal: "اثبتوا بالحق — الإعلان",
-  stage4_finished: "انتهت مرحلة اثبتوا بالحق",
-  final_results: "النتائج النهائية",
-  podium: "منصة الفائزين",
-};
+/** يقرأ من Firestore عند التشغيل — مع افتراضي ثابت قبل المزامنة. */
+export const gameFlowLabels = createStatusLabelProxy(
+  (status) =>
+    getCompetitionContent().teamStatusLabels[status] ??
+    DEFAULT_COMPETITION_CONTENT.teamStatusLabels[status],
+);
+
+export const audienceGameFlowLabels = createStatusLabelProxy(
+  (status) =>
+    getCompetitionContent().audienceStatusLabels[status] ??
+    DEFAULT_COMPETITION_CONTENT.audienceStatusLabels[status],
+);

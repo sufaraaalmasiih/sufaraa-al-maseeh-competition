@@ -9,6 +9,10 @@ import {
 } from "@/firebase/firestore";
 import { evaluateStage1Answer } from "@/features/stage1/stage1-answer-validation";
 import { assertTeamStageUnlocked } from "@/features/facilitator/team-control-types";
+import {
+  assertAnsweringTimerOpen,
+  assertCompetitionNotFrozen,
+} from "@/lib/competition-guards";
 import type { Stage1MockQuestion } from "@/features/stage1/stage1-types";
 
 const MAIN_COMPETITION_ID = "main";
@@ -58,21 +62,20 @@ export async function confirmStage1Answer({
     ]);
 
     const gameFlow = gameFlowSnapshot.data();
+    assertCompetitionNotFrozen(gameFlow);
+
     if (gameFlow?.status !== "stage1_running") {
       throw new Error("Stage 1 is not accepting answers.");
     }
 
     if (timerSnapshot.exists()) {
       const timer = timerSnapshot.data();
-      const timerExpired =
-        timer.active === true &&
-        timer.stage === "stage1" &&
-        typeof timer.endsAtMs === "number" &&
-        timer.endsAtMs <= Date.now();
-
-      if (timerExpired) {
-        throw new Error("Stage 1 timer expired.");
-      }
+      assertAnsweringTimerOpen(
+        timer,
+        "stage1",
+        "answering",
+        "Stage 1 timer expired.",
+      );
     }
 
     if (answerSnapshot.exists() && answerSnapshot.data().confirmed === true) {

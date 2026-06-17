@@ -1,7 +1,5 @@
 "use client";
 
-import { TimerCountdown } from "@/features/gameflow/components/timer-countdown";
-import { useCompetitionTimer } from "@/features/gameflow/use-competition-timer";
 import { Stage3Board } from "@/features/stage3/components/stage3-board";
 import { Stage3SelectionTimeoutBanner } from "@/features/stage3/components/stage3-selection-timeout-banner";
 import type { Stage3SelectionTimeoutNotice } from "@/features/stage3/stage3-selection-timeout-notice";
@@ -19,37 +17,35 @@ export function Stage3AudienceBoardScreen({
   ownerTeamName,
   selectionTimeoutNotice,
 }: Stage3AudienceBoardScreenProps) {
-  const { timer, remainingSeconds, isExpired } = useCompetitionTimer();
-  const isSelectionTimer =
-    timer?.active && timer.stage === "stage3" && timer.purpose === "selection";
-
   return (
-    <div className="stage3-scene">
-      <Stage3SelectionTimeoutBanner notice={selectionTimeoutNotice} />
-      <div className="stage3-turn-banner stage3-turn-banner--wait">
-        <p className="stage3-turn-banner__kicker">على المحك</p>
-        <p className="stage3-turn-banner__title">لوحة العرض</p>
-        <p className="stage3-turn-banner__subtitle">
-          {ownerTeamName
-            ? `بانتظار اختيار فريق ${ownerTeamName}`
-            : "بانتظار تحديد فريق صاحب الدور"}
-        </p>
+    <div className="gameplay-scene gameplay-scene--centered stage3-scene stage3-scene--board">
+      <div className="gameplay-flow">
+        <Stage3SelectionTimeoutBanner notice={selectionTimeoutNotice} />
+
+        <section className="gameplay-board-card stage3-unified-card stage3-unified-card--glass stage3-board-unified">
+          <header className="stage3-board-hero">
+            <div className="stage3-turn-banner stage3-turn-banner--wait stage3-turn-banner--hero">
+              <p className="stage3-turn-banner__kicker">على المحك</p>
+              <p className="stage3-turn-banner__title">لوحة العرض</p>
+              <p className="stage3-turn-banner__subtitle">
+                {ownerTeamName
+                  ? `بانتظار اختيار فريق ${ownerTeamName}`
+                  : "بانتظار تحديد فريق صاحب الدور"}
+              </p>
+            </div>
+          </header>
+
+          <Stage3Board
+            embedded
+            featured
+            hideHeader
+            variant="audience"
+            openedQuestionIds={openedQuestionIds}
+            usedQuestionIds={usedQuestionIds}
+            ownerTeamName={ownerTeamName}
+          />
+        </section>
       </div>
-
-      {isSelectionTimer ? (
-        <TimerCountdown
-          remainingSeconds={remainingSeconds}
-          isExpired={isExpired}
-          label="وقت اختيار السؤال"
-        />
-      ) : null}
-
-      <Stage3Board        variant="audience"
-        openedQuestionIds={openedQuestionIds}
-        usedQuestionIds={usedQuestionIds}
-        ownerTeamName={ownerTeamName}
-      />
     </div>
   );
 }
-

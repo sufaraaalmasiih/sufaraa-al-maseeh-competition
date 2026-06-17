@@ -25,9 +25,17 @@ export function PuzzlePiece({
     <div
       draggable={draggable}
       className={cn("puzzle-piece", dragging && "puzzle-piece-dragging", className)}
-      onDragEnd={onDragEnd}
+      onDragEnd={(event) => {
+        event.currentTarget.style.removeProperty("transform");
+        event.currentTarget.style.removeProperty("opacity");
+        onDragEnd?.();
+      }}
       onDragOver={onDragOver}
-      onDragStart={onDragStart}
+      onDragStart={(event) => {
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.dropEffect = "move";
+        onDragStart?.();
+      }}
     >
       {children}
     </div>

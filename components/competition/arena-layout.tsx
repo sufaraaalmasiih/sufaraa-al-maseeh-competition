@@ -14,6 +14,7 @@ interface ArenaLayoutProps {
   questionNumber?: number;
   totalQuestions?: number;
   className?: string;
+  showUnifiedHeader?: boolean;
 }
 
 export function ArenaLayout({
@@ -25,11 +26,12 @@ export function ArenaLayout({
   questionNumber,
   totalQuestions,
   className,
+  showUnifiedHeader = false,
 }: ArenaLayoutProps) {
   return (
     <AuroraBackground className={cn("gameplay-scene gameplay-scene--centered", className)}>
       <div className="gameplay-flow aurora-content">
-        <GameplayHeaderCard />
+        {showUnifiedHeader ? <GameplayHeaderCard /> : null}
         <div className="gameplay-arena-core">
           <section className="gameplay-board-card">
             <GameplayQuestionMeta

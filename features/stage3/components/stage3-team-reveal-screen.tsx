@@ -1,6 +1,7 @@
 "use client";
 
 import { LoadingState } from "@/components/layout/state-view";
+import { RevealResultChip } from "@/components/motion/reveal-result-chip";
 import { Stage3RevealSummary } from "@/features/stage3/components/stage3-reveal-summary";
 import {
   formatStage3PointsDelta,
@@ -22,60 +23,66 @@ export function Stage3TeamRevealScreen({ question }: Stage3TeamRevealScreenProps
   const isSelectionTimeout = isStage3SelectionTimeoutQuestion(question);
 
   return (
-    <div className="stage3-scene">
-      <Stage3RevealSummary question={question} />
+    <div className="gameplay-scene gameplay-scene--centered stage3-scene stage3-scene--reveal">
+      <div className="gameplay-flow">
+        <section className="gameplay-board-card stage3-unified-card stage3-unified-card--glass">
+          <Stage3RevealSummary question={question} embedded />
 
-      <div className="stage3-answer-zone">
-        <p className="mb-4 text-center text-xl font-black text-[#143A5A]">نتيجتك</p>
-        {loading ? <LoadingState /> : null}
-        {!loading && !answerState?.confirmed ? (
-          <p className="rounded-xl border border-[#2388C4]/20 bg-[#E9F6FC]/60 px-4 py-4 text-center text-sm font-semibold text-[#143A5A]/75">
-            لم تُسجَّل إجابة مؤكدة — 0 نقطة
-          </p>
-        ) : null}
-        {!loading && answerState?.confirmed ? (
-          <div className={`grid gap-3 ${isSelectionTimeout ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
-            <ResultChip
-              label="إجابتك"
-              value={formatStage3RevealAnswerDisplay(
-                answerState.answer,
-                answerState.passed,
-                answerState.outcome,
-              )}
-            />
-            {!isSelectionTimeout ? (
-              <ResultChip label="الإجابة الصحيحة" value={mockQuestion?.correctAnswer ?? "—"} />
+          <div className="stage3-answer-zone">
+            <p className="mb-4 text-center text-xl font-black text-[#143A5A]">نتيجتك</p>
+            {loading ? <LoadingState variant="inline" /> : null}
+            {!loading && !answerState?.confirmed ? (
+              <p className="rounded-xl border border-white/60 bg-white/30 px-4 py-4 text-center text-sm font-semibold text-[#143A5A]/75 backdrop-blur-md">
+                لم تُسجَّل إجابة مؤكدة — 0 نقطة
+              </p>
             ) : null}
-            <ResultChip label="النتيجة" value={formatStage3RevealOutcome(answerState)} />
-            <ResultChip
-              label="النقاط"
-              value={formatStage3PointsDelta(answerState.pointsDelta)}
-              highlight
-            />
+            {!loading && answerState?.confirmed ? (
+              <div className={`stage3-reveal-chips__grid ${isSelectionTimeout ? "stage3-reveal-chips__grid--timeout" : ""}`}>
+                <RevealResultChip
+                  label="إجابتك"
+                  value={formatStage3RevealAnswerDisplay(
+                    answerState.answer,
+                    answerState.passed,
+                    answerState.outcome,
+                  )}
+                  index={0}
+                  className="stage3-facilitator-status-card text-center"
+                  labelClassName="text-xs font-bold text-[#143A5A]/60"
+                  valueClassName="mt-1 text-lg font-black text-[#143A5A]"
+                />
+                {!isSelectionTimeout ? (
+                  <RevealResultChip
+                    label="الإجابة الصحيحة"
+                    value={mockQuestion?.correctAnswer ?? "—"}
+                    index={1}
+                    className="stage3-facilitator-status-card text-center stage3-reveal-chip--correct"
+                    labelClassName="text-xs font-bold text-[#4F8A10]"
+                    valueClassName="mt-1 text-lg font-black text-[#4F8A10]"
+                  />
+                ) : null}
+                <RevealResultChip
+                  label="النتيجة"
+                  value={formatStage3RevealOutcome(answerState)}
+                  index={isSelectionTimeout ? 1 : 2}
+                  className="stage3-facilitator-status-card text-center"
+                  labelClassName="text-xs font-bold text-[#143A5A]/60"
+                  valueClassName="mt-1 text-lg font-black text-[#143A5A]"
+                />
+                <RevealResultChip
+                  label="النقاط"
+                  value={formatStage3PointsDelta(answerState.pointsDelta)}
+                  index={isSelectionTimeout ? 2 : 3}
+                  highlight
+                  className="stage3-facilitator-status-card text-center"
+                  labelClassName="text-xs font-bold text-[#143A5A]/60"
+                  valueClassName="mt-1 text-lg font-black text-[#143A5A]"
+                  highlightClassName="text-3xl text-[#2388C4]"
+                />
+              </div>
+            ) : null}
           </div>
-        ) : null}
+        </section>
       </div>
-    </div>
-  );
-}
-
-function ResultChip({
-  label,
-  value,
-  highlight = false,
-}: {
-  label: string;
-  value: string;
-  highlight?: boolean;
-}) {
-  return (
-    <div className="stage3-facilitator-status-card text-center">
-      <p className="text-xs font-bold text-[#143A5A]/60">{label}</p>
-      <p
-        className={`mt-1 font-black ${highlight ? "text-3xl text-[#2388C4]" : "text-lg text-[#143A5A]"}`}
-      >
-        {value}
-      </p>
     </div>
   );
 }

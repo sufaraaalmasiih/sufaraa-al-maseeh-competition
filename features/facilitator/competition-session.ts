@@ -2,7 +2,6 @@
 
 import {
   addDoc,
-  arrayUnion,
   collection,
   deleteDoc,
   doc,
@@ -10,6 +9,7 @@ import {
   onSnapshot,
   orderBy,
   query,
+  runTransaction,
   serverTimestamp,
   updateDoc,
   type Timestamp,
@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import { firestore, firebaseAuth } from "@/firebase/firebaseClient";
 import { gameFlowRef, MAIN_COMPETITION_ID } from "@/firebase/firestore";
 import type { FinalResultTeam } from "@/features/facilitator/use-final-results";
+import { subscribeFirestoreDoc } from "@/lib/firestore-listener";
 
 export interface ArchiveTeam {
   teamId: string;
@@ -60,6 +61,9 @@ export interface SessionEditLogEntry {
   teamId?: string | null;
   teamName?: string | null;
 }
+
+/** Firestore doc limit is 1 MiB; cap entries to avoid oversized history documents. */
+export const MAX_EDIT_LOG_ENTRIES = 150;
 
 export function buildSessionTitle(version: string, hostGovernorate: string): string {
   const versionLabel = version.trim() || "نسخة بدون عنوان";
@@ -215,6 +219,20 @@ export async function readActiveSessionId(): Promise<string | null> {
   return typeof value === "string" && value.length > 0 ? value : null;
 }
 
+function normalizeEditLogEntryForWrite(entry: Record<string, unknown>): Record<string, unknown> {
+  const createdAtMs =
+    typeof entry.createdAtMs === "number" && Number.isFinite(entry.createdAtMs)
+      ? entry.createdAtMs
+      : toMs(entry.createdAt);
+
+  const normalized: Record<string, unknown> = { ...entry };
+  delete normalized.createdAt;
+  if (createdAtMs > 0) {
+    normalized.createdAtMs = createdAtMs;
+  }
+  return normalized;
+}
+
 export async function appendSessionEditLog(
   sessionId: string,
   entry: Omit<SessionEditLogEntry, "id" | "createdAtMs" | "facilitatorUid" | "facilitatorName"> & {
@@ -223,7 +241,7 @@ export async function appendSessionEditLog(
   },
 ): Promise<void> {
   const createdAtMs = Date.now();
-  const storedEntry = {
+  const storedEntry = normalizeEditLogEntryForWrite({
     id: createEditLogEntryId(),
     action: entry.action,
     reason: entry.reason,
@@ -235,12 +253,25 @@ export async function appendSessionEditLog(
     teamId: entry.teamId ?? null,
     teamName: entry.teamName ?? null,
     createdAtMs,
-    createdAt: serverTimestamp(),
-  };
+  });
 
-  await updateDoc(historyDoc(sessionId), {
-    editLogEntries: arrayUnion(storedEntry),
-    lastModifiedAtMs: createdAtMs,
+  const ref = historyDoc(sessionId);
+  await runTransaction(firestore, async (transaction) => {
+    const snapshot = await transaction.get(ref);
+    if (!snapshot.exists()) {
+      throw new Error("جلسة السجل غير موجودة.");
+    }
+    const rawExisting = Array.isArray(snapshot.data()?.editLogEntries)
+      ? (snapshot.data()?.editLogEntries as Record<string, unknown>[])
+      : [];
+    const nextEntries = [
+      storedEntry,
+      ...rawExisting.map(normalizeEditLogEntryForWrite),
+    ].slice(0, MAX_EDIT_LOG_ENTRIES);
+    transaction.update(ref, {
+      editLogEntries: nextEntries,
+      lastModifiedAtMs: createdAtMs,
+    });
   });
 }
 
@@ -307,6 +338,11 @@ export async function saveSessionResults(
   mode: "manual" | "auto",
   reason = mode === "auto" ? "حفظ تلقائي عند انتهاء المسابقة" : "حفظ يدوي من تبويب النتائج",
 ): Promise<void> {
+  const snapshot = await getDoc(historyDoc(sessionId));
+  const beforeTeams = snapshot.exists()
+    ? parseTeams((snapshot.data() as Record<string, unknown>).teams)
+    : [];
+
   const snapshotTeams: ArchiveTeam[] = teams.map((team) => ({
     teamId: team.teamId,
     teamName: team.teamName,
@@ -330,6 +366,8 @@ export async function saveSessionResults(
   await appendSessionEditLog(sessionId, {
     action: "results_saved",
     reason,
+    beforeValue: beforeTeams,
+    afterValue: snapshotTeams,
     details: { mode, teamCount: snapshotTeams.length },
   });
 }
@@ -493,14 +531,25 @@ export function useSessionEditLog(sessionId: string | null) {
   return { entries, loading, error };
 }
 
+export function useActiveSessionEditLog() {
+  const sessionId = useActiveSessionId();
+  return useSessionEditLog(sessionId);
+}
+
 export function useActiveSessionId() {
   const [sessionId, setSessionId] = useState<string | null>(null);
 
   useEffect(() => {
-    return onSnapshot(gameFlowRef, (snapshot) => {
-      const value = snapshot.data()?.activeSessionId;
-      setSessionId(typeof value === "string" && value.length > 0 ? value : null);
-    });
+    return subscribeFirestoreDoc(
+      gameFlowRef,
+      (snapshot) => {
+        const value = snapshot.data()?.activeSessionId;
+        setSessionId(typeof value === "string" && value.length > 0 ? value : null);
+      },
+      () => {
+        setSessionId(null);
+      },
+    );
   }, []);
 
   return sessionId;

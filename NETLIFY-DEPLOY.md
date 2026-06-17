@@ -1,0 +1,117 @@
+# نشر على Netlify + GitHub (خاص)
+
+مستودع خاص للمسابقة — Firebase للبيانات فقط، Netlify للموقع، Cloudinary للشعارات.
+
+---
+
+## 1) إنشاء مستودع GitHub خاص
+
+من جهازك في مجلد المشروع:
+
+```powershell
+cd C:\Users\ASUS\Documents\Codex\2026-05-30\codex-master-prompt-v1-sufaraa-al
+
+git init
+git add .
+git commit -m "سفراء المسيح — نسخة المسابقة لـ Netlify"
+```
+
+على GitHub: **New repository** → اسم مثل `sufaraa-al-maseeh-competition` → **Private** → لا تضف README.
+
+```powershell
+git branch -M main
+git remote add origin https://github.com/YOUR_USER/sufaraa-al-maseeh-competition.git
+git push -u origin main
+```
+
+> **لا ترفع** `.env.local` — موجود في `.gitignore`.
+
+---
+
+## 2) ربط Netlify
+
+1. [app.netlify.com](https://app.netlify.com) → تسجيل بالبريد  
+2. **Add new site** → **Import an existing project** → **GitHub**  
+3. اختر المستودع **الخاص**  
+4. Netlify يقرأ `netlify.toml` تلقائياً:
+   - Build: `npm run build:netlify`
+   - Plugin: `@netlify/plugin-nextjs`
+
+---
+
+## 3) متغيرات البيئة في Netlify
+
+**Site settings** → **Environment variables** → **Add a variable** (لكل سطر):
+
+### Firebase (عام — `NEXT_PUBLIC_`)
+
+| Key | Value |
+|-----|-------|
+| `NEXT_PUBLIC_FIREBASE_API_KEY` | `AIzaSyCEjE9aNu2o0RFodEyjOeekodmzyGnrYnU` |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | `sufaraaalmasiih-53478.firebaseapp.com` |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | `sufaraaalmasiih-53478` |
+| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | `sufaraaalmasiih-53478.firebasestorage.app` |
+| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | `118820359157` |
+| `NEXT_PUBLIC_FIREBASE_APP_ID` | `1:118820359157:web:ded14cbe45cb2f5a5baebc` |
+
+### Cloudinary (سري — بدون `NEXT_PUBLIC_`)
+
+| Key | Value |
+|-----|-------|
+| `CLOUDINARY_CLOUD_NAME` | `dlugkeu8s` |
+| `CLOUDINARY_API_KEY` | `767352672477887` |
+| `CLOUDINARY_API_SECRET` | *(من لوحة Cloudinary — لا تضعه في GitHub)* |
+
+اضغط **Deploy** أو **Trigger deploy**.
+
+---
+
+## 4) بعد أول نشر — Firebase Auth
+
+1. [Firebase Console](https://console.firebase.google.com/project/sufaraaalmasiih-53478/authentication/settings)  
+2. **Authentication** → **Settings** → **Authorized domains**  
+3. أضف نطاق Netlify، مثلاً: `your-site-name.netlify.app`
+
+بدون هذه الخطوة تسجيل الدخول يفشل على الموقع المنشور.
+
+---
+
+## 5) تهيئة قاعدة البيانات (مرة واحدة)
+
+1. أنشئ حساب `super_admin` في Firebase (Auth + Firestore `users/{uid}`)  
+2. افتح `https://YOUR-SITE.netlify.app/facilitator-login`  
+3. **الإعدادات** → **تهيئة قاعدة البيانات**
+
+---
+
+## 6) قائمة تحقق يوم المسابقة
+
+- [ ] Netlify يبني بنجاح (Deploy log أخضر)  
+- [ ] Authorized domain مضاف في Firebase  
+- [ ] تهيئة DB تمت  
+- [ ] `/audience` يفتح بدون login  
+- [ ] تسجيل فريق + شعار (Cloudinary)  
+- [ ] قواعد Firestore منشورة: `npm run firebase:deploy`
+
+---
+
+## 7) تحديث الموقع لاحقاً
+
+```powershell
+git add .
+git commit -m "وصف التعديل"
+git push
+```
+
+Netlify يعيد النشر تلقائياً.
+
+---
+
+## استكشاف الأخطاء
+
+| المشكلة | الحل |
+|---------|------|
+| Build failed | راجع Deploy log؛ تأكد `NODE_VERSION=22` |
+| Auth لا يعمل | أضف `*.netlify.app` في Authorized domains |
+| الشعار لا يُرفع | تحقق من `CLOUDINARY_*` في Netlify env |
+| permission-denied | `npm run firebase:deploy` |

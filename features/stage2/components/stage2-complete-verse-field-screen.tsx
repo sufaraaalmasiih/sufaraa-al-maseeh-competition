@@ -4,15 +4,13 @@ import { useEffect, useState } from "react";
 import { ArenaLayout } from "@/components/competition/arena-layout";
 import { StepJourney } from "@/components/competition/step-journey";
 import { QuestionPrompt } from "@/components/competition/question-prompt";
+import { QuestionTransition } from "@/components/motion/question-transition";
 import { EmptyState } from "@/components/layout/empty-state";
 import { useCompetitionTimer } from "@/features/gameflow/use-competition-timer";
 import { Stage2CompleteVerseQuestionCard } from "@/features/stage2/components/stage2-complete-verse-question-card";
 import { confirmStage2CompleteVerseAnswer } from "@/features/stage2/confirm-stage2-complete-verse-answer";
-import { STAGE2_QUESTION_ADVANCE_MS } from "@/features/stage2/stage2-constants";
-import {
-  STAGE2_COMPLETE_VERSE_QUESTION_COUNT,
-  stage2CompleteVerseMockQuestions,
-} from "@/features/stage2/stage2-complete-verse-mock-questions";
+import { getActiveStage2CompleteVerseQuestions } from "@/features/facilitator/question-bank-runtime-cache";
+import { Stage2FieldWaitingScreen } from "@/features/stage2/components/stage2-field-waiting-screen";
 
 interface Stage2CompleteVerseFieldScreenProps {
   assignedPlayerName: string;
@@ -34,8 +32,10 @@ export function Stage2CompleteVerseFieldScreen({
     timer?.active && timer.stage === "stage2" && timer.purpose === "answering",
   );
   const answeringClosed = Boolean(hasStage2AnsweringTimer && isExpired);
-  const currentQuestion = stage2CompleteVerseMockQuestions[questionIndex];
-  const completeVerseComplete = questionIndex >= STAGE2_COMPLETE_VERSE_QUESTION_COUNT;
+  const completeVerseQuestions = getActiveStage2CompleteVerseQuestions();
+  const questionCount = completeVerseQuestions.length;
+  const currentQuestion = completeVerseQuestions[questionIndex];
+  const completeVerseComplete = questionIndex >= questionCount;
 
   useEffect(() => {
     setQuestionIndex(completeVerseQuestionIndex);
@@ -49,13 +49,6 @@ export function Stage2CompleteVerseFieldScreen({
     setConfirmed(false);
     setSaveError(null);
   }, [questionIndex]);
-
-  function goToNextQuestion() {
-    setQuestionIndex((current) => current + 1);
-    setAnswerText("");
-    setConfirmed(false);
-    setSaveError(null);
-  }
 
   async function confirmCompleteVerseAnswer() {
     if (
@@ -78,7 +71,6 @@ export function Stage2CompleteVerseFieldScreen({
       });
       setConfirmed(true);
       setSaving(false);
-      window.setTimeout(goToNextQuestion, STAGE2_QUESTION_ADVANCE_MS);
     } catch {
       setSaveError("تعذر حفظ الإجابة. تحقق من الاتصال وحاول مرة أخرى.");
       setSaving(false);
@@ -90,26 +82,21 @@ export function Stage2CompleteVerseFieldScreen({
   }
 
   if (completeVerseComplete || !currentQuestion) {
-    return (
-      <div className="arena-scene items-center justify-center">
-        <p className="arena-question-text text-2xl sm:text-3xl">
-          انتهت أسئلة إكمال الآيات، بانتظار توجيه الميسر
-        </p>
-      </div>
-    );
+    return <Stage2FieldWaitingScreen title="انتهت أسئلة إكمال الآيات" />;
   }
 
   return (
-    <ArenaLayout
-      question={
-        <QuestionPrompt reference={currentQuestion.reference} size="arena-verse">
+    <QuestionTransition questionKey={`stage2-complete-q-${questionIndex}`}>
+      <ArenaLayout
+        question={
+        <QuestionPrompt reference={currentQuestion.reference} imageUrl={currentQuestion.imageUrl} size="arena-verse">
           {currentQuestion.verseWithBlank}
         </QuestionPrompt>
       }
       progress={
         <StepJourney
           current={questionIndex + 1}
-          total={STAGE2_COMPLETE_VERSE_QUESTION_COUNT}
+          total={questionCount}
         />
       }
       board={
@@ -128,5 +115,6 @@ export function Stage2CompleteVerseFieldScreen({
         />
       }
     />
+    </QuestionTransition>
   );
 }

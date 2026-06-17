@@ -4,16 +4,14 @@ import { useEffect, useState } from "react";
 import { ArenaLayout } from "@/components/competition/arena-layout";
 import { StepJourney } from "@/components/competition/step-journey";
 import { QuestionPrompt } from "@/components/competition/question-prompt";
+import { QuestionTransition } from "@/components/motion/question-transition";
 import { EmptyState } from "@/components/layout/empty-state";
 import { useCompetitionTimer } from "@/features/gameflow/use-competition-timer";
 import { Stage2MatchingQuestionCard } from "@/features/stage2/components/stage2-matching-question-card";
 import { confirmStage2MatchingAnswer } from "@/features/stage2/confirm-stage2-matching-answer";
-import { STAGE2_QUESTION_ADVANCE_MS } from "@/features/stage2/stage2-constants";
 import type { Stage2MatchingPairings } from "@/features/stage2/stage2-matching";
-import {
-  STAGE2_MATCHING_QUESTION_COUNT,
-  stage2MatchingMockQuestions,
-} from "@/features/stage2/stage2-matching-mock-questions";
+import { getActiveStage2MatchingQuestions } from "@/features/facilitator/question-bank-runtime-cache";
+import { Stage2FieldWaitingScreen } from "@/features/stage2/components/stage2-field-waiting-screen";
 
 interface Stage2MatchingFieldScreenProps {
   assignedPlayerName: string;
@@ -34,20 +32,16 @@ export function Stage2MatchingFieldScreen({
     timer?.active && timer.stage === "stage2" && timer.purpose === "answering",
   );
   const answeringClosed = Boolean(hasStage2AnsweringTimer && isExpired);
-  const currentQuestion = stage2MatchingMockQuestions[questionIndex];
-  const matchingComplete = questionIndex >= STAGE2_MATCHING_QUESTION_COUNT;
+  const matchingQuestions = getActiveStage2MatchingQuestions();
+  const questionCount = matchingQuestions.length;
+  const currentQuestion = matchingQuestions[questionIndex];
+  const matchingComplete = questionIndex >= questionCount;
 
   useEffect(() => {
     setQuestionIndex(matchingQuestionIndex);
     setConfirmed(false);
     setSaveError(null);
   }, [matchingQuestionIndex]);
-
-  function goToNextQuestion() {
-    setQuestionIndex((current) => current + 1);
-    setConfirmed(false);
-    setSaveError(null);
-  }
 
   async function handleConfirm(pairings: Stage2MatchingPairings) {
     if (answeringClosed || confirmed || saving || !currentQuestion) {
@@ -64,7 +58,6 @@ export function Stage2MatchingFieldScreen({
       });
       setConfirmed(true);
       setSaving(false);
-      window.setTimeout(goToNextQuestion, STAGE2_QUESTION_ADVANCE_MS);
     } catch {
       setSaveError("تعذر حفظ الإجابة. تحقق من الاتصال وحاول مرة أخرى.");
       setSaving(false);
@@ -76,24 +69,19 @@ export function Stage2MatchingFieldScreen({
   }
 
   if (matchingComplete || !currentQuestion) {
-    return (
-      <div className="arena-scene items-center justify-center">
-        <p className="arena-question-text text-2xl sm:text-3xl">
-          تم التوصيل، بانتظار توجيه الميسر
-        </p>
-      </div>
-    );
+    return <Stage2FieldWaitingScreen title="تم التوصيل" />;
   }
 
   return (
-    <ArenaLayout
-      question={
-        <QuestionPrompt reference={currentQuestion.reference} size="arena">
+    <QuestionTransition questionKey={`stage2-matching-q-${questionIndex}`}>
+      <ArenaLayout
+        question={
+        <QuestionPrompt reference={currentQuestion.reference} imageUrl={currentQuestion.imageUrl} size="arena">
           {currentQuestion.prompt}
         </QuestionPrompt>
       }
       progress={
-        <StepJourney current={questionIndex + 1} total={STAGE2_MATCHING_QUESTION_COUNT} />
+        <StepJourney current={questionIndex + 1} total={questionCount} />
       }
       board={
         <Stage2MatchingQuestionCard
@@ -109,5 +97,6 @@ export function Stage2MatchingFieldScreen({
         />
       }
     />
+    </QuestionTransition>
   );
 }

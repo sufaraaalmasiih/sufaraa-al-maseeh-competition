@@ -1,5 +1,7 @@
+"use client";
+
 import { BrandLogoMark } from "@/components/competition/brand-logo-mark";
-import { COMPETITION_INTRO_SUMMARY } from "@/features/gameflow/competition-intro-copy";
+import { useCompetitionContent } from "@/features/competition-content/competition-content-runtime";
 import { cn } from "@/lib/utils";
 
 interface AppHeaderProps {
@@ -9,6 +11,7 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ title, variant = "brand" }: AppHeaderProps) {
+  const content = useCompetitionContent();
   const isGradient = variant === "gradient";
 
   return (
@@ -21,8 +24,8 @@ export function AppHeader({ title, variant = "brand" }: AppHeaderProps) {
       <div className="app-brand-header__identity">
         <BrandLogoMark className="app-brand-header__logo" size="lg" />
         <div className="app-brand-header__copy">
-          <h1 className="app-brand-header__name">{COMPETITION_INTRO_SUMMARY.title}</h1>
-          <p className="app-brand-header__slogan">{COMPETITION_INTRO_SUMMARY.slogan}</p>
+          <h1 className="app-brand-header__name">{content.brand.title}</h1>
+          <p className="app-brand-header__slogan">{content.brand.slogan}</p>
         </div>
       </div>
 

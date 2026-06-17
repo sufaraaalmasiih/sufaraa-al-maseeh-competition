@@ -1,39 +1,58 @@
 "use client";
 
 import { BrandLogoMark } from "@/components/competition/brand-logo-mark";
-import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
+import { GameplayHeaderMeta } from "@/components/competition/gameplay-header-meta";
+import { GameplayHeaderTimer } from "@/components/competition/gameplay-header-timer";
 import { getCompetitionStageLabel } from "@/features/team/competition-stage-labels";
 import { useTeamCompetitionContext } from "@/features/team/use-team-competition-context";
+import { useGameplayHeaderTimer } from "@/features/gameflow/use-gameplay-header-timer";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
+import { cn } from "@/lib/utils";
 
 export function GameplayHeaderCard() {
   const { status } = useGameFlow();
   const { teamName, logoUrl, totalScore, loading } = useTeamCompetitionContext();
   const stageLabel = getCompetitionStageLabel(status);
+  const headerTimer = useGameplayHeaderTimer(status);
 
   return (
-    <header className="gameplay-unified-header">
-      <div className="gameplay-header-identity">
-        <BrandLogoMark className="gameplay-unified-competition-logo" size="lg" />
-        <div className="gameplay-unified-brand">
-          <p className="gameplay-unified-title">سفراء المسيح</p>
-          <p className="gameplay-unified-slogan">نحيا بالكلمة... ونشهد للحق</p>
+    <header
+      className={cn(
+        "gameplay-unified-header",
+        headerTimer && "gameplay-unified-header--has-timer",
+      )}
+    >
+      <div className="gameplay-unified-header__side gameplay-unified-header__side--start">
+        <div className="gameplay-header-identity">
+          <BrandLogoMark className="gameplay-unified-competition-logo" size="lg" />
+          <div className="gameplay-unified-brand">
+            <p className="gameplay-unified-title">سفراء المسيح</p>
+            <p className="gameplay-unified-slogan">نحيا بالكلمة... ونشهد للحق</p>
+          </div>
         </div>
       </div>
 
-      <div className="gameplay-header-meta">
-        <TeamLogoBadge
-          className="gameplay-unified-team-logo"
+      <div className="gameplay-unified-header__center">
+        {headerTimer ? (
+          <GameplayHeaderTimer
+            label={headerTimer.label}
+            remainingSeconds={headerTimer.remainingSeconds}
+            durationSeconds={headerTimer.durationSeconds}
+            isExpired={headerTimer.isExpired}
+            paused={headerTimer.paused}
+          />
+        ) : (
+          <p className="gameplay-unified-stage gameplay-unified-stage--center">{stageLabel}</p>
+        )}
+      </div>
+
+      <div className="gameplay-unified-header__side gameplay-unified-header__side--end">
+        <GameplayHeaderMeta
+          teamName={teamName}
           logoUrl={logoUrl}
-          teamName={loading ? "فريق" : teamName}
-          variant="header"
+          totalScore={totalScore}
+          loading={loading}
         />
-        <p className="gameplay-unified-team-name">{loading ? "..." : teamName}</p>
-        <p className="gameplay-unified-stage">{stageLabel}</p>
-        <p className="gameplay-unified-score">
-          <span aria-hidden>⭐ </span>
-          {loading ? "—" : totalScore} نقطة
-        </p>
       </div>
     </header>
   );

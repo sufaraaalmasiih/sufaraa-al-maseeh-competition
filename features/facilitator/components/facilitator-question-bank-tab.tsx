@@ -1,127 +1,304 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { FileSpreadsheet, Plus, Save, Trash2, Upload } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  AlertTriangle,
+  Archive,
+  CheckCircle2,
+  Download,
+  FileSpreadsheet,
+  Pencil,
+  Trash2,
+  Upload,
+} from "lucide-react";
 import { LoadingState } from "@/components/layout/state-view";
 import {
-  parseStage1RowsToQuestions,
-  saveStage1Bank,
-  useStage1BankEditor,
-} from "@/features/facilitator/stage1-question-bank-store";
+  downloadQuestionBankTemplate,
+  parseQuestionBankWorkbookFile,
+} from "@/features/facilitator/question-bank-excel-import";
+import { assertQuestionBankImportAllowed, isQuestionBankImportAllowedStatus } from "@/features/facilitator/question-bank-lock";
+import { downloadValidationReport } from "@/features/facilitator/question-bank-report-export";
 import {
-  getStage1QuestionTypeLabel,
-  type Stage1MockQuestion,
-  type Stage1QuestionType,
-} from "@/features/stage1/stage1-types";
+  backupCurrentQuestionBank,
+  createQuestionBankArchive,
+  deleteQuestionBankArchive,
+  loadQuestionBankArchive,
+  saveFullQuestionBank,
+  subscribeQuestionBankArchives,
+  updateQuestionBankArchiveMeta,
+} from "@/features/facilitator/question-bank-store";
+import { useQuestionBankRuntimeSync } from "@/features/facilitator/question-bank-runtime";
+import type { FullQuestionBankPayload, QuestionBankArchiveRecord } from "@/features/facilitator/question-bank-types";
+import { useStage1BankEditor } from "@/features/facilitator/stage1-question-bank-store";
+import type { WorkbookValidationReport } from "@/features/facilitator/question-bank-workbook-validation";
+import { useGameFlow } from "@/features/gameflow/use-game-flow";
 
-const TYPE_OPTIONS: Stage1QuestionType[] = [
-  "missing",
-  "fill_blank",
-  "multiple_choice",
-  "arrange",
-];
+const EMPTY_BANK_PAYLOAD: FullQuestionBankPayload = {
+  stage1: [],
+  stage2: { matching: [], arrangeVerse: [], completeVerse: [], trueFalseCorrect: [] },
+  stage3: {},
+  stage4: [],
+  meta: {
+    bankSizes: { stage1: 0, stage2: 0, stage3: 0, stage4: 0 },
+    stage2ReadingReference: "",
+    stage2ReadingPassage: "",
+  },
+};
 
-function emptyQuestion(index: number): Stage1MockQuestion {
-  return {
-    id: `stage1-q-${Date.now()}-${index}`,
-    type: "missing",
-    prompt: "",
-    correctAnswer: "",
-  };
+function ImportReportPanel({
+  report,
+  onDownloadReport,
+}: {
+  report: WorkbookValidationReport;
+  onDownloadReport: () => void;
+}) {
+  return (
+    <div className="facilitator-card facilitator-import-report">
+      <div className="facilitator-card__head">
+        {report.valid ? (
+          <CheckCircle2 className="h-5 w-5 text-[#4F8A10]" aria-hidden />
+        ) : (
+          <AlertTriangle className="h-5 w-5 text-destructive" aria-hidden />
+        )}
+        <div className="flex-1">
+          <h3 className="facilitator-card__title">
+            {report.valid ? "تقرير الفحص — الملف صالح" : "تقرير الفحص — يوجد أخطاء"}
+          </h3>
+          <p className="facilitator-card__desc">
+            {report.valid
+              ? `تم فحص ${report.totalRows} صفاً — ${report.totalValidQuestions} سؤالاً صالحاً.`
+              : `تم فحص ${report.totalRows} صفاً — وُجد ${report.errors.length} خطأ. صحّح الملف وأعد الاستيراد.`}
+          </p>
+        </div>
+        <button
+          type="button"
+          className="facilitator-btn facilitator-btn--outline"
+          onClick={onDownloadReport}
+        >
+          <Download className="h-4 w-4" aria-hidden />
+          تنزيل التقرير
+        </button>
+      </div>
+
+      <div className="facilitator-import-report__grid">
+        {report.stages.map((stage) => (
+          <div key={stage.stage} className="facilitator-import-report__stage">
+            <p className="facilitator-import-report__stage-title">
+              {stage.stageLabel}
+              <span className="facilitator-import-report__count">{stage.totalQuestions} سؤال</span>
+            </p>
+            {stage.types.length > 0 ? (
+              <ul className="facilitator-import-report__types">
+                {stage.types.map((entry) => (
+                  <li key={`${stage.stage}-${entry.typeLabel}`}>
+                    <span>{entry.typeLabel}</span>
+                    <span>{entry.count}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="facilitator-import-report__empty">لا أسئلة في هذه المرحلة</p>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {report.warnings.length > 0 ? (
+        <div className="facilitator-import-report__warnings">
+          <p className="facilitator-import-report__warnings-title">
+            تحذيرات ({report.warnings.length}) — الملف مقبول لكن يُفضّل المراجعة
+          </p>
+          <ul>
+            {report.warnings.map((warning, index) => (
+              <li key={`${warning.row}-${warning.field}-${index}`}>
+                <strong>صف {warning.row}</strong>
+                {warning.id !== "—" ? ` · ${warning.id}` : ""}
+                <span>
+                  [{warning.field}] {warning.message}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {!report.valid && report.errors.length > 0 ? (
+        <div className="facilitator-import-report__errors">
+          <p className="facilitator-import-report__errors-title">تفاصيل الأخطاء</p>
+          <ul>
+            {report.errors.map((error, index) => (
+              <li key={`${error.row}-${error.field}-${index}`}>
+                <strong>صف {error.row}</strong>
+                {error.id !== "—" ? ` · ${error.id}` : ""}
+                {error.stage !== "—" ? ` · ${error.stage}` : ""}
+                <span>
+                  [{error.field}] {error.message}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {report.previewSamples.length > 0 ? (
+        <div className="facilitator-import-report__preview">
+          <p className="facilitator-import-report__preview-title">معاينة عينات</p>
+          <ul>
+            {report.previewSamples.map((sample) => (
+              <li key={`${sample.stage}-${sample.id}`}>
+                <strong>
+                  {sample.stageLabel} · {sample.typeLabel} · {sample.id}
+                </strong>
+                <span>{sample.promptPreview}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
-function listToText(list: string[] | undefined): string {
-  return (list ?? []).join("\n");
-}
+function ArchiveRow({
+  archive,
+  busy,
+  onLoad,
+  onDelete,
+  onSaveMeta,
+}: {
+  archive: QuestionBankArchiveRecord;
+  busy: boolean;
+  onLoad: (id: string) => void;
+  onDelete: (id: string) => void;
+  onSaveMeta: (id: string, name: string, governorate: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(archive.name);
+  const [governorate, setGovernorate] = useState(archive.governorate);
 
-function textToList(text: string): string[] {
-  return text
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
+  useEffect(() => {
+    setName(archive.name);
+    setGovernorate(archive.governorate);
+  }, [archive.name, archive.governorate]);
+
+  return (
+    <div className="facilitator-archive__item">
+      <div className="facilitator-archive__meta">
+        {editing ? (
+          <div className="facilitator-archive__edit">
+            <input
+              type="text"
+              className="facilitator-archive__input"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="اسم الأرشيف"
+            />
+            <input
+              type="text"
+              className="facilitator-archive__input"
+              value={governorate}
+              onChange={(event) => setGovernorate(event.target.value)}
+              placeholder="المحافظة"
+            />
+          </div>
+        ) : (
+          <>
+            <p className="facilitator-archive__name">{archive.name}</p>
+            <p className="facilitator-archive__sub">
+              {archive.governorate ? `محافظة ${archive.governorate} · ` : ""}
+              {archive.sourceFileName} · {archive.counts.total} سؤال
+              {" · م1:"}
+              {archive.counts.stage1} م2:{archive.counts.stage2} م3:{archive.counts.stage3} م4:
+              {archive.counts.stage4}
+            </p>
+          </>
+        )}
+      </div>
+      <div className="facilitator-archive__actions">
+        {editing ? (
+          <>
+            <button
+              type="button"
+              className="facilitator-btn facilitator-btn--primary"
+              disabled={busy}
+              onClick={() => {
+                onSaveMeta(archive.id, name, governorate);
+                setEditing(false);
+              }}
+            >
+              حفظ
+            </button>
+            <button
+              type="button"
+              className="facilitator-btn facilitator-btn--outline"
+              disabled={busy}
+              onClick={() => {
+                setName(archive.name);
+                setGovernorate(archive.governorate);
+                setEditing(false);
+              }}
+            >
+              إلغاء
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              className="facilitator-btn facilitator-btn--primary"
+              disabled={busy}
+              onClick={() => onLoad(archive.id)}
+            >
+              تحميل
+            </button>
+            <button
+              type="button"
+              className="facilitator-btn facilitator-btn--outline"
+              disabled={busy}
+              onClick={() => setEditing(true)}
+            >
+              <Pencil className="h-4 w-4" aria-hidden />
+              تعديل
+            </button>
+            <button
+              type="button"
+              className="facilitator-btn facilitator-btn--danger"
+              disabled={busy}
+              onClick={() => onDelete(archive.id)}
+            >
+              <Trash2 className="h-4 w-4" aria-hidden />
+              حذف
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function FacilitatorQuestionBankTab() {
-  const { questions, loading, error } = useStage1BankEditor();
-  const [draft, setDraft] = useState<Stage1MockQuestion[]>([]);
-  const [dirty, setDirty] = useState(false);
-  const [saving, setSaving] = useState(false);
+  useQuestionBankRuntimeSync();
+  const { status } = useGameFlow();
+  const { questions, loading } = useStage1BankEditor();
   const [feedback, setFeedback] = useState<
     { kind: "success" | "error"; text: string } | null
   >(null);
+  const [downloadingTemplate, setDownloadingTemplate] = useState(false);
+  const [importReport, setImportReport] = useState<WorkbookValidationReport | null>(null);
+  const [lastImportFileName, setLastImportFileName] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [archives, setArchives] = useState<QuestionBankArchiveRecord[]>([]);
+  const [archiveBusy, setArchiveBusy] = useState(false);
+  const [archiveName, setArchiveName] = useState("");
+  const [governorate, setGovernorate] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => {
-    if (!dirty && questions) {
-      setDraft(questions);
-    }
-  }, [questions, dirty]);
-
+  const importAllowed = isQuestionBankImportAllowedStatus(status);
   const usingFirestore = (questions?.length ?? 0) > 0;
 
-  const summary = useMemo(() => {
-    const counts: Record<string, number> = {};
-    draft.forEach((question) => {
-      counts[question.type] = (counts[question.type] ?? 0) + 1;
-    });
-    return counts;
-  }, [draft]);
-
-  function patchQuestion(index: number, patch: Partial<Stage1MockQuestion>) {
-    setDirty(true);
-    setFeedback(null);
-    setDraft((current) =>
-      current.map((question, position) =>
-        position === index ? ({ ...question, ...patch } as Stage1MockQuestion) : question,
-      ),
-    );
-  }
-
-  function changeType(index: number, type: Stage1QuestionType) {
-    setDirty(true);
-    setDraft((current) =>
-      current.map((question, position) => {
-        if (position !== index) {
-          return question;
-        }
-        const base = {
-          id: question.id,
-          type,
-          prompt: question.prompt,
-          reference: question.reference,
-          correctAnswer: question.correctAnswer,
-        };
-        if (type === "multiple_choice") {
-          return {
-            ...base,
-            type: "multiple_choice" as const,
-            options: (question as { options?: string[] }).options ?? [],
-          };
-        }
-        if (type === "arrange") {
-          return {
-            ...base,
-            type: "arrange" as const,
-            parts: (question as { parts?: string[] }).parts ?? [],
-          };
-        }
-        if (type === "fill_blank") {
-          return { ...base, type: "fill_blank" as const };
-        }
-        return { ...base, type: "missing" as const };
-      }),
-    );
-  }
-
-  function addQuestion() {
-    setDirty(true);
-    setDraft((current) => [...current, emptyQuestion(current.length)]);
-  }
-
-  function removeQuestion(index: number) {
-    setDirty(true);
-    setDraft((current) => current.filter((_, position) => position !== index));
-  }
+  useEffect(() => {
+    return subscribeQuestionBankArchives(setArchives);
+  }, []);
 
   async function handleImport(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -129,70 +306,145 @@ export function FacilitatorQuestionBankTab() {
     if (!file) {
       return;
     }
+
     setFeedback(null);
+    setImporting(true);
+    setLastImportFileName(file.name);
+
     try {
-      const XLSX = await import("xlsx");
+      await assertQuestionBankImportAllowed();
+
       const buffer = await file.arrayBuffer();
-      const workbook = XLSX.read(buffer, { type: "array" });
-      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(firstSheet, {
-        defval: "",
-      });
-      const imported = parseStage1RowsToQuestions(rows);
-      if (imported.length === 0) {
+      const { payload, sheetName, validation } = await parseQuestionBankWorkbookFile(buffer);
+
+      setImportReport(validation);
+
+      if (!validation.valid || !payload) {
         setFeedback({
           kind: "error",
-          text: "لم يتم العثور على أسئلة صالحة في الملف. تحقق من الأعمدة (type, prompt, correctAnswer).",
+          text: `الملف يحتوي على ${validation.errors.length} خطأ. راجع تقرير الفحص أدناه وصحّح Excel ثم أعد الاستيراد.`,
         });
         return;
       }
-      setDirty(true);
-      setDraft(imported);
+
+      await backupCurrentQuestionBank("نسخة احتياطية قبل الاستيراد");
+
+      await saveFullQuestionBank(payload);
+
+      const resolvedName =
+        archiveName.trim() ||
+        (governorate.trim() ? `أسئلة ${governorate.trim()}` : file.name.replace(/\.[^.]+$/, ""));
+      await createQuestionBankArchive({
+        name: resolvedName,
+        governorate: governorate.trim(),
+        sourceFileName: file.name,
+        payload,
+      });
+
       setFeedback({
         kind: "success",
-        text: `تم استيراد ${imported.length} سؤالاً من الملف. راجِعها ثم اضغط حفظ.`,
+        text: `تم فحص وحفظ الملف تلقائياً من ${sheetName}. ${validation.totalValidQuestions} سؤالاً نشط الآن في كل المراحل.`,
       });
-    } catch {
-      setFeedback({ kind: "error", text: "تعذر قراءة الملف." });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "تعذر قراءة الملف. تأكد أنه ملف Excel صالح.";
+      setFeedback({ kind: "error", text: message });
+      if (!(error instanceof Error) || !error.message.includes("لا يمكن استيراد")) {
+        setImportReport(null);
+      }
+    } finally {
+      setImporting(false);
     }
   }
 
-  async function handleSave() {
-    setSaving(true);
+  async function handleDownloadTemplate() {
+    setDownloadingTemplate(true);
     setFeedback(null);
     try {
-      await saveStage1Bank(draft);
-      setDirty(false);
+      await downloadQuestionBankTemplate();
       setFeedback({
         kind: "success",
-        text: `تم حفظ ${draft.length} سؤالاً. ستظهر للمتسابقين في المرحلة الأولى.`,
+        text: "تم تنزيل القالب الرسمي. املأ الأوراق ثم استورد الملف كاملاً.",
       });
     } catch {
-      setFeedback({ kind: "error", text: "تعذر حفظ بنك الأسئلة." });
+      setFeedback({ kind: "error", text: "تعذر إنشاء ملف النموذج." });
     } finally {
-      setSaving(false);
+      setDownloadingTemplate(false);
     }
   }
 
   async function handleRestoreDefault() {
-    if (!window.confirm("استخدام بنك الأسئلة الافتراضي؟ سيُحذف البنك المخصص.")) {
+    if (!window.confirm("استخدام بنك الأسئلة الافتراضي؟ سيُحذف البنك المخصص من كل المراحل.")) {
       return;
     }
-    setSaving(true);
+    setArchiveBusy(true);
+    setFeedback(null);
     try {
-      await saveStage1Bank([]);
-      setDirty(false);
-      setDraft([]);
-      setFeedback({ kind: "success", text: "تمت العودة إلى البنك الافتراضي." });
-    } catch {
-      setFeedback({ kind: "error", text: "تعذر استعادة الافتراضي." });
+      await assertQuestionBankImportAllowed();
+      await backupCurrentQuestionBank("نسخة قبل استعادة الافتراضي");
+      await saveFullQuestionBank(EMPTY_BANK_PAYLOAD);
+      setImportReport(null);
+      setFeedback({ kind: "success", text: "تمت العودة إلى البنك الافتراضي لكل المراحل." });
+    } catch (error) {
+      setFeedback({
+        kind: "error",
+        text: error instanceof Error ? error.message : "تعذر استعادة الافتراضي.",
+      });
     } finally {
-      setSaving(false);
+      setArchiveBusy(false);
+    }
+  }
+
+  async function handleLoadArchive(archiveId: string) {
+    setArchiveBusy(true);
+    setFeedback(null);
+    try {
+      await assertQuestionBankImportAllowed();
+      await backupCurrentQuestionBank("نسخة قبل تحميل أرشيف");
+      await loadQuestionBankArchive(archiveId);
+      setFeedback({ kind: "success", text: "تم تحميل الأرشيف وتفعيل بنك الأسئلة." });
+    } catch (error) {
+      setFeedback({
+        kind: "error",
+        text: error instanceof Error ? error.message : "تعذر تحميل الأرشيف.",
+      });
+    } finally {
+      setArchiveBusy(false);
+    }
+  }
+
+  async function handleDeleteArchive(archiveId: string) {
+    const target = archives.find((entry) => entry.id === archiveId);
+    if (!target || !window.confirm(`حذف الأرشيف «${target.name}»؟ لا يمكن التراجع.`)) {
+      return;
+    }
+    setArchiveBusy(true);
+    try {
+      await deleteQuestionBankArchive(archiveId);
+      setFeedback({ kind: "success", text: "تم حذف الأرشيف." });
+    } catch {
+      setFeedback({ kind: "error", text: "تعذر حذف الأرشيف." });
+    } finally {
+      setArchiveBusy(false);
+    }
+  }
+
+  async function handleSaveArchiveMeta(archiveId: string, name: string, gov: string) {
+    setArchiveBusy(true);
+    try {
+      await updateQuestionBankArchiveMeta(archiveId, { name, governorate: gov });
+      setFeedback({ kind: "success", text: "تم تحديث بيانات الأرشيف." });
+    } catch {
+      setFeedback({ kind: "error", text: "تعذر تحديث الأرشيف." });
+    } finally {
+      setArchiveBusy(false);
     }
   }
 
   if (loading) {
-    return <LoadingState />;
+    return <LoadingState variant="page" />;
   }
 
   return (
@@ -201,11 +453,10 @@ export function FacilitatorQuestionBankTab() {
         <div className="facilitator-card__head">
           <FileSpreadsheet className="h-5 w-5 text-[#2388C4]" aria-hidden />
           <div>
-            <h3 className="facilitator-card__title">بنك أسئلة المرحلة الأولى</h3>
+            <h3 className="facilitator-card__title">بنك الأسئلة — قالب Excel الرسمي</h3>
             <p className="facilitator-card__desc">
-              استورد الأسئلة من ملف Excel/CSV أو حرّرها هنا. تُحفظ في قاعدة البيانات
-              ويستخدمها المتسابقون مباشرة. الأعمدة المتوقعة: type, prompt, reference,
-              correctAnswer, options, parts.
+              املأ قالب Excel ثم استورده. كل ملف مقبول يُحفظ تلقائياً في Firestore ويُؤرشف للتحميل
+              لاحقاً (مثلاً أسئلة محافظة معينة). المرحلة الثالثة والرابعة تدعمان كل أنواع الأسئلة.
             </p>
           </div>
         </div>
@@ -214,14 +465,34 @@ export function FacilitatorQuestionBankTab() {
           <span>
             المصدر الحالي: {usingFirestore ? "بنك مخصص (Firestore)" : "البنك الافتراضي"}
           </span>
-          <span>عدد الأسئلة في المسودة: {draft.length}</span>
-          {TYPE_OPTIONS.map((type) =>
-            summary[type] ? (
-              <span key={type}>
-                {getStage1QuestionTypeLabel(type)}: {summary[type]}
-              </span>
-            ) : null,
-          )}
+          <span>المرحلة 1 المحفوظة: {questions?.length ?? 0} سؤال</span>
+          <span>
+            حالة الاستيراد:{" "}
+            {importAllowed ? "مسموح (قبل بدء المسابقة)" : "مقفول أثناء المسابقة"}
+          </span>
+        </div>
+
+        <div className="facilitator-archive__form">
+          <label className="facilitator-archive__field">
+            <span>اسم الأرشيف (اختياري)</span>
+            <input
+              type="text"
+              className="facilitator-archive__input"
+              value={archiveName}
+              onChange={(event) => setArchiveName(event.target.value)}
+              placeholder="مثال: أسئلة محافظة حمص 2026"
+            />
+          </label>
+          <label className="facilitator-archive__field">
+            <span>المحافظة (اختياري)</span>
+            <input
+              type="text"
+              className="facilitator-archive__input"
+              value={governorate}
+              onChange={(event) => setGovernorate(event.target.value)}
+              placeholder="مثال: حمص"
+            />
+          </label>
         </div>
 
         <input
@@ -235,33 +506,27 @@ export function FacilitatorQuestionBankTab() {
         <div className="facilitator-timer__buttons">
           <button
             type="button"
+            className="facilitator-btn facilitator-btn--primary"
+            disabled={downloadingTemplate}
+            onClick={() => void handleDownloadTemplate()}
+          >
+            <Download className="h-4 w-4" aria-hidden />
+            {downloadingTemplate ? "جارٍ التجهيز..." : "تنزيل قالب Excel الرسمي"}
+          </button>
+          <button
+            type="button"
             className="facilitator-btn facilitator-btn--outline"
+            disabled={importing || !importAllowed}
             onClick={() => fileInputRef.current?.click()}
+            title={importAllowed ? undefined : "أوقف المسابقة أو أعد التعيين أولاً"}
           >
             <Upload className="h-4 w-4" aria-hidden />
-            استيراد من Excel/CSV
-          </button>
-          <button
-            type="button"
-            className="facilitator-btn facilitator-btn--outline"
-            onClick={addQuestion}
-          >
-            <Plus className="h-4 w-4" aria-hidden />
-            إضافة سؤال
-          </button>
-          <button
-            type="button"
-            className="facilitator-btn facilitator-btn--primary"
-            disabled={saving || !dirty}
-            onClick={() => void handleSave()}
-          >
-            <Save className="h-4 w-4" aria-hidden />
-            {saving ? "جارٍ الحفظ..." : "حفظ البنك"}
+            {importing ? "جارٍ الفحص والحفظ..." : "استيراد وفحص Excel"}
           </button>
           <button
             type="button"
             className="facilitator-btn facilitator-btn--danger"
-            disabled={saving}
+            disabled={archiveBusy || !importAllowed}
             onClick={() => void handleRestoreDefault()}
           >
             استعادة الافتراضي
@@ -281,119 +546,56 @@ export function FacilitatorQuestionBankTab() {
         ) : null}
       </div>
 
-      {draft.length === 0 ? (
+      {importReport ? (
+        <ImportReportPanel
+          report={importReport}
+          onDownloadReport={() =>
+            downloadValidationReport(
+              importReport,
+              lastImportFileName || "question-bank-validation",
+            )
+          }
+        />
+      ) : null}
+
+      <div className="facilitator-card facilitator-archive">
+        <div className="facilitator-card__head">
+          <Archive className="h-5 w-5 text-[#2388C4]" aria-hidden />
+          <div>
+            <h3 className="facilitator-card__title">أرشيف الأسئلة</h3>
+            <p className="facilitator-card__desc">
+              كل ملف مقبول يُحفظ هنا تلقائياً. حمّل أرشيفاً في أي وقت، أو عدّل اسمه ومحافظته، أو
+              احذفه.
+            </p>
+          </div>
+        </div>
+
+        {archives.length === 0 ? (
+          <p className="facilitator-card__desc">لا يوجد أرشيف بعد. استورد ملف Excel مقبولاً أولاً.</p>
+        ) : (
+          <div className="facilitator-archive__list">
+            {archives.map((archive) => (
+              <ArchiveRow
+                key={archive.id}
+                archive={archive}
+                busy={archiveBusy || !importAllowed}
+                onLoad={(id) => void handleLoadArchive(id)}
+                onDelete={(id) => void handleDeleteArchive(id)}
+                onSaveMeta={(id, name, gov) => void handleSaveArchiveMeta(id, name, gov)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {!importReport && !usingFirestore ? (
         <div className="facilitator-card">
           <p className="facilitator-card__desc">
-            لا توجد أسئلة مخصصة. يستخدم المتسابقون البنك الافتراضي. استورد ملفاً أو
-            أضف سؤالاً للبدء.
+            لا يوجد بنك مخصص. نزّل القالب، املأ الأسئلة، ثم استورد الملف لعرض تقرير الفحص والحفظ
+            التلقائي.
           </p>
         </div>
-      ) : (
-        draft.map((question, index) => (
-          <div key={`${question.id}-${index}`} className="facilitator-card">
-            <div className="facilitator-card__head">
-              <h3 className="facilitator-card__title">سؤال {index + 1}</h3>
-              <button
-                type="button"
-                className="facilitator-btn facilitator-btn--danger"
-                onClick={() => removeQuestion(index)}
-              >
-                <Trash2 className="h-4 w-4" aria-hidden />
-                حذف
-              </button>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="facilitator-field">
-                <span className="facilitator-field__label">النوع</span>
-                <select
-                  className="facilitator-input"
-                  value={question.type}
-                  onChange={(event) =>
-                    changeType(index, event.target.value as Stage1QuestionType)
-                  }
-                >
-                  {TYPE_OPTIONS.map((type) => (
-                    <option key={type} value={type}>
-                      {getStage1QuestionTypeLabel(type)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="facilitator-field">
-                <span className="facilitator-field__label">الشاهد (اختياري)</span>
-                <input
-                  type="text"
-                  className="facilitator-input"
-                  value={question.reference ?? ""}
-                  onChange={(event) =>
-                    patchQuestion(index, { reference: event.target.value })
-                  }
-                />
-              </label>
-            </div>
-
-            <label className="facilitator-field">
-              <span className="facilitator-field__label">نص السؤال</span>
-              <textarea
-                className="facilitator-input"
-                rows={2}
-                value={question.prompt}
-                onChange={(event) => patchQuestion(index, { prompt: event.target.value })}
-              />
-            </label>
-
-            <label className="facilitator-field">
-              <span className="facilitator-field__label">الإجابة الصحيحة</span>
-              <input
-                type="text"
-                className="facilitator-input"
-                value={question.correctAnswer}
-                onChange={(event) =>
-                  patchQuestion(index, { correctAnswer: event.target.value })
-                }
-              />
-            </label>
-
-            {question.type === "multiple_choice" ? (
-              <label className="facilitator-field">
-                <span className="facilitator-field__label">
-                  الخيارات (خيار في كل سطر)
-                </span>
-                <textarea
-                  className="facilitator-input"
-                  rows={4}
-                  value={listToText((question as { options?: string[] }).options)}
-                  onChange={(event) =>
-                    patchQuestion(index, {
-                      options: textToList(event.target.value),
-                    } as Partial<Stage1MockQuestion>)
-                  }
-                />
-              </label>
-            ) : null}
-
-            {question.type === "arrange" ? (
-              <label className="facilitator-field">
-                <span className="facilitator-field__label">
-                  الأجزاء بالترتيب الصحيح (جزء في كل سطر)
-                </span>
-                <textarea
-                  className="facilitator-input"
-                  rows={4}
-                  value={listToText((question as { parts?: string[] }).parts)}
-                  onChange={(event) =>
-                    patchQuestion(index, {
-                      parts: textToList(event.target.value),
-                    } as Partial<Stage1MockQuestion>)
-                  }
-                />
-              </label>
-            ) : null}
-          </div>
-        ))
-      )}
+      ) : null}
     </div>
   );
 }

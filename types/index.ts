@@ -35,6 +35,7 @@ export interface GameFlow {
   status: GameFlowStatus;
   currentStage: GameFlowStage;
   currentQuestion: number;
+  competitionFrozen?: boolean;
 }
 
 export type TimerPurpose = "answering" | "reading" | "selection" | "reveal" | "none";
@@ -83,7 +84,10 @@ export interface TeamStateDocument {
   ready: boolean;
   readiness: {
     competitionIntro: boolean;
-    stage1Intro?: boolean;
+    stage1Intro: boolean;
+    stage2Intro: boolean;
+    stage3Intro: boolean;
+    stage4Intro: boolean;
     stage1: boolean;
     stage2: boolean;
     stage3: boolean;
@@ -147,7 +151,7 @@ export interface TeamStateDocument {
 export const roleRoutes: Record<AppRole, string> = {
   team: "/team",
   facilitator: "/facilitator",
-  super_admin: "/admin",
+  super_admin: "/facilitator",
   viewer: "/audience",
 };
 

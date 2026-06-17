@@ -1,0 +1,11 @@
+# Firebase App Hosting — سفراء المسيح
+# Docs: https://firebase.google.com/docs/app-hosting
+
+runConfig:
+  minInstances: 0
+  maxInstances: 4
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+
+# Set NEXT_PUBLIC_FIREBASE_* in Firebase Console → App Hosting → Environment.

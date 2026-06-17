@@ -1,5 +1,7 @@
 import { EmptyState } from "@/components/layout/empty-state";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
+import { AnimatedRankingRow } from "@/components/motion/animated-ranking-row";
+import { useGradualReveal } from "@/hooks/use-gradual-reveal";
 import { STAGE3_NAME } from "@/features/stage3/stage3-constants";
 import type { RankedStage3Team } from "@/features/stage3/stage3-ranking";
 import { cn } from "@/lib/utils";
@@ -12,6 +14,7 @@ interface Stage3RankingTableProps {
   title?: string;
   description?: string;
   embedded?: boolean;
+  animate?: boolean;
 }
 
 export function Stage3RankingTable({
@@ -22,55 +25,95 @@ export function Stage3RankingTable({
   title,
   description,
   embedded = false,
+  animate = false,
 }: Stage3RankingTableProps) {
   const compact = variant === "audience" || variant === "team";
+  const revealedTeams = useGradualReveal(teams, animate ? 520 : 0, {
+    maxDurationMs: 7_500,
+  });
+  const visibleTeams = animate ? revealedTeams : teams;
+  const isRevealing = animate && visibleTeams.length < teams.length;
 
   if (loading) {
-    return <LoadingState />;
+    return <LoadingState variant={embedded ? "inline" : "page"} />;
   }
 
   if (error) {
+    if (embedded) {
+      return <p className="competition-ranking-panel__embedded-empty">{error}</p>;
+    }
+
     return <ErrorState title="تعذر تحميل الترتيب" description={error} />;
   }
 
   if (teams.length === 0) {
+    if (embedded) {
+      return <p className="competition-ranking-panel__embedded-empty">بانتظار تسجيل الفرق</p>;
+    }
+
     return <EmptyState title="بانتظار تسجيل الفرق" />;
   }
 
   if (compact) {
     const panel = (
-      <div className={cn("competition-ranking-panel", embedded ? "mt-0" : "mt-6")}>
+      <div
+        className={cn(
+          "competition-ranking-panel",
+          embedded && "competition-ranking-panel--embedded",
+          !embedded && "mt-6",
+        )}
+      >
         <div className="competition-ranking-panel__header">
-          <p className="text-sm font-bold text-[#4F8A10]">{STAGE3_NAME}</p>
-          <h3 className="competition-ranking-panel__title">
-            {title ?? "ترتيب مرحلة على المحك"}
-          </h3>
-          <p className="competition-ranking-panel__desc">
-            {description ?? "الترتيب حسب نقاط المرحلة الثالثة ثم المجموع ثم اسم الفريق."}
-          </p>
+          {!embedded ? (
+            <>
+              <p className="competition-ranking-panel__kicker">{STAGE3_NAME}</p>
+              <h3 className="competition-ranking-panel__title">
+                {title ?? "ترتيب مرحلة على المحك"}
+              </h3>
+              <p className="competition-ranking-panel__desc">
+                {isRevealing
+                  ? `جاري الإعلان... (${visibleTeams.length}/${teams.length})`
+                  : (description ?? "الترتيب حسب نقاط المرحلة الثالثة ثم المجموع ثم اسم الفريق.")}
+              </p>
+            </>
+          ) : (
+            <>
+              <h3 className="competition-ranking-panel__embedded-title">
+                {title ?? "ترتيب مرحلة على المحك"}
+              </h3>
+              {isRevealing ? (
+                <p className="competition-ranking-panel__embedded-desc">
+                  جاري الإعلان... ({visibleTeams.length}/{teams.length})
+                </p>
+              ) : null}
+            </>
+          )}
         </div>
-        {teams.map((team) => (
-          <div
-            key={team.teamId}
-            className={cn(
-              "competition-ranking-row",
-              team.rank === 1 && "competition-ranking-row--gold",
-              team.rank === 2 && "competition-ranking-row--silver",
-              team.rank === 3 && "competition-ranking-row--bronze",
-            )}
-          >
-            <span className="competition-ranking-row__rank">{team.rank}</span>
-            <div className="min-w-0 text-right">
-              <p className="truncate text-base font-black text-[#143A5A] sm:text-lg">
-                {team.teamName}
-              </p>
-              <p className="text-xs font-semibold sm:text-sm" style={{ color: "rgba(20,58,90,0.55)" }}>
-                المرحلة: {team.stage3Score} — المجموع: {team.totalScore}
-              </p>
-            </div>
-            <p className="text-2xl font-black text-[#2388C4] sm:text-3xl">{team.stage3Score}</p>
-          </div>
-        ))}
+        <div className="competition-ranking-scroll competition-ranking-scroll--cards">
+          {visibleTeams.map((team, index) => (
+            <AnimatedRankingRow
+              key={team.teamId}
+              index={index}
+              animate={animate && isRevealing}
+              className={cn(
+                "competition-ranking-row competition-ranking-row--card",
+                team.rank === 1 && "competition-ranking-row--gold",
+                team.rank === 2 && "competition-ranking-row--silver",
+                team.rank === 3 && "competition-ranking-row--bronze",
+              )}
+            >
+              <span className="competition-ranking-row__rank">{team.rank}</span>
+              <div className="competition-ranking-row__team">
+                <p className="competition-ranking-row__name">{team.teamName}</p>
+                <p className="competition-ranking-row__meta">المجموع: {team.totalScore}</p>
+              </div>
+              <div className="competition-ranking-row__score">
+                <span className="competition-ranking-row__score-label">نقاط المرحلة</span>
+                <span className="competition-ranking-row__score-value">{team.stage3Score}</span>
+              </div>
+            </AnimatedRankingRow>
+          ))}
+        </div>
       </div>
     );
 
@@ -87,8 +130,8 @@ export function Stage3RankingTable({
           {description ?? "الترتيب حسب نقاط المرحلة الثالثة ثم المجموع ثم اسم الفريق."}
         </p>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] text-right text-sm">
+      <div className="overflow-x-auto competition-ranking-scroll">
+        <table className="competition-ranking-table w-full min-w-[640px] text-right text-sm">
           <thead className="bg-[#F3FAFF] text-[#143A5A]">
             <tr>
               <th className="px-4 py-3 font-bold">المركز</th>

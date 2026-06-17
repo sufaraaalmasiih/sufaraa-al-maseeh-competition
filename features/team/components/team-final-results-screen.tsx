@@ -1,29 +1,15 @@
 "use client";
 
-import { useMemo } from "react";
 import { EmptyState } from "@/components/layout/empty-state";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
-import { useStage1Ranking } from "@/features/stage1/use-stage1-ranking";
-import { cn } from "@/lib/utils";
+import { FinalResultsRankingPanel } from "@/components/competition/final-results-ranking-panel";
+import { useFinalResults } from "@/features/facilitator/use-final-results";
 
 export function TeamFinalResultsScreen() {
-  const { teams, loading, error } = useStage1Ranking();
-
-  const rankedByTotal = useMemo(
-    () =>
-      [...teams]
-        .sort((first, second) => {
-          if (second.totalScore !== first.totalScore) {
-            return second.totalScore - first.totalScore;
-          }
-          return first.teamName.localeCompare(second.teamName, "ar");
-        })
-        .map((team, index) => ({ ...team, rank: index + 1 })),
-    [teams],
-  );
+  const { teams, loading, error } = useFinalResults();
 
   if (loading) {
-    return <LoadingState />;
+    return <LoadingState variant="page" />;
   }
 
   if (error) {
@@ -31,7 +17,7 @@ export function TeamFinalResultsScreen() {
   }
 
   return (
-    <section className="competition-stage-screen">
+    <section className="competition-stage-screen competition-stage-screen--animated competition-stage-screen--final-results">
       <div className="competition-stage-screen__card glass-card-white">
         <span className="competition-stage-screen__badge competition-stage-screen__badge--blue">
           النتائج النهائية
@@ -41,37 +27,10 @@ export function TeamFinalResultsScreen() {
           المجموع النهائي لجميع الفرق بعد المراحل الأربع
         </p>
 
-        {rankedByTotal.length === 0 ? (
+        {teams.length === 0 ? (
           <EmptyState title="بانتظار تسجيل النتائج" />
         ) : (
-          <div className="competition-ranking-panel">
-            <div className="competition-ranking-panel__header">
-              <h3 className="competition-ranking-panel__title">الترتيب العام</h3>
-              <p className="competition-ranking-panel__desc">حسب المجموع الكلي</p>
-            </div>
-            {rankedByTotal.map((team) => (
-              <div
-                key={team.teamId}
-                className={cn(
-                  "competition-ranking-row",
-                  team.rank === 1 && "competition-ranking-row--gold",
-                  team.rank === 2 && "competition-ranking-row--silver",
-                  team.rank === 3 && "competition-ranking-row--bronze",
-                )}
-              >
-                <span className="competition-ranking-row__rank">{team.rank}</span>
-                <div className="min-w-0 text-right">
-                  <p className="truncate text-base font-black text-[#143A5A] sm:text-lg">
-                    {team.teamName}
-                  </p>
-                  <p className="text-xs font-semibold sm:text-sm" style={{ color: "rgba(20,58,90,0.55)" }}>
-                    {team.governorate}
-                  </p>
-                </div>
-                <p className="text-2xl font-black text-[#2388C4] sm:text-3xl">{team.totalScore}</p>
-              </div>
-            ))}
-          </div>
+          <FinalResultsRankingPanel teams={teams} animate />
         )}
       </div>
     </section>

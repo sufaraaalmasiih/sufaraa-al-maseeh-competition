@@ -1,13 +1,16 @@
+"use client";
+
 import Link from "next/link";
-import { Cross } from "lucide-react";
+import { BrandLogoMark } from "@/components/competition/brand-logo-mark";
 import { CompetitionGradientShell } from "@/components/layout/competition-gradient-shell";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface AuthLayoutProps {
   title: string;
   description: string;
   switchHref?: string;
   switchLabel?: string;
+  variant?: "hub" | "form" | "form-wide";
   children: React.ReactNode;
 }
 
@@ -16,36 +19,46 @@ export function AuthLayout({
   description,
   switchHref,
   switchLabel,
+  variant = "hub",
   children,
 }: AuthLayoutProps) {
+  const isHub = variant === "hub";
+
   return (
-    <CompetitionGradientShell contentClassName="mx-auto flex w-full min-w-0 max-w-3xl flex-col items-center px-4 py-8 text-center">
-      <section className="w-full">
-        <div className="mb-8 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-white/30 bg-white/15 shadow-sm backdrop-blur-sm">
-            <Cross className="h-8 w-8 text-white" strokeWidth={2.4} />
+    <CompetitionGradientShell
+      centerContent
+      animateBackground={false}
+      scrollable={isHub}
+      className="app-viewport-fill"
+      contentClassName={cn("auth-screen__wrap", isHub && "auth-screen__wrap--hub")}
+    >
+      <article
+        className={cn(
+          "auth-screen__card",
+          isHub && "auth-screen__card--hub",
+          variant === "form-wide" && "auth-screen__card--wide",
+        )}
+      >
+        <header className="auth-screen__header">
+          <BrandLogoMark className="auth-screen__logo" size="md" />
+          <div className="auth-screen__brand">
+            <p className="auth-screen__brand-name">سفراء المسيح</p>
+            <h1 className="auth-screen__title">{title}</h1>
           </div>
-          <p className="mt-4 text-sm font-bold text-[#d8f4ff]">Sufaraa Al-Maseeh</p>
-          <h1 className="team-waiting-screen__title mt-1">سفراء المسيح</h1>
-          <p className="team-waiting-screen__slogan mt-2">نحيا بالكلمة... ونشهد للحق</p>
-        </div>
-        <Card className="w-full min-w-0 border-white/25 bg-white/90 shadow-[0_18px_50px_rgba(0,0,0,0.15)] backdrop-blur-md">
-          <CardHeader>
-            <CardTitle>{title}</CardTitle>
-            <CardDescription>{description}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {children}
-            {switchHref && switchLabel ? (
-              <div className="mt-6 text-center text-sm text-muted-foreground">
-                <Link className="font-semibold text-primary hover:underline" href={switchHref}>
-                  {switchLabel}
-                </Link>
-              </div>
-            ) : null}
-          </CardContent>
-        </Card>
-      </section>
+        </header>
+
+        {description ? <p className="auth-screen__lead">{description}</p> : null}
+
+        <div className="auth-screen__body">{children}</div>
+
+        {switchHref && switchLabel ? (
+          <footer className="auth-screen__footer">
+            <Link className="auth-screen__switch" href={switchHref}>
+              {switchLabel}
+            </Link>
+          </footer>
+        ) : null}
+      </article>
     </CompetitionGradientShell>
   );
 }

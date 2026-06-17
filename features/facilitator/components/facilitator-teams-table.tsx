@@ -4,6 +4,7 @@ import { EmptyState } from "@/components/layout/empty-state";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
 import type { RankedStage1Team } from "@/features/stage1/stage1-ranking";
 import type { FacilitatorReadinessKey } from "@/features/facilitator/facilitator-flow-plan";
+import { isTeamReadyForReadiness } from "@/features/facilitator/facilitator-readiness";
 import { cn } from "@/lib/utils";
 
 interface FacilitatorTeamsTableProps {
@@ -12,16 +13,6 @@ interface FacilitatorTeamsTableProps {
   error: string | null;
   readinessKey: FacilitatorReadinessKey | null;
   ownerTeamId?: string | null;
-}
-
-function teamReady(team: RankedStage1Team, key: FacilitatorReadinessKey | null): boolean {
-  if (key === "competitionIntro") {
-    return team.competitionIntroReady;
-  }
-  if (key === "stage1Intro") {
-    return team.stage1IntroReady;
-  }
-  return team.ready;
 }
 
 export function FacilitatorTeamsTable({
@@ -42,7 +33,7 @@ export function FacilitatorTeamsTable({
         </div>
       </div>
 
-      {loading ? <LoadingState /> : null}
+      {loading ? <LoadingState variant="inline" /> : null}
       {error ? <ErrorState title="تعذر تحميل الفرق" description={error} /> : null}
       {!loading && !error && teams.length === 0 ? (
         <EmptyState title="لا توجد فرق مسجلة حتى الآن." />
@@ -63,7 +54,7 @@ export function FacilitatorTeamsTable({
             </thead>
             <tbody>
               {teams.map((team) => {
-                const ready = teamReady(team, readinessKey);
+                const ready = isTeamReadyForReadiness(team, readinessKey);
                 const isOwner = ownerTeamId != null && team.teamId === ownerTeamId;
                 return (
                   <tr

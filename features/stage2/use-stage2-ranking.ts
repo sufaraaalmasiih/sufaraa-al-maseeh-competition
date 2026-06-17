@@ -1,13 +1,12 @@
 "use client";
 
-import { onSnapshot } from "firebase/firestore";
-import { useEffect, useState } from "react";
-import { teamStatesCollectionRef } from "@/firebase/firestore";
+import { useMemo } from "react";
 import {
   getStage2Ranking,
   type RankedStage2Team,
   type Stage2RankingTeam,
 } from "@/features/stage2/stage2-ranking";
+import { useTeamStatesSnapshot } from "@/features/gameflow/team-states-store";
 
 function normalizeTeamState(
   id: string,
@@ -27,28 +26,15 @@ function normalizeTeamState(
 }
 
 export function useStage2Ranking() {
-  const [teams, setTeams] = useState<RankedStage2Team[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { docs, loading, error } = useTeamStatesSnapshot("main");
 
-  useEffect(() => {
-    return onSnapshot(
-      teamStatesCollectionRef("main"),
-      (snapshot) => {
-        setTeams(
-          getStage2Ranking(
-            snapshot.docs.map((item) => normalizeTeamState(item.id, item.data())),
-          ),
-        );
-        setError(null);
-        setLoading(false);
-      },
-      () => {
-        setError("تعذر تحميل ترتيب المرحلة الثانية.");
-        setLoading(false);
-      },
-    );
-  }, []);
+  const teams = useMemo(
+    () =>
+      getStage2Ranking(
+        docs.map((item) => normalizeTeamState(item.id, item.data)),
+      ),
+    [docs],
+  );
 
   return { teams, loading, error };
 }

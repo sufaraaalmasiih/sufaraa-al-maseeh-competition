@@ -8,7 +8,12 @@ export type FacilitatorStageKey =
   | "stage4"
   | "final";
 
-export type FacilitatorReadinessKey = "competitionIntro" | "stage1Intro";
+export type FacilitatorReadinessKey =
+  | "competitionIntro"
+  | "stage1Intro"
+  | "stage2Intro"
+  | "stage3Intro"
+  | "stage4Intro";
 
 export interface FacilitatorHeroAction {
   label: string;
@@ -166,14 +171,14 @@ const PLAN: Record<GameFlowStatus, FacilitatorPhasePlan> = {
     stageKey: "stage2",
     stageName: FACILITATOR_STAGE_NAMES.stage2,
     phaseLabel: "شرح المرحلة",
-    hint: "شرح مرحلة فتشوا الكتب. تابع لتوزيع المجالات.",
+    hint: "شرح مرحلة فتشوا الكتب. تابع لتوزيع المجالات عندما تجهز كل الفرق.",
     hero: {
       label: "الانتقال لتوزيع المجالات",
       nextStatus: "stage2_role_assignment",
       nextStage: "stage2",
       kind: "primary",
     },
-    readinessKey: null,
+    readinessKey: "stage2Intro",
     managedByPanel: false,
   },
   stage2_role_assignment: {
@@ -208,7 +213,7 @@ const PLAN: Record<GameFlowStatus, FacilitatorPhasePlan> = {
     stageKey: "stage2",
     stageName: FACILITATOR_STAGE_NAMES.stage2,
     phaseLabel: "أسئلة المجالات",
-    hint: "راقب تقدم الفرق عبر المجالات الأربعة. أنهِ المرحلة عند الاكتمال.",
+    hint: "راقب تقدم الفرق من لوحة العمل. انقل الفريق للمجال التالي بعد إنهاء أسئلة المجال الحالي.",
     hero: {
       label: "إنهاء المرحلة الثانية",
       nextStatus: "stage2_finished",
@@ -216,7 +221,7 @@ const PLAN: Record<GameFlowStatus, FacilitatorPhasePlan> = {
       kind: "finish",
     },
     readinessKey: null,
-    managedByPanel: false,
+    managedByPanel: true,
   },
   stage2_finished: {
     stageKey: "stage2",
@@ -236,14 +241,14 @@ const PLAN: Record<GameFlowStatus, FacilitatorPhasePlan> = {
     stageKey: "stage3",
     stageName: FACILITATOR_STAGE_NAMES.stage3,
     phaseLabel: "شرح المرحلة",
-    hint: "شرح مرحلة على المحك. ابدأ اللوحة عند الجاهزية.",
+    hint: "شرح مرحلة على المحك. ابدأ اللوحة عندما تجهز كل الفرق.",
     hero: {
       label: "بدء لوحة على المحك",
       nextStatus: "stage3_board",
       nextStage: "stage3",
       kind: "primary",
     },
-    readinessKey: null,
+    readinessKey: "stage3Intro",
     managedByPanel: false,
   },
   stage3_board: {
@@ -309,9 +314,9 @@ const PLAN: Record<GameFlowStatus, FacilitatorPhasePlan> = {
     stageKey: "stage4",
     stageName: FACILITATOR_STAGE_NAMES.stage4,
     phaseLabel: "شرح المرحلة",
-    hint: "اضبط عدد الأسئلة ومدة الإجابة في تبويب الإعدادات، ثم ابدأ المرحلة من لوحة التحكم.",
+    hint: "اضبط عدد الأسئلة ومدة الإجابة في تبويب الإعدادات. تابع عندما تجهز كل الفرق.",
     hero: null,
-    readinessKey: null,
+    readinessKey: "stage4Intro",
     managedByPanel: true,
   },
   stage4_waiting_question: {

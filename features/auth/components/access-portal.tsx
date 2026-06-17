@@ -1,63 +1,132 @@
-import Link from "next/link";
-import { Eye, LayoutDashboard, ShieldCheck, ShieldPlus, UserPlus, UsersRound } from "lucide-react";
-import { AuthLayout } from "@/features/auth/components/auth-layout";
+"use client";
 
-const portalLinks = [
+import {
+  BarChart3,
+  Eye,
+  LayoutDashboard,
+  ShieldCheck,
+  ShieldPlus,
+  UserPlus,
+  UsersRound,
+  type LucideIcon,
+} from "lucide-react";
+import { AuthLayout } from "@/features/auth/components/auth-layout";
+import { AuthPortalTile } from "@/features/auth/components/auth-portal-tile";
+
+interface PortalLink {
+  href: string;
+  label: string;
+  hint: string;
+  icon: LucideIcon;
+  tone?: "default" | "audience" | "dev";
+  prefetch?: boolean;
+  spanFull?: boolean;
+}
+
+interface PortalSection {
+  title: string;
+  links: PortalLink[];
+}
+
+const portalSections: PortalSection[] = [
   {
-    href: "/team-login",
-    label: "دخول الفرق",
-    icon: UsersRound,
+    title: "الفرق",
+    links: [
+      {
+        href: "/coach",
+        label: "لوحة المدرب",
+        hint: "متابعة النقاط والأسئلة — للموبايل",
+        icon: BarChart3,
+        prefetch: true,
+      },
+      {
+        href: "/team-login",
+        label: "دخول الفرق",
+        hint: "للاعبين المسجّلين مسبقاً",
+        icon: UsersRound,
+        prefetch: true,
+      },
+      {
+        href: "/register",
+        label: "تسجيل فريق جديد",
+        hint: "إنشاء حساب فريق للمشاركة",
+        icon: UserPlus,
+        prefetch: true,
+      },
+    ],
   },
   {
-    href: "/register",
-    label: "تسجيل فريق جديد",
-    icon: UserPlus,
+    title: "التشغيل",
+    links: [
+      {
+        href: "/facilitator-login",
+        label: "دخول الميسر",
+        hint: "تشغيل المسابقة وإدارة المراحل",
+        icon: LayoutDashboard,
+        prefetch: true,
+      },
+      {
+        href: "/admin-login",
+        label: "دخول المشرف العام",
+        hint: "تشغيل المسابقة + تبويب إدارة النظام",
+        icon: ShieldCheck,
+        prefetch: true,
+      },
+    ],
   },
   {
-    href: "/facilitator-login",
-    label: "دخول الميسر",
-    icon: LayoutDashboard,
+    title: "العرض",
+    links: [
+      {
+        href: "/audience",
+        label: "شاشة الجمهور",
+        hint: "عرض عام — لا يحتاج تسجيل دخول",
+        icon: Eye,
+        tone: "audience",
+        prefetch: false,
+        spanFull: true,
+      },
+    ],
   },
-  {
-    href: "/admin-login",
-    label: "دخول المشرف العام",
-    icon: ShieldCheck,
-  },
-  {
-    href: "/audience",
-    label: "شاشة الجمهور",
-    icon: Eye,
-  },
-] as const;
+];
+
+const devSection: PortalSection = {
+  title: "بيئة التطوير",
+  links: [
+    {
+      href: "/dev/create-admin-user",
+      label: "إنشاء حساب إدارة (تطوير)",
+      hint: "أداة محلية لتهيئة أول حساب مشرف — غير متاحة في الإنتاج",
+      icon: ShieldPlus,
+      tone: "dev",
+      prefetch: false,
+      spanFull: true,
+    },
+  ],
+};
 
 export function AccessPortal() {
-  const links =
+  const sections =
     process.env.NODE_ENV === "development"
-      ? [
-          ...portalLinks,
-          {
-            href: "/dev/create-admin-user",
-            label: "إنشاء حساب إدارة (تطوير)",
-            icon: ShieldPlus,
-          },
-        ]
-      : portalLinks;
+      ? [...portalSections, devSection]
+      : portalSections;
 
   return (
     <AuthLayout
+      variant="hub"
       title="بوابة الدخول"
       description="اختر المسار المناسب لدورك في مسابقة سفراء المسيح."
     >
-      <div className="grid gap-3">
-        {links.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            className="flex min-h-12 items-center justify-center gap-3 rounded-md border border-primary/15 bg-[#F3FAFF] px-4 py-3 text-base font-bold text-[#143A5A] transition-colors hover:border-primary/35 hover:bg-[#E9F6FC]"
-            href={href}
-          >
-            <Icon className="h-5 w-5 text-primary" />
-            {label}
-          </Link>
+      <div className="auth-portal-grid">
+        {sections.map((section) => (
+          <div key={section.title} className="auth-portal-section">
+            <h3 className="auth-portal-section__title">{section.title}</h3>
+            <div className="auth-portal-section__tiles">
+              {section.links.map((link) => (
+                <AuthPortalTile key={link.href} {...link} />
+              ))}
+            </div>
+          </div>
         ))}
       </div>
     </AuthLayout>

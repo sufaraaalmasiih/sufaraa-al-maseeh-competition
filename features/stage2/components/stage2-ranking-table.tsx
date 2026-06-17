@@ -7,8 +7,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { RankedStage2Team } from "@/features/stage2/stage2-ranking";
 import { cn } from "@/lib/utils";
+import { AnimatedRankingRow } from "@/components/motion/animated-ranking-row";
+import type { RankedStage2Team } from "@/features/stage2/stage2-ranking";
 
 interface Stage2RankingTableProps {
   teams: RankedStage2Team[];
@@ -18,6 +19,8 @@ interface Stage2RankingTableProps {
   title?: string;
   description?: string;
   stageLabel?: string;
+  animate?: boolean;
+  hideHeader?: boolean;
 }
 
 const topRankStyles: Record<number, string> = {
@@ -34,11 +37,14 @@ export function Stage2RankingTable({
   title,
   description,
   stageLabel = "فتشوا الكتب",
+  animate = false,
+  hideHeader = false,
 }: Stage2RankingTableProps) {
   const audience = variant === "audience";
 
   return (
-    <Card>
+    <Card className={hideHeader ? "border-0 bg-transparent shadow-none" : undefined}>
+      {hideHeader ? null : (
       <CardHeader className={audience ? "text-center" : undefined}>
         {audience ? (
           <p className="text-sm font-bold text-[#4F8A10]">{stageLabel}</p>
@@ -56,17 +62,20 @@ export function Stage2RankingTable({
               : "يعتمد الترتيب على نقاط المرحلة الثانية ثم المجموع ثم اسم الفريق.")}
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        {loading ? <LoadingState /> : null}
+      )}
+      <CardContent className={hideHeader ? "p-0" : undefined}>
+        {loading ? <LoadingState variant="inline" /> : null}
         {error ? <ErrorState title="تعذر تحميل الترتيب" description={error} /> : null}
         {!loading && !error && teams.length === 0 ? (
           <EmptyState title="بانتظار تسجيل الفرق" />
         ) : null}
         {!loading && !error && teams.length > 0 && audience ? (
-          <div className="space-y-3">
-            {teams.map((team) => (
-              <div
+          <div className="competition-ranking-scroll competition-ranking-scroll--cards space-y-3">
+            {teams.map((team, index) => (
+              <AnimatedRankingRow
                 key={team.teamId}
+                index={index}
+                animate={animate}
                 className={cn(
                   "grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-md border border-primary/10 bg-white p-4",
                   topRankStyles[team.rank],
@@ -89,7 +98,7 @@ export function Stage2RankingTable({
                   </p>
                   <p className="text-xs font-bold text-muted-foreground">نقطة</p>
                 </div>
-              </div>
+              </AnimatedRankingRow>
             ))}
           </div>
         ) : null}

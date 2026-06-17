@@ -14,7 +14,10 @@ const firebaseConfig = {
 
 export const firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
+const SECONDARY_APP_NAME = "sufaraa-staff-bootstrap";
+
 let clientAuth: Auth | null = null;
+let secondaryAuth: Auth | null = null;
 let persistenceConfigured = false;
 let persistencePromise: Promise<void> | null = null;
 
@@ -51,6 +54,25 @@ export function ensureAuthPersistence(): Promise<void> {
   }
 
   return persistencePromise;
+}
+
+/**
+ * Auth instance for creating staff accounts without signing out the current super admin.
+ */
+export function getSecondaryFirebaseAuth(): Auth {
+  if (typeof window === "undefined") {
+    const secondaryApp = getApps().find((app) => app.name === SECONDARY_APP_NAME)
+      ?? initializeApp(firebaseConfig, SECONDARY_APP_NAME);
+    return getAuth(secondaryApp);
+  }
+
+  if (!secondaryAuth) {
+    const secondaryApp = getApps().find((app) => app.name === SECONDARY_APP_NAME)
+      ?? initializeApp(firebaseConfig, SECONDARY_APP_NAME);
+    secondaryAuth = getAuth(secondaryApp);
+  }
+
+  return secondaryAuth;
 }
 
 export function logFirebaseClientInit(): void {

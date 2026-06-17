@@ -1,18 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ErrorState, LoadingState } from "@/components/layout/state-view";
-import { TimerCountdown } from "@/features/gameflow/components/timer-countdown";
+import { ErrorState } from "@/components/layout/state-view";
+import { useAuthRole } from "@/hooks/use-auth-role";
 import { useCompetitionTimer } from "@/features/gameflow/use-competition-timer";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
 import { Stage3AnswerCard } from "@/features/stage3/components/stage3-answer-card";
+import { Stage3GameplayHeader } from "@/features/stage3/components/stage3-gameplay-header";
 import { Stage3QuestionOpenScreen } from "@/features/stage3/components/stage3-question-open-screen";
 import {
   confirmStage3Answer,
   confirmStage3Pass,
 } from "@/features/stage3/confirm-stage3-answer";
 import { finalizeStage3OwnerNoAnswer } from "@/features/stage3/finalize-stage3-owner-no-answer";
-import { getStage3MockQuestion } from "@/features/stage3/stage3-mock-questions";
+import { getStage3MockQuestionForPlay } from "@/features/stage3/stage3-mock-questions";
 import { useStage3MyAnswer } from "@/features/stage3/use-stage3-my-answer";
 
 function formatStage3SaveError(error: unknown): string {
@@ -35,11 +36,12 @@ function formatStage3SaveError(error: unknown): string {
 
 export function Stage3TeamQuestionOpenScreen() {
   const { stage3ActiveQuestion, stage3OwnerTeamId, stage3OwnerTeamName } = useGameFlow();
-  const { timer, remainingSeconds, isExpired } = useCompetitionTimer();
-  const { teamId, answerState, loading: answerLoading } = useStage3MyAnswer(
-    stage3ActiveQuestion?.id ?? null,
-  );
+  const { timer, isExpired } = useCompetitionTimer();
+  const { user } = useAuthRole();
+  const { answerState } = useStage3MyAnswer(stage3ActiveQuestion?.id ?? null);
+  const teamId = user?.uid ?? null;
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [answerText, setAnswerText] = useState("");
   const [confirmed, setConfirmed] = useState(false);
   const [passed, setPassed] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -47,7 +49,7 @@ export function Stage3TeamQuestionOpenScreen() {
   const ownerNoAnswerAttemptedRef = useRef(false);
 
   const mockQuestion = stage3ActiveQuestion
-    ? getStage3MockQuestion(stage3ActiveQuestion.id)
+    ? getStage3MockQuestionForPlay(stage3ActiveQuestion.id)
     : null;
   const isOwner = Boolean(
     teamId && stage3OwnerTeamId && teamId === stage3OwnerTeamId,
@@ -62,9 +64,23 @@ export function Stage3TeamQuestionOpenScreen() {
     if (answerState?.confirmed) {
       setConfirmed(true);
       setPassed(answerState.passed);
-      setSelectedAnswer(answerState.passed ? null : answerState.answer);
+      if (answerState.passed) {
+        setSelectedAnswer(null);
+        setAnswerText("");
+      } else {
+        setSelectedAnswer(answerState.answer);
+        setAnswerText(answerState.answer);
+      }
     }
   }, [answerState]);
+
+  useEffect(() => {
+    setSelectedAnswer(null);
+    setAnswerText("");
+    setConfirmed(false);
+    setPassed(false);
+    setSaveError(null);
+  }, [stage3ActiveQuestion?.id]);
 
   useEffect(() => {
     ownerNoAnswerAttemptedRef.current = false;
@@ -105,8 +121,8 @@ export function Stage3TeamQuestionOpenScreen() {
     stage3ActiveQuestion?.id,
   ]);
 
-  async function handleConfirm() {
-    if (!stage3ActiveQuestion || !selectedAnswer) {
+  async function handleConfirm(answer: string) {
+    if (!stage3ActiveQuestion || !answer.trim()) {
       return;
     }
 
@@ -115,7 +131,7 @@ export function Stage3TeamQuestionOpenScreen() {
 
     try {
       const result = await confirmStage3Answer({
-        answer: selectedAnswer,
+        answer,
         questionId: stage3ActiveQuestion.id,
       });
       setConfirmed(true);
@@ -153,10 +169,6 @@ export function Stage3TeamQuestionOpenScreen() {
     );
   }
 
-  if (answerLoading) {
-    return <LoadingState />;
-  }
-
   if (!mockQuestion) {
     return (
       <ErrorState
@@ -176,42 +188,54 @@ export function Stage3TeamQuestionOpenScreen() {
   }
 
   return (
-    <div className="stage3-scene">
-      <Stage3QuestionOpenScreen
-        question={stage3ActiveQuestion}
-        ownerTeamName={stage3OwnerTeamName}
-        variant="team"
-      />
+    <div className="gameplay-scene gameplay-scene--centered stage3-scene stage3-scene--question-open">
+      <div className="gameplay-flow">
+        <section className="gameplay-board-card stage3-unified-card stage3-unified-card--glass stage3-question-open-card">
+          <header className="stage3-question-top">
+            <div className="stage3-question-top__meta">
+              <Stage3GameplayHeader
+                ownerTeamName={stage3OwnerTeamName}
+                fieldLabel={stage3ActiveQuestion.fieldLabel}
+                questionNumber={stage3ActiveQuestion.questionNumber}
+                difficulty={stage3ActiveQuestion.difficulty}
+                variant="bar"
+              />
+            </div>
 
-      {timer?.active && timer.stage === "stage3" && timer.purpose === "answering" ? (
-        <TimerCountdown
-          remainingSeconds={remainingSeconds}
-          isExpired={isExpired}
-          label="وقت الإجابة"
-        />
-      ) : null}
+          </header>
 
-      <Stage3AnswerCard
-        question={mockQuestion}
-        isOwner={isOwner}
-        selectedAnswer={selectedAnswer}
-        confirmed={confirmed}
-        passed={passed}
-        saving={saving}
-        saveError={saveError}
-        disabled={answeringClosed}
-        onSelectAnswer={setSelectedAnswer}
-        onConfirm={() => {
-          void handleConfirm();
-        }}
-        onPass={
-          isOwner
-            ? undefined
-            : () => {
-                void handlePass();
-              }
-        }
-      />
+          <Stage3QuestionOpenScreen
+            question={stage3ActiveQuestion}
+            ownerTeamName={stage3OwnerTeamName}
+            variant="team"
+            hideHeader
+          />
+
+          <Stage3AnswerCard
+            question={mockQuestion}
+            isOwner={isOwner}
+            selectedAnswer={selectedAnswer}
+            answerText={answerText}
+            confirmed={confirmed}
+            passed={passed}
+            saving={saving}
+            saveError={saveError}
+            disabled={answeringClosed}
+            onSelectAnswer={setSelectedAnswer}
+            onAnswerTextChange={setAnswerText}
+            onConfirm={(answer) => {
+              void handleConfirm(answer);
+            }}
+            onPass={
+              isOwner
+                ? undefined
+                : () => {
+                    void handlePass();
+                  }
+            }
+          />
+        </section>
+      </div>
     </div>
   );
 }

@@ -21,7 +21,7 @@ export function Stage3FacilitatorAnswersPanel({
       </p>
 
       <div className="mt-4">
-        {loading ? <LoadingState /> : null}
+        {loading ? <LoadingState variant="inline" /> : null}
         {error ? <ErrorState title="تعذر تحميل الإجابات" description={error} /> : null}
         {!loading && !error && answers.length === 0 ? (
           <EmptyState title="لا توجد إجابات مؤكدة بعد." />

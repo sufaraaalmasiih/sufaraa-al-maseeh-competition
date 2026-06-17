@@ -4,15 +4,30 @@ import { useEffect, useState } from "react";
 import { onSnapshot } from "firebase/firestore";
 import { Save } from "lucide-react";
 import { gameFlowRef } from "@/firebase/firestore";
-import { CompetitionResetPanel } from "@/features/gameflow/components/competition-reset-panel";
 import {
   DEFAULT_TIMER_DURATIONS,
   parseTimerDurations,
   writeTimerDurations,
   type FacilitatorTimerDurations,
 } from "@/features/facilitator/facilitator-timer-settings";
-import { setStage4QuestionCount } from "@/features/stage4/set-stage4-question-count";
-import { STAGE4_DEFAULT_QUESTION_COUNT } from "@/features/stage4/stage4-constants";
+import {
+  clampSettingsToBankSizes,
+  fetchQuestionBankMeta,
+  saveQuestionBankMeta,
+  type QuestionBankMeta,
+} from "@/features/facilitator/question-bank-meta";
+import {
+  DEFAULT_QUESTION_DISPLAY_SETTINGS,
+  getStageDisplayLabel,
+  parseQuestionDisplaySettings,
+  STAGE_DISPLAY_KEYS,
+  writeQuestionDisplaySettings,
+  type QuestionDisplaySettings,
+  type QuestionOrderMode,
+  type StageQuestionDisplaySettings,
+} from "@/features/facilitator/question-display-settings";
+import type { AdminStageKey } from "@/features/facilitator/facilitator-team-admin";
+import { CompetitionBootstrapPanel } from "@/features/gameflow/components/competition-bootstrap-panel";
 
 const FIELDS: { key: keyof FacilitatorTimerDurations; label: string }[] = [
   { key: "stage1", label: "المرحلة الأولى (ثانية)" },
@@ -24,39 +39,55 @@ const FIELDS: { key: keyof FacilitatorTimerDurations; label: string }[] = [
   { key: "stage4Answer", label: "الإجابة — اثبتوا بالحق (ثانية)" },
 ];
 
+const ORDER_OPTIONS: { value: QuestionOrderMode; label: string }[] = [
+  { value: "order", label: "ترتيب الميسر (كما في ملف Excel)" },
+  { value: "random", label: "ترتيب عشوائي (ثابت لكل مسابقة)" },
+];
+
 export function FacilitatorSettingsTab() {
   const [durations, setDurations] = useState<FacilitatorTimerDurations>(
     () => ({ ...DEFAULT_TIMER_DURATIONS }),
   );
-  const [stage4QuestionCount, setStage4QuestionCountLocal] = useState(
-    STAGE4_DEFAULT_QUESTION_COUNT,
+  const [questionSettings, setQuestionSettings] = useState<QuestionDisplaySettings>(
+    () => ({ ...DEFAULT_QUESTION_DISPLAY_SETTINGS }),
   );
+  const [bankMeta, setBankMeta] = useState<QuestionBankMeta | null>(null);
   const [dirty, setDirty] = useState(false);
-  const [stage4Dirty, setStage4Dirty] = useState(false);
+  const [questionDirty, setQuestionDirty] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [stage4Saved, setStage4Saved] = useState(false);
+  const [questionSaved, setQuestionSaved] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [stage4Saving, setStage4Saving] = useState(false);
+  const [questionSaving, setQuestionSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [stage4Error, setStage4Error] = useState<string | null>(null);
+  const [questionError, setQuestionError] = useState<string | null>(null);
+  const [stage2Reference, setStage2Reference] = useState("يوحنا 15: 1-17");
+  const [stage2Passage, setStage2Passage] = useState("");
+  const [readingDirty, setReadingDirty] = useState(false);
+  const [readingSaved, setReadingSaved] = useState(false);
+  const [readingSaving, setReadingSaving] = useState(false);
+  const [readingError, setReadingError] = useState<string | null>(null);
+
+  useEffect(() => {
+    void fetchQuestionBankMeta().then((meta) => {
+      setBankMeta(meta);
+      if (!readingDirty) {
+        setStage2Reference(meta.stage2ReadingReference);
+        setStage2Passage(meta.stage2ReadingPassage);
+      }
+    });
+  }, [readingDirty]);
 
   useEffect(() => {
     return onSnapshot(gameFlowRef, (snapshot) => {
       const data = snapshot.data();
-      // Don't clobber unsaved edits while the facilitator is typing.
-      setDurations((current) =>
-        dirty ? current : parseTimerDurations(data?.durations),
-      );
-      if (!stage4Dirty) {
-        const stored = data?.stage4QuestionCount;
-        setStage4QuestionCountLocal(
-          typeof stored === "number" && Number.isFinite(stored)
-            ? stored
-            : STAGE4_DEFAULT_QUESTION_COUNT,
+      setDurations((current) => (dirty ? current : parseTimerDurations(data?.durations)));
+      if (!questionDirty) {
+        setQuestionSettings(
+          parseQuestionDisplaySettings(data, bankMeta?.bankSizes),
         );
       }
     });
-  }, [dirty, stage4Dirty]);
+  }, [dirty, questionDirty, bankMeta]);
 
   function updateField(key: keyof FacilitatorTimerDurations, value: string) {
     setSaved(false);
@@ -90,30 +121,59 @@ export function FacilitatorSettingsTab() {
     void persist({ ...DEFAULT_TIMER_DURATIONS });
   }
 
-  function updateStage4QuestionCount(value: string) {
-    setStage4Saved(false);
-    setStage4Dirty(true);
-    setStage4QuestionCountLocal(Number(value) || STAGE4_DEFAULT_QUESTION_COUNT);
+  function updateStageSetting(
+    stage: AdminStageKey,
+    patch: Partial<StageQuestionDisplaySettings>,
+  ) {
+    setQuestionSaved(false);
+    setQuestionDirty(true);
+    setQuestionSettings((current) => ({
+      ...current,
+      [stage]: { ...current[stage], ...patch },
+    }));
   }
 
-  async function persistStage4QuestionCount() {
-    setStage4Saving(true);
-    setStage4Error(null);
+  async function persistQuestionSettings() {
+    setQuestionSaving(true);
+    setQuestionError(null);
     try {
-      const safeCount = Math.max(1, Math.min(15, Math.floor(stage4QuestionCount)));
-      await setStage4QuestionCount(safeCount);
-      setStage4QuestionCountLocal(safeCount);
-      setStage4Dirty(false);
-      setStage4Saved(true);
+      const meta = bankMeta ?? (await fetchQuestionBankMeta());
+      setBankMeta(meta);
+      const clamped = clampSettingsToBankSizes(questionSettings, meta.bankSizes);
+      await writeQuestionDisplaySettings(clamped);
+      setQuestionSettings(clamped);
+      setQuestionDirty(false);
+      setQuestionSaved(true);
     } catch {
-      setStage4Error("تعذر حفظ عدد الأسئلة. حاول مرة أخرى.");
+      setQuestionError("تعذر حفظ إعدادات الأسئلة. حاول مرة أخرى.");
     } finally {
-      setStage4Saving(false);
+      setQuestionSaving(false);
+    }
+  }
+
+  async function persistStage2Reading() {
+    setReadingSaving(true);
+    setReadingError(null);
+    try {
+      await saveQuestionBankMeta({
+        stage2ReadingReference: stage2Reference.trim() || "يوحنا 15: 1-17",
+        stage2ReadingPassage: stage2Passage.trim(),
+      });
+      setReadingDirty(false);
+      setReadingSaved(true);
+      const meta = await fetchQuestionBankMeta();
+      setBankMeta(meta);
+    } catch {
+      setReadingError("تعذر حفظ نص القراءة. حاول مرة أخرى.");
+    } finally {
+      setReadingSaving(false);
     }
   }
 
   return (
     <div className="space-y-6">
+      <CompetitionBootstrapPanel showWhenReady />
+
       <div className="facilitator-card">
         <div className="facilitator-card__head">
           <div>
@@ -168,43 +228,167 @@ export function FacilitatorSettingsTab() {
       <div className="facilitator-card">
         <div className="facilitator-card__head">
           <div>
-            <h3 className="facilitator-card__title">إعدادات المرحلة الرابعة</h3>
+            <h3 className="facilitator-card__title">عدد وترتيب الأسئلة في كل مرحلة</h3>
             <p className="facilitator-card__desc">
-              عدد أسئلة «اثبتوا بالحق» يُطبَّق عند بدء المرحلة من لوحة سير المسابقة.
+              يكتب المشرف كل الأسئلة في ملف Excel (مثلاً Stage1 — 200 سؤال). هنا يحدد
+              الميسر كم سؤالاً يظهر في المسابقة وبالترتيب الذي يريده. أسئلة كل مرحلة
+              من بنكها فقط — لا تختلط بين المراحل.
             </p>
           </div>
         </div>
 
-        <label className="facilitator-field">
-          <span className="facilitator-field__label">عدد أسئلة المرحلة الرابعة</span>
-          <input
-            type="number"
-            min={1}
-            max={15}
-            className="facilitator-input"
-            value={stage4QuestionCount}
-            onChange={(event) => updateStage4QuestionCount(event.target.value)}
-          />
-        </label>
+        {bankMeta ? (
+          <p className="mb-4 text-sm text-[#5A6B7D]">
+            أحجام البنوك الحالية من آخر استيراد:{" "}
+            {STAGE_DISPLAY_KEYS.map((stage) => (
+              <span key={stage} className="ml-2 inline-block">
+                {getStageDisplayLabel(stage)} — {bankMeta.bankSizes[stage]}
+              </span>
+            ))}
+          </p>
+        ) : null}
 
-        <div className="facilitator-timer__buttons">
+        <div className="space-y-5">
+          {STAGE_DISPLAY_KEYS.map((stage) => {
+            const bankSize = bankMeta?.bankSizes[stage] ?? 50;
+            const settings = questionSettings[stage];
+            const showOrder = stage !== "stage3";
+
+            return (
+              <div
+                key={stage}
+                className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4"
+              >
+                <h4 className="mb-3 text-sm font-black text-[#143A5A]">
+                  {getStageDisplayLabel(stage)}
+                  <span className="mr-2 font-normal text-[#64748B]">
+                    (البنك: {bankSize} سؤال)
+                  </span>
+                </h4>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="facilitator-field">
+                    <span className="facilitator-field__label">عدد الأسئلة الظاهرة</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={bankSize}
+                      className="facilitator-input"
+                      value={settings.displayCount}
+                      onChange={(event) =>
+                        updateStageSetting(stage, {
+                          displayCount: Number(event.target.value) || 1,
+                        })
+                      }
+                    />
+                  </label>
+                  {showOrder ? (
+                    <label className="facilitator-field">
+                      <span className="facilitator-field__label">ترتيب الظهور</span>
+                      <select
+                        className="facilitator-input"
+                        value={settings.orderMode}
+                        onChange={(event) =>
+                          updateStageSetting(stage, {
+                            orderMode: event.target.value as QuestionOrderMode,
+                          })
+                        }
+                      >
+                        {ORDER_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : (
+                    <p className="self-end text-sm text-[#64748B]">
+                      المرحلة الثالثة تستخدم لوحة ثابتة؛ العدد يحدد خلايا البنك النشطة.
+                    </p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="facilitator-timer__buttons mt-4">
           <button
             type="button"
             className="facilitator-btn facilitator-btn--primary"
-            onClick={() => void persistStage4QuestionCount()}
-            disabled={stage4Saving}
+            onClick={() => void persistQuestionSettings()}
+            disabled={questionSaving}
           >
             <Save className="h-4 w-4" aria-hidden />
-            {stage4Saving ? "جارٍ الحفظ..." : "حفظ عدد الأسئلة"}
+            {questionSaving ? "جارٍ الحفظ..." : "حفظ إعدادات الأسئلة"}
           </button>
         </div>
-        {stage4Saved && !stage4Dirty ? (
-          <p className="facilitator-inline-success">تم حفظ عدد أسئلة المرحلة الرابعة.</p>
+        {questionSaved && !questionDirty ? (
+          <p className="facilitator-inline-success">
+            تم حفظ إعدادات الأسئلة. تُطبَّق عند بدء كل مرحلة من لوحة التحكم.
+          </p>
         ) : null}
-        {stage4Error ? <p className="facilitator-inline-error">{stage4Error}</p> : null}
+        {questionError ? <p className="facilitator-inline-error">{questionError}</p> : null}
       </div>
 
-      <CompetitionResetPanel />
+      <div className="facilitator-card">
+        <div className="facilitator-card__head">
+          <div>
+            <h3 className="facilitator-card__title">قراءة المرحلة الثانية — فتشوا الكتب</h3>
+            <p className="facilitator-card__desc">
+              النص الذي يظهر على شاشة القراءة قبل بدء الأسئلة. يمكنك تعديله هنا مباشرة
+              أو من ورقة <strong>قراءة_م2</strong> في ملف Excel ثم إعادة الاستيراد.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-4">
+          <label className="facilitator-field">
+            <span className="facilitator-field__label">المرجع المختصر (يظهر بخط كبير)</span>
+            <input
+              type="text"
+              className="facilitator-input"
+              value={stage2Reference}
+              onChange={(event) => {
+                setReadingSaved(false);
+                setReadingDirty(true);
+                setStage2Reference(event.target.value);
+              }}
+              placeholder="مثال: يوحنا 15: 1-17"
+            />
+          </label>
+          <label className="facilitator-field">
+            <span className="facilitator-field__label">نص المقطع (اختياري — معاينة تحت المرجع)</span>
+            <textarea
+              className="facilitator-input min-h-[120px] resize-y"
+              value={stage2Passage}
+              onChange={(event) => {
+                setReadingSaved(false);
+                setReadingDirty(true);
+                setStage2Passage(event.target.value);
+              }}
+              placeholder="اتركه فارغاً إذا تريد أن يفتح المتسابقون الإنجيل بأنفسهم"
+            />
+          </label>
+        </div>
+
+        <div className="facilitator-timer__buttons mt-4">
+          <button
+            type="button"
+            className="facilitator-btn facilitator-btn--primary"
+            onClick={() => void persistStage2Reading()}
+            disabled={readingSaving}
+          >
+            <Save className="h-4 w-4" aria-hidden />
+            {readingSaving ? "جارٍ الحفظ..." : "حفظ نص القراءة"}
+          </button>
+        </div>
+        {readingSaved && !readingDirty ? (
+          <p className="facilitator-inline-success">
+            تم حفظ نص القراءة. يُطبَّق عند بدء مرحلة القراءة التالية.
+          </p>
+        ) : null}
+        {readingError ? <p className="facilitator-inline-error">{readingError}</p> : null}
+      </div>
     </div>
   );
 }

@@ -1,3 +1,8 @@
+import {
+  getActiveStage4Question as getCachedStage4Question,
+  getActiveStage4QuestionByIndex as getCachedStage4QuestionByIndex,
+  getActiveStage4Questions as getCachedStage4Questions,
+} from "@/features/facilitator/question-bank-runtime-cache";
 import type { Stage4QuestionMetadata } from "@/features/stage4/stage4-question-types";
 
 const MOCK_STAGE4_QUESTIONS: Stage4QuestionMetadata[] = [
@@ -136,16 +141,53 @@ const MOCK_STAGE4_QUESTIONS: Stage4QuestionMetadata[] = [
     acceptedAnswers: ["بولس الرسول", "شاول"],
     order: 15,
   },
+  {
+    id: "s4-q16",
+    type: "multiple_choice",
+    prompt: "من هو النبي الذي ابتلعه الحوت؟",
+    options: ["يونان", "إرميا", "إيليا", "دانيال"],
+    correctAnswer: "يونان",
+    order: 16,
+  },
+  {
+    id: "s4-q17",
+    type: "missing",
+    prompt: "أكمل: «الله ___ العالم»",
+    correctAnswer: "محبة",
+    acceptedAnswers: ["أحب"],
+    order: 17,
+  },
+  {
+    id: "s4-q18",
+    type: "fill_blank",
+    prompt: "أكمل: «الرب ___ راعيّ فلا ___ شيء»",
+    correctAnswer: "راعي | يعوزني",
+    acceptedAnswers: ["راعي يعوزني"],
+    order: 18,
+  },
+  {
+    id: "s4-q19",
+    type: "arrange",
+    prompt: "رتّب: «المحبة لا تسقط أبداً»",
+    parts: ["المحبة", "لا", "تسقط", "أبداً"],
+    correctAnswer: "المحبة | لا | تسقط | أبداً",
+    order: 19,
+  },
 ];
 
 export function getStage4MockQuestions(): Stage4QuestionMetadata[] {
-  return MOCK_STAGE4_QUESTIONS;
+  const cached = getCachedStage4Questions();
+  return cached.length > 0 ? cached : MOCK_STAGE4_QUESTIONS;
 }
 
 export function getStage4MockQuestionByIndex(index: number): Stage4QuestionMetadata | null {
+  const cached = getCachedStage4QuestionByIndex(index);
+  if (cached) {
+    return cached;
+  }
   return MOCK_STAGE4_QUESTIONS[index] ?? null;
 }
 
 export function getStage4MockQuestion(id: string): Stage4QuestionMetadata | null {
-  return MOCK_STAGE4_QUESTIONS.find((question) => question.id === id) ?? null;
+  return getCachedStage4Question(id) ?? MOCK_STAGE4_QUESTIONS.find((q) => q.id === id) ?? null;
 }

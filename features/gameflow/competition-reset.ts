@@ -15,6 +15,10 @@ import {
   timerRef,
 } from "@/firebase/firestore";
 import { clearActiveSessionLink, completeActiveSession } from "@/features/facilitator/competition-session";
+import {
+  buildInitialGameFlowPayload,
+  buildInitialTimerPayload,
+} from "@/lib/competition-initial-payloads";
 
 const FIRESTORE_BATCH_LIMIT = 500;
 
@@ -123,46 +127,3 @@ async function commitBatchedDeletes(refs: DocumentReference[]): Promise<void> {
   }
 }
 
-function buildInitialGameFlowPayload() {
-  return {
-    status: "waiting_players",
-    currentStage: "none",
-    activeSessionId: null,
-    currentQuestion: 0,
-    stage3ActiveQuestion: null,
-    stage3OpenedQuestionIds: [] as string[],
-    stage3UsedQuestionIds: [] as string[],
-    stage3OwnerTeamId: null,
-    stage3OwnerTeamName: null,
-    stage3OwnerTurnIndex: 0,
-    stage3TurnOrder: [] as Array<{
-      teamId: string;
-      teamName: string;
-      totalScoreAtStart: number;
-    }>,
-    stage3SelectionStartedAt: 0,
-    stage3LastAutoAdvanceKey: "",
-    stage3RoundId: "",
-    stage3LastSelectionTimeoutKey: "",
-    stage3SelectionTimeoutNotice: null,
-    stage4QuestionIndex: 0,
-    stage4QuestionCount: 15,
-    stage4ActiveQuestion: null,
-    stage4FinishedQuestionIds: [] as string[],
-    stage4RevealStartedAt: 0,
-    updatedAt: serverTimestamp(),
-  };
-}
-
-function buildInitialTimerPayload() {
-  return {
-    active: false,
-    remainingSeconds: 0,
-    stage: "none",
-    purpose: "none",
-    durationSeconds: 0,
-    startedAtMs: 0,
-    endsAtMs: 0,
-    updatedAt: serverTimestamp(),
-  };
-}

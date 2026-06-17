@@ -2,9 +2,13 @@
 
 import { onAuthStateChanged } from "firebase/auth";
 import { onSnapshot } from "firebase/firestore";
-import { useEffect, useState } from "react";
-import { firebaseAuth } from "@/firebase/firebaseClient";
+import { useEffect, useRef, useState } from "react";
+import { getClientFirebaseAuth, ensureAuthPersistence } from "@/firebase/firebaseClient";
 import { teamStateRef } from "@/firebase/firestore";
+import {
+  FIRESTORE_LISTENER_TIMEOUT_MS,
+  scheduleFirestoreListenerTimeout,
+} from "@/lib/firestore-listener-timeout";
 
 interface TeamStage3Context {
   teamId: string | null;
@@ -26,40 +30,88 @@ export function useTeamStage3Context(): TeamStage3Context {
   const [stage3Score, setStage3Score] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const subscribedTeamIdRef = useRef<string | null>(null);
+  const loadingRef = useRef(true);
 
   useEffect(() => {
-    let unsubscribeTeamState: (() => void) | undefined;
+    loadingRef.current = loading;
+  }, [loading]);
 
-    const unsubscribeAuth = onAuthStateChanged(firebaseAuth, (user) => {
+  useEffect(() => {
+    let alive = true;
+    let unsubscribeTeamState: (() => void) | undefined;
+    let clearListenerTimeout: (() => void) | undefined;
+
+    const finishLoading = (nextError: string | null = null) => {
+      clearListenerTimeout?.();
+      clearListenerTimeout = undefined;
+      if (!alive) {
+        return;
+      }
+      loadingRef.current = false;
+      setLoading(false);
+      if (nextError) {
+        setError(nextError);
+      }
+    };
+
+    void ensureAuthPersistence();
+
+    const unsubscribeAuth = onAuthStateChanged(getClientFirebaseAuth(), (user) => {
+      if (!alive) {
+        return;
+      }
+
+      clearListenerTimeout?.();
       unsubscribeTeamState?.();
+      unsubscribeTeamState = undefined;
 
       if (!user) {
+        subscribedTeamIdRef.current = null;
         setTeamId(null);
         setTeamName("—");
         setStage3SelectedQuestionId("");
         setStage3CurrentField("");
         setStage3QuestionIndex(0);
         setStage3Score(0);
-        setLoading(false);
         setError(null);
+        finishLoading();
         return;
       }
 
-      setTeamId(user.uid);
-      setLoading(true);
+      const nextTeamId = user.uid;
+      if (subscribedTeamIdRef.current === nextTeamId && unsubscribeTeamState) {
+        return;
+      }
+
+      subscribedTeamIdRef.current = nextTeamId;
+      setTeamId(nextTeamId);
       setError(null);
+      loadingRef.current = true;
+      setLoading(true);
+
+      clearListenerTimeout = scheduleFirestoreListenerTimeout(
+        () => loadingRef.current,
+        () => {
+          finishLoading("تعذر تحميل حالة الفريق خلال المهلة. أعد تحميل الصفحة.");
+        },
+        FIRESTORE_LISTENER_TIMEOUT_MS,
+      );
 
       unsubscribeTeamState = onSnapshot(
-        teamStateRef("main", user.uid),
+        teamStateRef("main", nextTeamId),
         (snapshot) => {
+          if (!alive) {
+            return;
+          }
+
           if (!snapshot.exists()) {
             setTeamName("—");
             setStage3SelectedQuestionId("");
             setStage3CurrentField("");
             setStage3QuestionIndex(0);
             setStage3Score(0);
-            setError("لم يتم العثور على حالة الفريق.");
-            setLoading(false);
+            finishLoading("لم يتم العثور على حالة الفريق.");
             return;
           }
 
@@ -75,29 +127,27 @@ export function useTeamStage3Context(): TeamStage3Context {
               : "",
           );
           setStage3CurrentField(
-            typeof stage3Progress?.currentField === "string"
-              ? stage3Progress.currentField
-              : "",
+            typeof stage3Progress?.currentField === "string" ? stage3Progress.currentField : "",
           );
           setStage3QuestionIndex(
-            typeof stage3Progress?.questionIndex === "number"
-              ? stage3Progress.questionIndex
-              : 0,
+            typeof stage3Progress?.questionIndex === "number" ? stage3Progress.questionIndex : 0,
           );
           setStage3Score(typeof stageScores?.stage3 === "number" ? stageScores.stage3 : 0);
           setError(null);
-          setLoading(false);
+          finishLoading();
         },
         () => {
-          setError("تعذر تحميل حالة الفريق.");
-          setLoading(false);
+          finishLoading("تعذر تحميل حالة الفريق.");
         },
       );
     });
 
     return () => {
+      alive = false;
+      clearListenerTimeout?.();
       unsubscribeTeamState?.();
       unsubscribeAuth();
+      subscribedTeamIdRef.current = null;
     };
   }, []);
 

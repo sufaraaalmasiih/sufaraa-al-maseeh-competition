@@ -16,6 +16,9 @@ interface TeamCompetitionContext {
   ready: boolean;
   competitionIntroReady: boolean;
   stage1IntroReady: boolean;
+  stage2IntroReady: boolean;
+  stage3IntroReady: boolean;
+  stage4IntroReady: boolean;
   players: TeamPlayer[];
   totalScore: number;
   loading: boolean;
@@ -29,6 +32,9 @@ export function useTeamCompetitionContext(): TeamCompetitionContext {
   const [ready, setReady] = useState(false);
   const [competitionIntroReady, setCompetitionIntroReady] = useState(false);
   const [stage1IntroReady, setStage1IntroReady] = useState(false);
+  const [stage2IntroReady, setStage2IntroReady] = useState(false);
+  const [stage3IntroReady, setStage3IntroReady] = useState(false);
+  const [stage4IntroReady, setStage4IntroReady] = useState(false);
   const [players, setPlayers] = useState<TeamPlayer[]>([]);
   const [totalScore, setTotalScore] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -52,6 +58,9 @@ export function useTeamCompetitionContext(): TeamCompetitionContext {
         setReady(false);
         setCompetitionIntroReady(false);
         setStage1IntroReady(false);
+        setStage2IntroReady(false);
+        setStage3IntroReady(false);
+        setStage4IntroReady(false);
         setPlayers([]);
         setTotalScore(0);
         setLoading(false);
@@ -116,6 +125,9 @@ export function useTeamCompetitionContext(): TeamCompetitionContext {
             setReady(false);
             setCompetitionIntroReady(false);
             setStage1IntroReady(false);
+        setStage2IntroReady(false);
+        setStage3IntroReady(false);
+        setStage4IntroReady(false);
             setTotalScore(0);
             setError(null);
             setLoading(false);
@@ -133,6 +145,9 @@ export function useTeamCompetitionContext(): TeamCompetitionContext {
           const readiness = data.readiness as Record<string, unknown> | undefined;
           setCompetitionIntroReady(readiness?.competitionIntro === true);
           setStage1IntroReady(readiness?.stage1Intro === true);
+          setStage2IntroReady(readiness?.stage2Intro === true);
+          setStage3IntroReady(readiness?.stage3Intro === true);
+          setStage4IntroReady(readiness?.stage4Intro === true);
           setTotalScore(typeof data.totalScore === "number" ? data.totalScore : 0);
           setError(null);
           setLoading(false);
@@ -171,6 +186,9 @@ export function useTeamCompetitionContext(): TeamCompetitionContext {
     ready,
     competitionIntroReady,
     stage1IntroReady,
+    stage2IntroReady,
+    stage3IntroReady,
+    stage4IntroReady,
     players,
     totalScore,
     loading,

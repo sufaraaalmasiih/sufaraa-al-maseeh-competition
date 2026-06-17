@@ -6,18 +6,18 @@ const OWNER_POINTS: Record<
   Stage3Difficulty,
   Record<Exclude<Stage3AnswerOutcome, "pass">, number>
 > = {
-  easy: { correct: 15, wrong: -5, no_answer: -5 },
-  medium: { correct: 30, wrong: -10, no_answer: -10 },
-  hard: { correct: 45, wrong: -15, no_answer: -15 },
+  easy: { correct: 15, wrong: -5, no_answer: -5, selection_timeout: -5 },
+  medium: { correct: 30, wrong: -10, no_answer: -10, selection_timeout: -10 },
+  hard: { correct: 45, wrong: -15, no_answer: -15, selection_timeout: -15 },
 };
 
 const OTHER_POINTS: Record<
   Stage3Difficulty,
   Record<Stage3AnswerOutcome, number>
 > = {
-  easy: { correct: 5, wrong: -5, no_answer: 0, pass: 0 },
-  medium: { correct: 10, wrong: -10, no_answer: 0, pass: 0 },
-  hard: { correct: 15, wrong: -15, no_answer: 0, pass: 0 },
+  easy: { correct: 5, wrong: -5, no_answer: 0, pass: 0, selection_timeout: 0 },
+  medium: { correct: 10, wrong: -10, no_answer: 0, pass: 0, selection_timeout: 0 },
+  hard: { correct: 15, wrong: -15, no_answer: 0, pass: 0, selection_timeout: 0 },
 };
 
 export function computeStage3PointsDelta(

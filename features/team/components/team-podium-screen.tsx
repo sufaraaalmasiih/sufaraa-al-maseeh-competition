@@ -4,21 +4,21 @@ import { useMemo } from "react";
 import { EmptyState } from "@/components/layout/empty-state";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
 import { CompetitionPodium } from "@/components/competition/competition-podium";
-import { useStage1Ranking } from "@/features/stage1/use-stage1-ranking";
+import { useFinalResults } from "@/features/facilitator/use-final-results";
 
 export function TeamPodiumScreen() {
-  const { teams, loading, error } = useStage1Ranking();
+  const { teams, loading, error } = useFinalResults();
 
   const topThree = useMemo(
     () =>
       [...teams]
-        .sort((first, second) => second.totalScore - first.totalScore)
+        .sort((first, second) => first.rank - second.rank)
         .slice(0, 3),
     [teams],
   );
 
   if (loading) {
-    return <LoadingState />;
+    return <LoadingState variant="page" />;
   }
 
   if (error) {
@@ -26,7 +26,7 @@ export function TeamPodiumScreen() {
   }
 
   return (
-    <section className="competition-stage-screen">
+    <section className="competition-stage-screen competition-stage-screen--animated competition-stage-screen--podium">
       <div className="competition-stage-screen__card glass-card-white">
         <span className="competition-stage-screen__badge">منصة الفائزين</span>
         <h2 className="competition-stage-screen__title">مبارك للفائزين!</h2>
@@ -37,10 +37,13 @@ export function TeamPodiumScreen() {
         ) : (
           <CompetitionPodium
             showHeader={false}
+            animate
+            showGovernorate
             teams={topThree.map((team) => ({
               teamId: team.teamId,
               teamName: team.teamName,
-              score: team.totalScore,
+              score: team.total,
+              governorate: team.governorate,
             }))}
           />
         )}

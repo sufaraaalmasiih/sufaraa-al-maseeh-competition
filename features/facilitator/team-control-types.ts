@@ -1,4 +1,6 @@
 import type { GameFlowStatus } from "@/types";
+import type { Stage3QuestionMetadata } from "@/features/stage3/stage3-question-types";
+import type { Stage4QuestionMetadata } from "@/features/stage4/stage4-question-types";
 
 export type AdminStageKey = "stage1" | "stage2" | "stage3" | "stage4";
 
@@ -24,8 +26,8 @@ export interface TeamFacilitatorOverride {
   stage2QuestionIndex?: number;
   stage4QuestionIndex?: number;
   stage3QuestionId?: string;
-  stage3ActiveQuestion?: Record<string, unknown> | null;
-  stage4ActiveQuestion?: Record<string, unknown> | null;
+  stage3ActiveQuestion?: Stage3QuestionMetadata | null;
+  stage4ActiveQuestion?: Stage4QuestionMetadata | null;
 }
 
 export function parseTeamStageLocks(raw: unknown): TeamStageLocks {

@@ -30,7 +30,7 @@ export function Stage3ProgressTable() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {loading ? <LoadingState /> : null}
+        {loading ? <LoadingState variant="inline" /> : null}
         {error ? <ErrorState title="تعذر تحميل التقدم" description={error} /> : null}
         {!loading && !error && teams.length === 0 ? (
           <EmptyState title="لا توجد فرق مسجلة حتى الآن." />

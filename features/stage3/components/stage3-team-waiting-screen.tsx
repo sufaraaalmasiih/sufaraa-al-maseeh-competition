@@ -1,6 +1,8 @@
 "use client";
 
+import { Stage3GameplayHeader } from "@/features/stage3/components/stage3-gameplay-header";
 import { Stage3QuestionOpenScreen } from "@/features/stage3/components/stage3-question-open-screen";
+import { useCompetitionContent } from "@/features/competition-content/competition-content-runtime";
 import type { Stage3QuestionMetadata } from "@/features/stage3/stage3-question-types";
 
 type Stage3TeamWaitingVariant = "answer_closed" | "reveal" | "results_done";
@@ -11,44 +13,46 @@ interface Stage3TeamWaitingScreenProps {
   ownerTeamName: string | null;
 }
 
-const WAITING_COPY: Record<
-  Stage3TeamWaitingVariant,
-  { title: string; subtitle: string }
-> = {
-  answer_closed: {
-    title: "تم إغلاق الإجابات",
-    subtitle: "انتظروا إظهار النتائج على شاشة الجمهور.",
-  },
-  reveal: {
-    title: "تُعرض الإجابات الآن",
-    subtitle: "يتم الآن عرض النتائج على شاشة الجمهور.",
-  },
-  results_done: {
-    title: "انتهى عرض الإجابات",
-    subtitle: "بانتظار الدور التالي من الميسّر.",
-  },
-};
-
 export function Stage3TeamWaitingScreen({
   variant,
   question,
   ownerTeamName,
 }: Stage3TeamWaitingScreenProps) {
-  const copy = WAITING_COPY[variant];
+  const content = useCompetitionContent();
+  const copy = content.stage3TeamWaiting[variant];
 
   return (
-    <div className="stage3-scene">
-      <Stage3QuestionOpenScreen
-        question={question}
-        ownerTeamName={ownerTeamName}
-        variant="team"
-      />
-      <div className="stage3-turn-banner stage3-turn-banner--wait">
-        <p className="stage3-turn-banner__kicker">على المحك</p>
-        <p className="stage3-turn-banner__title">{copy.title}</p>
-        <p className="stage3-turn-banner__subtitle">{copy.subtitle}</p>
+    <div className="gameplay-scene gameplay-scene--centered stage3-scene stage3-scene--waiting">
+      <div className="gameplay-flow">
+        <section className="gameplay-board-card stage3-unified-card stage3-unified-card--glass stage3-waiting-card">
+          <header className="stage3-waiting-top">
+            <div className="stage3-waiting-top__meta">
+              <Stage3GameplayHeader
+                ownerTeamName={ownerTeamName}
+                fieldLabel={question?.fieldLabel}
+                questionNumber={question?.questionNumber}
+                difficulty={question?.difficulty}
+                variant="bar"
+              />
+            </div>
+          </header>
+
+          <div className="stage3-waiting-body">
+            <Stage3QuestionOpenScreen
+              question={question}
+              ownerTeamName={ownerTeamName}
+              variant="team"
+              hideHeader
+            />
+
+            <div className={`stage3-wait-panel stage3-wait-panel--${variant}`}>
+              <span aria-hidden className="stage3-wait-panel__pulse" />
+              <p className="stage3-wait-panel__title">{copy.title}</p>
+              <p className="stage3-wait-panel__subtitle">{copy.subtitle}</p>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );
 }
-

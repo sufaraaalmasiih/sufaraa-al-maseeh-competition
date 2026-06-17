@@ -1,16 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { TimerCountdown } from "@/features/gameflow/components/timer-countdown";
+import { useCompetitionTimer } from "@/features/gameflow/use-competition-timer";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
+import { Stage1QuestionCard } from "@/features/stage1/components/stage1-question-card";
+import type { Stage1MockQuestion } from "@/features/stage1/stage1-types";
 import { Stage4QuestionDisplay } from "@/features/stage4/components/stage4-question-display";
 import {
   confirmStage4Answer,
   confirmStage4Pass,
 } from "@/features/stage4/confirm-stage4-answer";
+import { isStage4FlexibleType } from "@/features/stage4/stage4-question-types";
 import { useStage4MyAnswer } from "@/features/stage4/use-stage4-my-answer";
+import { GameReadyButton } from "@/components/ui/game-ready-button";
+import { Input } from "@/components/ui/input";
+import { getStage4QuestionTypeLabel } from "@/features/stage4/stage4-question-types";
 
 function formatSaveError(error: unknown): string {
   const message = error instanceof Error ? error.message : "";
@@ -25,35 +31,58 @@ function formatSaveError(error: unknown): string {
 export function Stage4TeamQuestionScreen() {
   const { stage4ActiveQuestion, stage4QuestionIndex, stage4QuestionCount, status } =
     useGameFlow();
+  const { timer, remainingSeconds, isExpired } = useCompetitionTimer();
   const { answerState, loading: answerLoading } = useStage4MyAnswer(
     stage4ActiveQuestion?.id ?? null,
   );
   const [answerText, setAnswerText] = useState("");
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+
+  const flexibleQuestion = useMemo((): Stage1MockQuestion | null => {
+    if (!stage4ActiveQuestion || !isStage4FlexibleType(stage4ActiveQuestion.type)) {
+      return null;
+    }
+
+    return stage4ActiveQuestion as Stage1MockQuestion;
+  }, [stage4ActiveQuestion]);
+
+  const arrangeShuffleSeed = `${stage4ActiveQuestion?.id ?? "stage4"}-arrange`;
+  const isAnswerTimer = Boolean(
+    timer?.active && timer.stage === "stage4" && timer.purpose === "answering",
+  );
 
   useEffect(() => {
     if (answerState?.confirmed) {
       setSubmitted(true);
       setAnswerText(answerState.passed ? "" : answerState.answerText);
+      setSelectedAnswer(answerState.passed ? null : answerState.answerText);
     } else {
       setSubmitted(false);
     }
   }, [answerState, stage4ActiveQuestion?.id]);
 
+  useEffect(() => {
+    setAnswerText("");
+    setSelectedAnswer(null);
+    setSubmitted(false);
+    setSaveError(null);
+  }, [stage4ActiveQuestion?.id]);
+
   if (answerLoading) {
-    return <LoadingState />;
+    return <LoadingState variant="page" />;
   }
 
   const closed = status !== "stage4_question_open";
 
-  async function handleSubmit() {
+  async function submitAnswer(answer: string) {
     if (!stage4ActiveQuestion || saving || submitted || closed) {
       return;
     }
 
-    const trimmed = answerText.trim();
+    const trimmed = answer.trim();
 
     if (!trimmed) {
       setSaveError("أدخل إجابتك قبل الإرسال.");
@@ -101,51 +130,128 @@ export function Stage4TeamQuestionScreen() {
   }
 
   return (
-    <div className="space-y-4">
-      <Stage4QuestionDisplay
-        question={stage4ActiveQuestion}
-        questionIndex={stage4QuestionIndex}
-        questionCount={stage4QuestionCount}
-        variant="team"
-      />
+    <div className="gameplay-scene gameplay-scene--centered stage4-scene stage4-scene--question-open">
+      <div className="gameplay-flow">
+        <section className="gameplay-board-card stage4-unified-card stage4-unified-card--glass stage4-team-card stage4-question-open-card">
+          {isAnswerTimer ? (
+            <header className="stage4-question-top">
+              <div className="stage4-question-top__meta">
+                <div className="stage4-question-top__bar">
+                  <div className="stage4-question-top__lead">
+                    <p className="stage4-question-top__label">اثبتوا بالحق</p>
+                    <p className="stage4-question-top__progress">
+                      السؤال {stage4QuestionIndex + 1} من {stage4QuestionCount}
+                    </p>
+                  </div>
+                  {stage4ActiveQuestion ? (
+                    <span className="stage4-question-top__type-badge">
+                      {getStage4QuestionTypeLabel(stage4ActiveQuestion.type)}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+              <div className="stage4-question-top__timer">
+                <TimerCountdown
+                  remainingSeconds={remainingSeconds}
+                  isExpired={isExpired}
+                  label="وقت الإجابة"
+                  variant="embedded"
+                />
+              </div>
+            </header>
+          ) : null}
 
-      {saveError ? <ErrorState title="تعذر الحفظ" description={saveError} /> : null}
-
-      {submitted ? (
-        <div className="glass-card-premium p-6 text-center">
-          <p className="text-lg font-black text-[#143A5A]">
-            تم استلام إجابتكم، بانتظار بقية الفرق
-          </p>
-        </div>
-      ) : closed ? (
-        <div className="glass-card-premium p-6 text-center">
-          <p className="text-lg font-black text-[#143A5A]">
-            تم إغلاق الإجابات، بانتظار الإعلان
-          </p>
-        </div>
-      ) : (
-        <div className="glass-card-premium space-y-4 p-6">
-          <Input
-            value={answerText}
-            onChange={(event) => setAnswerText(event.target.value)}
-            placeholder="اكتب إجابتكم هنا"
-            disabled={saving}
+          <Stage4QuestionDisplay
+            question={stage4ActiveQuestion}
+            questionIndex={stage4QuestionIndex}
+            questionCount={stage4QuestionCount}
+            variant="team"
+            embedded
+            hideMeta={isAnswerTimer}
           />
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <Button type="button" disabled={saving} onClick={() => void handleSubmit()}>
-              {saving ? "جاري الإرسال..." : "إرسال الإجابة"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={saving}
-              onClick={() => void handlePass()}
-            >
-              تخطي / Pass
-            </Button>
+
+          <div className="stage4-answer-zone stage4-answer-zone--interactive">
+            {saveError ? <ErrorState title="تعذر الحفظ" description={saveError} /> : null}
+
+            {submitted ? (
+              <p className="stage4-answer-zone__status">
+                تم استلام إجابتكم، بانتظار بقية الفرق
+              </p>
+            ) : closed ? (
+              <p className="stage4-answer-zone__status">
+                تم إغلاق الإجابات، بانتظار الإعلان
+              </p>
+            ) : flexibleQuestion ? (
+              <div className="stage4-answer-zone__flexible">
+                <Stage1QuestionCard
+                  answerText={answerText}
+                  arrangeShuffleSeed={arrangeShuffleSeed}
+                  confirmed={submitted}
+                  interactionOnly
+                  question={flexibleQuestion}
+                  questionNumber={stage4QuestionIndex + 1}
+                  saveError={saveError}
+                  saving={saving}
+                  selectedAnswer={selectedAnswer}
+                  totalQuestions={stage4QuestionCount}
+                  onAnswerTextChange={setAnswerText}
+                  onConfirm={(answer) => {
+                    void submitAnswer(answer ?? "");
+                  }}
+                  onSelectAnswer={setSelectedAnswer}
+                />
+                <div className="game-ready-btn-wrap">
+                  <GameReadyButton
+                    type="button"
+                    className="game-ready-btn--outline"
+                    disabled={saving}
+                    onClick={() => void handlePass()}
+                  >
+                    تخطي / Pass
+                  </GameReadyButton>
+                </div>
+              </div>
+            ) : (
+              <div className="stage4-answer-zone__text">
+                <p className="stage4-answer-zone__title">إجابتكم</p>
+                <Input
+                  value={answerText}
+                  onChange={(event) => setAnswerText(event.target.value)}
+                  placeholder="اكتب إجابتكم هنا"
+                  disabled={saving}
+                  className="stage4-answer-zone__input"
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && !saving) {
+                      void submitAnswer(answerText);
+                    }
+                  }}
+                />
+                <div className="stage4-answer-zone__actions">
+                  <div className="game-ready-btn-wrap">
+                    <GameReadyButton
+                      type="button"
+                      disabled={saving}
+                      onClick={() => void submitAnswer(answerText)}
+                    >
+                      {saving ? "جاري الإرسال..." : "إرسال الإجابة"}
+                    </GameReadyButton>
+                  </div>
+                  <div className="game-ready-btn-wrap">
+                    <GameReadyButton
+                      type="button"
+                      className="game-ready-btn--outline"
+                      disabled={saving}
+                      onClick={() => void handlePass()}
+                    >
+                      تخطي / Pass
+                    </GameReadyButton>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        </section>
+      </div>
     </div>
   );
 }

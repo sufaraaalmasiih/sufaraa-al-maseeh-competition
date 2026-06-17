@@ -1,6 +1,5 @@
 "use client";
 
-import { CompetitionAnswerSuccess } from "@/components/competition/competition-answer-success";
 import { CompetitionConfirmButton } from "@/components/competition/competition-confirm-button";
 import { QuestionPrompt } from "@/components/competition/question-prompt";
 import type { Stage2CompleteVerseQuestion } from "@/features/stage2/stage2-complete-verse-types";
@@ -29,41 +28,39 @@ export function Stage2CompleteVerseQuestionCard({
   onConfirm,
 }: Stage2CompleteVerseQuestionCardProps) {
   return (
-    <div className="space-y-3">
+    <div className="gameplay-answer-zone">
       {hideQuestion ? null : (
-        <QuestionPrompt reference={question.reference} size="verse">
+        <QuestionPrompt reference={question.reference} imageUrl={question.imageUrl} size="verse">
           {question.verseWithBlank}
         </QuestionPrompt>
       )}
 
-      <input
-        autoComplete="off"
-        className="glass-input w-full"
-        disabled={confirmed || disabled || saving}
-        placeholder="اكتب الإكمال هنا"
-        value={answerText}
-        onChange={(event) => onAnswerTextChange(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" && answerText.trim()) onConfirm();
-        }}
-      />
+      <div className="gameplay-answer-field">
+        <input
+          autoComplete="off"
+          className="gameplay-answer-input"
+          disabled={confirmed || disabled || saving}
+          placeholder="اكتب الإكمال هنا"
+          value={answerText}
+          onChange={(event) => onAnswerTextChange(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && answerText.trim()) onConfirm();
+          }}
+        />
+      </div>
 
-      {confirmed ? (
-        <CompetitionAnswerSuccess />
-      ) : (
-        <>
-          {saveError ? (
-            <p className="glass-card px-3 py-2 text-sm font-bold text-destructive">{saveError}</p>
-          ) : null}
-          <CompetitionConfirmButton
-            className="mx-auto"
-            disabled={disabled || saving || !answerText.trim()}
-            onClick={onConfirm}
-          >
-            {saving ? "جاري الحفظ..." : "تأكيد الإجابة"}
-          </CompetitionConfirmButton>
-        </>
-      )}
+      {!confirmed && saveError ? (
+        <p className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-center text-sm font-bold text-destructive">
+          {saveError}
+        </p>
+      ) : null}
+      <CompetitionConfirmButton
+        confirmed={confirmed}
+        disabled={disabled || saving || !answerText.trim()}
+        onClick={onConfirm}
+      >
+        {saving ? "جاري الحفظ..." : "تأكيد الإجابة"}
+      </CompetitionConfirmButton>
     </div>
   );
 }

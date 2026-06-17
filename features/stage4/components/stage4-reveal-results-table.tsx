@@ -1,22 +1,84 @@
 "use client";
 
+import type { ReactNode } from "react";
+import { motion } from "framer-motion";
+import { getRankingRowDelay } from "@/components/motion/animated-ranking-row";
 import { LoadingState } from "@/components/layout/state-view";
-import type { Stage4ActiveAnswerRow } from "@/features/stage4/use-stage4-active-answers";
+import { RevealCorrectAnswer } from "@/components/motion/reveal-correct-answer";
+import { RevealResultChip } from "@/components/motion/reveal-result-chip";
+import { useGradualReveal } from "@/hooks/use-gradual-reveal";
+import { getRevealResultsDensityClass } from "@/features/competition/reveal-results-density";
+import {
+  formatStage3PointsDelta,
+  formatStage3RevealOutcome,
+} from "@/features/stage3/stage3-reveal-outcome";
+import { cn } from "@/lib/utils";
+import type { RevealResultsAnswerRow } from "@/features/stage4/reveal-results-answer-row";
 
 interface Stage4RevealResultsTableProps {
-  answers: Stage4ActiveAnswerRow[];
+  answers: RevealResultsAnswerRow[];
   correctAnswer: string;
   loading?: boolean;
   variant?: "team" | "facilitator" | "audience";
   highlightTeamId?: string | null;
+  animate?: boolean;
+  embedded?: boolean;
+  /** Stage 3 audience reveal hides the streak column and uses stage3 outcome labels. */
+  revealStage?: "stage3" | "stage4";
+  showStreakColumn?: boolean;
+  outcomeHeader?: string;
+  /** Optional section rendered below the answers table inside the same reveal card. */
+  rankingSection?: ReactNode;
 }
 
-function outcomeLabel(answer: Stage4ActiveAnswerRow): string {
+const TABLE_REVEAL_DELAY = 0.55;
+
+function stage4OutcomeLabel(answer: RevealResultsAnswerRow): string {
   if (answer.passed) {
     return "تخطي";
   }
 
   return answer.isCorrect ? "صحيح" : "خطأ";
+}
+
+function stage4OutcomeClassName(answer: RevealResultsAnswerRow): string {
+  if (answer.passed) {
+    return "reveal-results-outcome reveal-results-outcome--pass";
+  }
+
+  return answer.isCorrect
+    ? "reveal-results-outcome reveal-results-outcome--correct"
+    : "reveal-results-outcome reveal-results-outcome--wrong";
+}
+
+function stage3OutcomeClassName(answer: RevealResultsAnswerRow): string {
+  if (answer.passed) {
+    return "reveal-results-outcome reveal-results-outcome--pass";
+  }
+
+  if (answer.outcome === "selection_timeout") {
+    return "reveal-results-outcome reveal-results-outcome--pass";
+  }
+
+  if (answer.outcome === "no_answer") {
+    return "reveal-results-outcome reveal-results-outcome--wrong";
+  }
+
+  return answer.isCorrect
+    ? "reveal-results-outcome reveal-results-outcome--correct"
+    : "reveal-results-outcome reveal-results-outcome--wrong";
+}
+
+function pointsClassName(pointsDelta: number): string {
+  if (pointsDelta > 0) {
+    return "reveal-results-points reveal-results-points--gain";
+  }
+
+  if (pointsDelta < 0) {
+    return "reveal-results-points reveal-results-points--loss";
+  }
+
+  return "reveal-results-points";
 }
 
 export function Stage4RevealResultsTable({
@@ -25,69 +87,256 @@ export function Stage4RevealResultsTable({
   loading = false,
   variant = "facilitator",
   highlightTeamId,
+  animate = true,
+  embedded = false,
+  revealStage = "stage4",
+  showStreakColumn,
+  outcomeHeader,
+  rankingSection,
 }: Stage4RevealResultsTableProps) {
-  if (loading) {
-    return <LoadingState />;
-  }
+  const usesStage3Outcomes = revealStage === "stage3";
+  const showStreak = showStreakColumn ?? !usesStage3Outcomes;
+  const statusHeader = outcomeHeader ?? (usesStage3Outcomes ? "النتيجة" : "الحالة");
 
+  const getOutcomeLabel = (answer: RevealResultsAnswerRow) =>
+    usesStage3Outcomes
+      ? formatStage3RevealOutcome({
+          passed: answer.passed,
+          isCorrect: answer.isCorrect,
+          outcome: answer.outcome,
+          pointsDelta: answer.pointsDelta,
+        })
+      : stage4OutcomeLabel(answer);
+
+  const getOutcomeClass = (answer: RevealResultsAnswerRow) =>
+    usesStage3Outcomes ? stage3OutcomeClassName(answer) : stage4OutcomeClassName(answer);
+
+  const formatPoints = (pointsDelta: number) =>
+    usesStage3Outcomes ? formatStage3PointsDelta(pointsDelta) : pointsDelta > 0 ? `+${pointsDelta}` : String(pointsDelta);
   const visibleAnswers =
     variant === "team" && highlightTeamId
       ? answers.filter((answer) => answer.teamId === highlightTeamId)
       : answers;
 
-  return (
-    <div className="space-y-4">
-      <div className="rounded-md border border-[#4F8A10]/20 bg-[#F1F9E8] px-4 py-3 text-center">
-        <p className="text-xs font-bold text-muted-foreground">الإجابة الصحيحة</p>
-        <p className="mt-1 text-lg font-black text-[#143A5A]">{correctAnswer}</p>
-      </div>
+  const revealedAnswers = useGradualReveal(visibleAnswers, animate ? 520 : 0, {
+    maxDurationMs: 8_000,
+  });
+  const rows = animate ? revealedAnswers : visibleAnswers;
+  const latestAnswer = rows[rows.length - 1] ?? null;
+  const showTeamChips = variant === "team" && embedded;
 
-      <div className="overflow-x-auto rounded-md border border-primary/10">
-        <table className="w-full min-w-[640px] text-right text-sm">
-          <thead className="bg-[#F3FAFF] text-[#143A5A]">
-            <tr>
-              {variant !== "team" ? <th className="px-4 py-3 font-bold">الفريق</th> : null}
-              <th className="px-4 py-3 font-bold">الإجابة</th>
-              <th className="px-4 py-3 font-bold">الحالة</th>
-              <th className="px-4 py-3 font-bold">النقاط</th>
-              <th className="px-4 py-3 font-bold">التسلسل</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-primary/10 bg-white">
-            {visibleAnswers.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={variant === "team" ? 4 : 5}
-                  className="px-4 py-6 text-center text-muted-foreground"
-                >
-                  لا توجد إجابات بعد.
-                </td>
-              </tr>
-            ) : (
-              visibleAnswers.map((answer) => (
-                <tr
-                  key={answer.answerDocId}
-                  className={
-                    highlightTeamId && answer.teamId === highlightTeamId
-                      ? "bg-[#F3FAFF]/70"
-                      : undefined
-                  }
-                >
-                  {variant !== "team" ? (
-                    <td className="px-4 py-3 font-bold text-[#143A5A]">{answer.teamName}</td>
-                  ) : null}
-                  <td className="px-4 py-3">
-                    {answer.passed ? "تخطي" : answer.answerText || "—"}
-                  </td>
-                  <td className="px-4 py-3">{outcomeLabel(answer)}</td>
-                  <td className="px-4 py-3 font-bold">{answer.pointsDelta}</td>
-                  <td className="px-4 py-3">{answer.streakAfter}</td>
+  if (loading && variant !== "audience") {
+    return <LoadingState variant={embedded ? "inline" : "page"} />;
+  }
+
+  const densityClass =
+    variant === "audience" && !embedded
+      ? getRevealResultsDensityClass(visibleAnswers.length)
+      : null;
+
+  const shellClass = cn(
+    embedded ? "stage4-reveal-results" : "reveal-results-card reveal-results-card--standalone",
+    !embedded && variant === "audience" && "reveal-results-card--audience reveal-results-card--glass",
+    !embedded && rankingSection && "reveal-results-card--with-ranking",
+    densityClass,
+  );
+
+  const content = (
+    <>
+      <RevealCorrectAnswer
+        label="الإجابة الصحيحة"
+        value={correctAnswer}
+        className={embedded ? "stage4-reveal-answer-hero" : "reveal-results-card__answer"}
+        labelClassName={
+          embedded ? "stage4-reveal-answer-hero__label" : "reveal-results-card__answer-label"
+        }
+        valueClassName={
+          embedded ? "stage4-reveal-answer-hero__value" : "reveal-results-card__answer-value"
+        }
+      />
+
+      {animate && rows.length < visibleAnswers.length ? (
+        <motion.p
+          className="reveal-results-card__progress reveal-progress-label"
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          key={rows.length}
+        >
+          جاري الإعلان... ({rows.length}/{visibleAnswers.length})
+        </motion.p>
+      ) : null}
+
+      {showTeamChips ? (
+        <div className="stage4-reveal-chips">
+          <p className="stage4-reveal-chips__title">نتيجتك</p>
+          {!latestAnswer ? (
+            <p className="stage4-reveal-chips__empty">لم تُسجَّل إجابة بعد.</p>
+          ) : (
+            <div className="stage4-reveal-chips__grid">
+              <RevealResultChip
+                label="إجابتك"
+                value={latestAnswer.passed ? "تخطي" : latestAnswer.answerText || "—"}
+                index={0}
+                className="stage4-reveal-chip"
+                labelClassName="stage4-reveal-chip__label"
+                valueClassName="stage4-reveal-chip__value"
+              />
+              <RevealResultChip
+                label={statusHeader}
+                value={getOutcomeLabel(latestAnswer)}
+                index={1}
+                className="stage4-reveal-chip"
+                labelClassName="stage4-reveal-chip__label"
+                valueClassName="stage4-reveal-chip__value"
+              />
+              <RevealResultChip
+                label="النقاط"
+                value={String(latestAnswer.pointsDelta)}
+                index={2}
+                highlight
+                className="stage4-reveal-chip"
+                labelClassName="stage4-reveal-chip__label"
+                valueClassName="stage4-reveal-chip__value"
+                highlightClassName="stage4-reveal-chip__value--highlight"
+              />
+              {showStreak ? (
+                <RevealResultChip
+                  label="التسلسل"
+                  value={String(latestAnswer.streakAfter)}
+                  index={3}
+                  className="stage4-reveal-chip"
+                  labelClassName="stage4-reveal-chip__label"
+                  valueClassName="stage4-reveal-chip__value"
+                />
+              ) : null}
+            </div>
+          )}
+        </div>
+      ) : (
+        <motion.div
+          className="reveal-results-card__table-wrap"
+          initial={animate ? { opacity: 0, y: 16 } : false}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: 0.45,
+            delay: animate ? TABLE_REVEAL_DELAY : 0,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+        >
+          <div className="competition-ranking-scroll reveal-results-card__scroll">
+            <table className="competition-ranking-table competition-ranking-table--reveal">
+              <thead>
+                <tr>
+                  {variant !== "team" ? <th>الفريق</th> : null}
+                  <th>الإجابة</th>
+                  <th>{statusHeader}</th>
+                  <th>النقاط</th>
+                  {showStreak ? <th>التسلسل</th> : null}
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan={
+                        variant === "team"
+                          ? showStreak
+                            ? 4
+                            : 3
+                          : showStreak
+                            ? 5
+                            : 4
+                      }
+                      className="reveal-results-card__empty"
+                    >
+                      جاري تحميل الإجابات...
+                    </td>
+                  </tr>
+                ) : rows.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={
+                        variant === "team"
+                          ? showStreak
+                            ? 4
+                            : 3
+                          : showStreak
+                            ? 5
+                            : 4
+                      }
+                      className="reveal-results-card__empty"
+                    >
+                      لا توجد إجابات بعد.
+                    </td>
+                  </tr>
+                ) : (
+                  rows.map((answer, index) => (
+                    <motion.tr
+                      key={answer.answerDocId}
+                      initial={
+                        animate
+                          ? { opacity: 0, x: 28, filter: "blur(3px)" }
+                          : false
+                      }
+                      animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                      transition={{
+                        duration: 0.42,
+                        delay: animate ? TABLE_REVEAL_DELAY + getRankingRowDelay(index) : 0,
+                        ease: [0.22, 1, 0.36, 1],
+                      }}
+                      className={cn(
+                        highlightTeamId && answer.teamId === highlightTeamId
+                          ? "reveal-results-row--highlight"
+                          : index === rows.length - 1 && animate
+                            ? "reveal-results-row--latest"
+                            : undefined,
+                      )}
+                    >
+                      {variant !== "team" ? (
+                        <td className="reveal-results-team">{answer.teamName}</td>
+                      ) : null}
+                      <td className="reveal-results-answer">
+                        {answer.passed ? "تخطي" : answer.answerText || "—"}
+                      </td>
+                      <td>
+                        <span className={getOutcomeClass(answer)}>
+                          {getOutcomeLabel(answer)}
+                        </span>
+                      </td>
+                      <td className={pointsClassName(answer.pointsDelta)}>
+                        {formatPoints(answer.pointsDelta)}
+                      </td>
+                      {showStreak ? (
+                        <td className="reveal-results-streak">{answer.streakAfter}</td>
+                      ) : null}
+                    </motion.tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
+      )}
+
+      {rankingSection ? (
+        <div className="reveal-results-card__ranking">{rankingSection}</div>
+      ) : null}
+    </>
+  );
+
+  if (embedded) {
+    return <div className={shellClass}>{content}</div>;
+  }
+
+  return (
+    <motion.div
+      className={shellClass}
+      initial={animate ? { opacity: 0, y: variant === "audience" ? 10 : 28, scale: 0.98 } : false}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ type: "spring", stiffness: 260, damping: 24, mass: 0.9 }}
+    >
+      {content}
+    </motion.div>
   );
 }

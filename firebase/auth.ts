@@ -5,13 +5,12 @@ import {
   type UserCredential,
 } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
-import {
-  getDownloadURL,
-  ref,
-  uploadBytes,
-} from "firebase/storage";
 import { serverTimestamp, setDoc } from "firebase/firestore";
-import { firebaseStorage, getClientFirebaseAuth, ensureAuthPersistence } from "@/firebase/firebaseClient";
+import {
+  getClientFirebaseAuth,
+  getSecondaryFirebaseAuth,
+  ensureAuthPersistence,
+} from "@/firebase/firebaseClient";
 import { createInitialTeamState, teamRef, userRef } from "@/firebase/firestore";
 import type { RegisterTeamInput } from "@/features/auth/schemas";
 import type { AppRole, TeamDocument } from "@/types";
@@ -82,6 +81,45 @@ export async function createAdminSideUser(
   const uid = credential.user.uid;
   console.info("[admin-user-create] auth user created", { uid });
 
+  try {
+    await writeStaffUserDocument(uid, input);
+  } catch (error) {
+    await signOut(getClientFirebaseAuth());
+    throw error;
+  }
+}
+
+/** إنشاء حساب ميسر من جلسة المشرف العام دون تسجيل خروجه */
+export async function createFacilitatorBySuperAdmin(
+  input: Pick<CreateAdminSideUserInput, "fullName" | "email" | "password">,
+): Promise<void> {
+  const primaryAuth = getClientFirebaseAuth();
+  if (!primaryAuth.currentUser) {
+    throw new Error("SUPER_ADMIN_REQUIRED");
+  }
+
+  const secondaryAuth = getSecondaryFirebaseAuth();
+  const credential = await createUserWithEmailAndPassword(
+    secondaryAuth,
+    input.email,
+    input.password,
+  );
+  const uid = credential.user.uid;
+
+  try {
+    await writeStaffUserDocument(uid, {
+      ...input,
+      role: "facilitator",
+    });
+  } finally {
+    await signOut(secondaryAuth);
+  }
+}
+
+async function writeStaffUserDocument(
+  uid: string,
+  input: CreateAdminSideUserInput,
+): Promise<void> {
   console.info("[admin-user-create] write users/{uid} start", {
     path: `users/${uid}`,
   });
@@ -179,13 +217,33 @@ export async function registerTeam(input: RegisterTeamInput): Promise<RegisterTe
 }
 
 async function uploadTeamLogo(uid: string, file: File): Promise<string> {
-  console.info("[team-register] upload logo storage start", { uid });
-  const extension = file.name.split(".").pop() || "png";
-  const storageRef = ref(firebaseStorage, `teams/${uid}/logo.${extension}`);
-  await uploadBytes(storageRef, file);
-  const logoUrl = await getDownloadURL(storageRef);
-  console.info("[team-register] upload logo storage success", { uid });
-  return logoUrl;
+  console.info("[team-register] upload logo cloudinary start", { uid });
+  const auth = getClientFirebaseAuth();
+  const idToken = await auth.currentUser?.getIdToken();
+  if (!idToken) {
+    throw new Error("Missing auth token for logo upload.");
+  }
+
+  const formData = new FormData();
+  formData.append("logo", file);
+
+  const response = await fetch("/api/team-logo/upload", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${idToken}` },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Logo upload failed with status ${response.status}.`);
+  }
+
+  const payload = (await response.json()) as { logoUrl?: string };
+  if (!payload.logoUrl) {
+    throw new Error("Logo upload returned no URL.");
+  }
+
+  console.info("[team-register] upload logo cloudinary success", { uid });
+  return payload.logoUrl;
 }
 
 async function tryUploadTeamLogo(

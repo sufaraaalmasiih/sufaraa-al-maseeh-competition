@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ErrorState, LoadingState } from "@/components/layout/state-view";
-import { TimerCountdown } from "@/features/gameflow/components/timer-countdown";
-import { useCompetitionTimer } from "@/features/gameflow/use-competition-timer";
+import { ErrorState } from "@/components/layout/state-view";
+import { useAuthRole } from "@/hooks/use-auth-role";
 import { Stage3Board } from "@/features/stage3/components/stage3-board";
 import { selectStage3QuestionByOwner } from "@/features/stage3/open-stage3-question";
 import { boardQuestionToMetadata } from "@/features/stage3/stage3-question-metadata";
@@ -27,14 +26,11 @@ export function Stage3TeamBoardScreen({
   ownerTeamName,
   selectionTimeoutNotice,
 }: Stage3TeamBoardScreenProps) {
-  const { timer, remainingSeconds, isExpired } = useCompetitionTimer();
-  const { teamId, teamName, loading, error } = useTeamStage3Context();
+  const { user } = useAuthRole();
+  const { teamName, error } = useTeamStage3Context();
+  const teamId = user?.uid ?? null;
   const [selectingQuestionId, setSelectingQuestionId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-
-  if (loading) {
-    return <LoadingState />;
-  }
 
   if (error) {
     return <ErrorState title="تعذر تحميل بيانات الفريق" description={error} />;
@@ -42,8 +38,6 @@ export function Stage3TeamBoardScreen({
 
   const isOwner = Boolean(teamId && ownerTeamId && teamId === ownerTeamId);
   const ownerReady = Boolean(ownerTeamId);
-  const isSelectionTimer =
-    timer?.active && timer.stage === "stage3" && timer.purpose === "selection";
 
   async function handleSelectQuestion(question: Stage3BoardQuestion, fieldLabel: string) {
     if (!teamId || !isOwner || selectingQuestionId) {
@@ -62,7 +56,7 @@ export function Stage3TeamBoardScreen({
       await selectStage3QuestionByOwner({
         question: boardQuestionToMetadata(question, fieldLabel),
         callerTeamId: teamId,
-        callerTeamName: teamName,
+        callerTeamName: teamName || "فريق",
       });
     } catch {
       setActionError("تعذر فتح السؤال. تأكد أنك فريق صاحب الدور وأن السؤال لم يُستخدم.");
@@ -72,40 +66,38 @@ export function Stage3TeamBoardScreen({
   }
 
   return (
-    <div className="stage3-scene">
-      <Stage3SelectionTimeoutBanner notice={selectionTimeoutNotice} />
-      <TurnBanner
-        isOwner={isOwner}
-        ownerReady={ownerReady}
-        ownerTeamName={ownerTeamName}
-        teamName={teamName}
-      />
+    <div className="gameplay-scene gameplay-scene--centered stage3-scene stage3-scene--board">
+      <div className="gameplay-flow">
+        <Stage3SelectionTimeoutBanner notice={selectionTimeoutNotice} />
 
-      {isSelectionTimer ? (
-        <TimerCountdown
-          remainingSeconds={remainingSeconds}
-          isExpired={isExpired}
-          label={isOwner ? "وقت اختيار السؤال" : "وقت اختيار صاحب الدور"}
-        />
-      ) : null}
+        <section className="gameplay-board-card stage3-unified-card stage3-unified-card--glass stage3-board-unified">
+          <header className="stage3-board-hero">
+            <TurnBanner
+              isOwner={isOwner}
+              ownerReady={ownerReady}
+              ownerTeamName={ownerTeamName}
+            />
+          </header>
 
-      {actionError ? <ErrorState title="تعذر المتابعة" description={actionError} /> : null}
+          {actionError ? <ErrorState title="تعذر المتابعة" description={actionError} /> : null}
 
-      <Stage3Board
-        variant="team"
-        canChoose={isOwner && !isExpired}
-        pendingQuestionId={selectingQuestionId}
-        openedQuestionIds={openedQuestionIds}
-        usedQuestionIds={usedQuestionIds}
-        ownerTeamName={ownerTeamName}
-        onSelectQuestion={(question, fieldLabel) => {
-          void handleSelectQuestion(question, fieldLabel);
-        }}
-      />
+          <Stage3Board
+            embedded
+            featured
+            hideHeader
+            variant="team"
+            canChoose={isOwner}
+            pendingQuestionId={selectingQuestionId}
+            openedQuestionIds={openedQuestionIds}
+            usedQuestionIds={usedQuestionIds}
+            ownerTeamName={ownerTeamName}
+            onSelectQuestion={(question, fieldLabel) => {
+              void handleSelectQuestion(question, fieldLabel);
+            }}
+          />
 
-      {selectingQuestionId ? (
-        <p className="text-center text-base font-bold text-[#143A5A]">جاري فتح التحدي...</p>
-      ) : null}
+        </section>
+      </div>
     </div>
   );
 }
@@ -114,16 +106,14 @@ function TurnBanner({
   isOwner,
   ownerReady,
   ownerTeamName,
-  teamName,
 }: {
   isOwner: boolean;
   ownerReady: boolean;
   ownerTeamName: string | null;
-  teamName: string;
 }) {
   if (!ownerReady) {
     return (
-      <div className="stage3-turn-banner stage3-turn-banner--wait">
+      <div className="stage3-turn-banner stage3-turn-banner--wait stage3-turn-banner--hero">
         <p className="stage3-turn-banner__kicker">على المحك</p>
         <p className="stage3-turn-banner__title">بانتظار الميسّر</p>
         <p className="stage3-turn-banner__subtitle">سيُحدد فريق صاحب الدور قريباً.</p>
@@ -133,22 +123,19 @@ function TurnBanner({
 
   if (isOwner) {
     return (
-      <div className="stage3-turn-banner stage3-turn-banner--owner">
+      <div className="stage3-turn-banner stage3-turn-banner--owner stage3-turn-banner--hero">
         <p className="stage3-turn-banner__kicker">دوركم الآن!</p>
         <p className="stage3-turn-banner__title">اختاروا المجال والسؤال</p>
-        <p className="stage3-turn-banner__subtitle">
-          فريقكم: <span className="font-black text-[#4F8A10]">{teamName}</span>
-        </p>
       </div>
     );
   }
 
   return (
-    <div className="stage3-turn-banner stage3-turn-banner--wait">
+    <div className="stage3-turn-banner stage3-turn-banner--wait stage3-turn-banner--hero">
       <p className="stage3-turn-banner__kicker">على المحك</p>
       <p className="stage3-turn-banner__title">
         بانتظار اختيار فريق{" "}
-        <span className="text-[#2388C4]">{ownerTeamName ?? "صاحب الدور"}</span>
+        <span className="font-black text-[#0f5f8f]">{ownerTeamName ?? "صاحب الدور"}</span>
       </p>
       <p className="stage3-turn-banner__subtitle">ستُفتح الأسئلة عندما يختار الفريق صاحب الدور.</p>
     </div>

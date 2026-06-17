@@ -13,13 +13,16 @@ export function Stage4AudienceRevealScreen() {
     : null;
 
   return (
-    <Stage4RevealResultsTable
-      answers={answers}
-      correctAnswer={
-        mockQuestion?.correctAnswer ?? stage4ActiveQuestion?.correctAnswer ?? "—"
-      }
-      loading={loading}
-      variant="audience"
-    />
+    <div className="audience-reveal-results-page">
+      <Stage4RevealResultsTable
+        answers={answers}
+        correctAnswer={
+          mockQuestion?.correctAnswer ?? stage4ActiveQuestion?.correctAnswer ?? "—"
+        }
+        loading={loading}
+        variant="audience"
+        animate
+      />
+    </div>
   );
 }

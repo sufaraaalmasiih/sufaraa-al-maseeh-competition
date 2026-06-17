@@ -1,9 +1,9 @@
 "use client";
 
 import { getDocs } from "firebase/firestore";
-import { onSnapshot } from "firebase/firestore";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { teamStatesCollectionRef } from "@/firebase/firestore";
+import { useTeamStatesSnapshot } from "@/features/gameflow/team-states-store";
 
 export interface FinalResultTeam {
   teamId: string;
@@ -61,25 +61,12 @@ export async function fetchFinalResultTeams(
 }
 
 export function useFinalResults() {
-  const [teams, setTeams] = useState<FinalResultTeam[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { docs, loading, error } = useTeamStatesSnapshot("main");
 
-  useEffect(() => {
-    return onSnapshot(
-      teamStatesCollectionRef("main"),
-      (snapshot) => {
-        const rows = snapshot.docs.map((item) => normalize(item.id, item.data()));
-        setTeams(rankTeams(rows));
-        setError(null);
-        setLoading(false);
-      },
-      () => {
-        setError("تعذر تحميل النتائج النهائية.");
-        setLoading(false);
-      },
-    );
-  }, []);
+  const teams = useMemo(
+    () => rankTeams(docs.map((item) => normalize(item.id, item.data))),
+    [docs],
+  );
 
   return { teams, loading, error };
 }

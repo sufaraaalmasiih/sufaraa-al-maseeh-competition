@@ -4,6 +4,7 @@ export interface Stage2ArrangeVerseQuestion {
   fragments: string[];
   correctOrder: string[];
   reference: string;
+  imageUrl?: string;
 }
 
 export interface Stage2ArrangeVerseAnswer {

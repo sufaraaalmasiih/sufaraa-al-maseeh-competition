@@ -9,7 +9,17 @@ export interface Stage1BaseQuestion {
   type: Stage1QuestionType;
   prompt: string;
   reference?: string;
+  imageUrl?: string;
   correctAnswer: string;
+}
+
+export function isStage1QuestionType(value: string): value is Stage1QuestionType {
+  return (
+    value === "missing" ||
+    value === "multiple_choice" ||
+    value === "arrange" ||
+    value === "fill_blank"
+  );
 }
 
 /** ماذا ينقص — typed missing word/phrase (old project). */

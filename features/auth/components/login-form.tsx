@@ -10,7 +10,9 @@ import {
   InvalidLoginCredentialError,
   loginWithEmail,
   getUserRole,
+  logout,
 } from "@/firebase/auth";
+import { stampCompetitionReauthEpoch } from "@/features/competition-session/competition-session-controls";
 import { getClientFirebaseAuth } from "@/firebase/firebaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,12 +55,17 @@ export function LoginForm({
       const credential = await loginWithEmail(values.email, values.password);
       const role = await getUserRole(credential.user.uid);
       if (!role) {
+        await logout();
         setFormError("لا يوجد ملف مستخدم مرتبط بهذا الحساب");
         return;
       }
       if (!allowedRoles.includes(role)) {
+        await logout();
         setFormError(roleErrorMessage);
         return;
+      }
+      if (role === "team") {
+        await stampCompetitionReauthEpoch();
       }
       await getClientFirebaseAuth().authStateReady();
       router.push(roleRoutes[role]);
@@ -81,15 +88,16 @@ export function LoginForm({
       description={description}
       switchHref={switchHref}
       switchLabel={switchLabel}
+      variant="form"
     >
-      <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
+      <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
         <FieldError message={formError} />
-        <div className="space-y-2">
+        <div className="auth-form__field">
           <Label htmlFor="email">البريد الإلكتروني</Label>
           <Input id="email" type="email" autoComplete="email" {...register("email")} />
           <FieldError message={errors.email?.message} />
         </div>
-        <div className="space-y-2">
+        <div className="auth-form__field">
           <Label htmlFor="password">كلمة المرور</Label>
           <Input
             id="password"
@@ -99,7 +107,7 @@ export function LoginForm({
           />
           <FieldError message={errors.password?.message} />
         </div>
-        <Button className="w-full" size="lg" disabled={isSubmitting}>
+        <Button className="auth-form__submit" size="lg" disabled={isSubmitting}>
           <LogIn className="h-5 w-5" />
           {isSubmitting ? "جاري الدخول..." : "دخول"}
         </Button>

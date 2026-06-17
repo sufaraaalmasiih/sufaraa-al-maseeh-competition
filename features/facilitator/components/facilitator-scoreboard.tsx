@@ -3,6 +3,7 @@
 import { EmptyState } from "@/components/layout/empty-state";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
 import type { FacilitatorReadinessKey } from "@/features/facilitator/facilitator-flow-plan";
+import { isTeamReadyForReadiness } from "@/features/facilitator/facilitator-readiness";
 import type { LiveResultRow } from "@/features/facilitator/use-live-results";
 import type { RankedStage1Team } from "@/features/stage1/stage1-ranking";
 import { cn } from "@/lib/utils";
@@ -19,16 +20,6 @@ interface FacilitatorScoreboardProps {
   error: string | null;
   readinessKey?: FacilitatorReadinessKey | null;
   ownerTeamId?: string | null;
-}
-
-function teamReady(team: RankedStage1Team, key: FacilitatorReadinessKey | null): boolean {
-  if (key === "competitionIntro") {
-    return team.competitionIntroReady;
-  }
-  if (key === "stage1Intro") {
-    return team.stage1IntroReady;
-  }
-  return team.ready;
 }
 
 function rankClass(rank: number): string {
@@ -71,7 +62,7 @@ export function FacilitatorScoreboard({
         <p className="flow-scoreboard__desc">{desc}</p>
       </div>
 
-      {loading ? <LoadingState /> : null}
+      {loading ? <LoadingState variant="inline" /> : null}
       {error ? <ErrorState title="تعذر التحميل" description={error} /> : null}
 
       {!loading && !error && mode === "teams" && teams.length === 0 ? (
@@ -83,7 +74,7 @@ export function FacilitatorScoreboard({
       ) : null}
 
       {!loading && !error && mode === "teams" && teams.length > 0 ? (
-        <div className="flow-teams-table-wrap">
+        <div className="flow-teams-table-wrap competition-ranking-scroll">
           <table className="flow-teams-table">
             <thead>
               <tr>
@@ -95,7 +86,7 @@ export function FacilitatorScoreboard({
             </thead>
             <tbody>
               {teams.map((team, index) => {
-                const ready = teamReady(team, readinessKey);
+                const ready = isTeamReadyForReadiness(team, readinessKey);
                 const isOwner = ownerTeamId != null && team.teamId === ownerTeamId;
                 return (
                   <tr

@@ -19,6 +19,8 @@ export interface Stage4ActiveAnswerRow {
   streakAfter: number;
 }
 
+const ANSWERS_LOAD_TIMEOUT_MS = 4_000;
+
 export function useStage4ActiveAnswers(questionId: string | null) {
   const [answers, setAnswers] = useState<Stage4ActiveAnswerRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +34,18 @@ export function useStage4ActiveAnswers(questionId: string | null) {
       return;
     }
 
+    let settled = false;
+    const settleLoading = () => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      setLoading(false);
+    };
+
     setLoading(true);
+
+    const timeoutId = window.setTimeout(settleLoading, ANSWERS_LOAD_TIMEOUT_MS);
 
     const answersQuery = query(
       answersCollectionRef(MAIN_COMPETITION_ID),
@@ -40,7 +53,7 @@ export function useStage4ActiveAnswers(questionId: string | null) {
       where("questionId", "==", questionId),
     );
 
-    return onSnapshot(
+    const unsubscribe = onSnapshot(
       answersQuery,
       (snapshot) => {
         setAnswers(
@@ -71,13 +84,18 @@ export function useStage4ActiveAnswers(questionId: string | null) {
             .sort((first, second) => first.teamName.localeCompare(second.teamName, "ar")),
         );
         setError(null);
-        setLoading(false);
+        settleLoading();
       },
       () => {
         setError("تعذر تحميل إجابات المرحلة الرابعة.");
-        setLoading(false);
+        settleLoading();
       },
     );
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      unsubscribe();
+    };
   }, [questionId]);
 
   return { answers, loading, error };

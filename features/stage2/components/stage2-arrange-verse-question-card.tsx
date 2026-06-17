@@ -2,7 +2,6 @@
 
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { CompetitionAnswerSuccess } from "@/components/competition/competition-answer-success";
 import { CompetitionConfirmButton } from "@/components/competition/competition-confirm-button";
 import { PuzzlePiece } from "@/components/competition/puzzle-piece";
 import { QuestionPrompt } from "@/components/competition/question-prompt";
@@ -79,20 +78,25 @@ export function Stage2ArrangeVerseQuestionCard({
     setDraggedIndex(null);
   }
 
+  function handleDrop(event: React.DragEvent) {
+    event.preventDefault();
+    setDraggedIndex(null);
+  }
+
   function handleConfirm() {
     if (confirmed || disabled || saving) return;
     onConfirm(currentOrder);
   }
 
   return (
-    <div className="space-y-2">
+    <div className="gameplay-arrange-zone">
       {hideQuestion ? null : (
-        <QuestionPrompt reference={question.reference} size="hero">
+        <QuestionPrompt reference={question.reference} imageUrl={question.imageUrl} size="hero">
           {question.prompt}
         </QuestionPrompt>
       )}
 
-      <div className="puzzle-piece-track">
+      <div className="puzzle-piece-track" onDragOver={(event) => event.preventDefault()} onDrop={handleDrop}>
         {currentOrder.map((fragment, index) => (
           <PuzzlePiece
             key={`${question.id}-${fragment}-${index}`}
@@ -139,22 +143,17 @@ export function Stage2ArrangeVerseQuestionCard({
         ))}
       </div>
 
-      {confirmed ? (
-        <CompetitionAnswerSuccess />
-      ) : (
-        <>
-          {saveError ? (
-            <p className="glass-card px-3 py-2 text-sm font-bold text-destructive">{saveError}</p>
-          ) : null}
-          <CompetitionConfirmButton
-            className="mx-auto"
-            disabled={disabled || saving}
-            onClick={handleConfirm}
-          >
-            {saving ? "جاري الحفظ..." : "تأكيد الإجابة"}
-          </CompetitionConfirmButton>
-        </>
-      )}
+      {!confirmed && saveError ? (
+        <p className="glass-card px-3 py-2 text-sm font-bold text-destructive">{saveError}</p>
+      ) : null}
+      <CompetitionConfirmButton
+        className="mx-auto"
+        confirmed={confirmed}
+        disabled={disabled || saving}
+        onClick={handleConfirm}
+      >
+        {saving ? "جاري الحفظ..." : "تأكيد الإجابة"}
+      </CompetitionConfirmButton>
     </div>
   );
 }
