@@ -1,5 +1,5 @@
-import { runTransaction, serverTimestamp } from "firebase/firestore";
-import { firestore } from "@/firebase/firebaseClient";
+﻿import { runTransaction, serverTimestamp } from "firebase/firestore";
+import { getClientFirestore } from "@/firebase/firebaseClient";
 import { MAIN_COMPETITION_ID, teamRef, teamStateRef } from "@/firebase/firestore";
 import { appendTeamAdminAuditLog } from "@/features/facilitator/facilitator-team-admin-audit";
 import type { TeamPlayer } from "@/types";
@@ -15,7 +15,7 @@ export async function updateTeamProfile(input: {
   const profileRef = teamRef(input.teamId);
   let beforeValue: Record<string, unknown> | null = null;
 
-  await runTransaction(firestore, async (transaction) => {
+  await runTransaction(getClientFirestore(), async (transaction) => {
     const stateSnapshot = await transaction.get(stateRef);
     if (!stateSnapshot.exists()) {
       throw new Error("الفريق غير موجود في المسابقة.");
@@ -68,7 +68,7 @@ export async function removeTeamFromCompetition(input: {
   const stateRef = teamStateRef(MAIN_COMPETITION_ID, input.teamId);
   let beforeValue: Record<string, unknown> | null = null;
 
-  await runTransaction(firestore, async (transaction) => {
+  await runTransaction(getClientFirestore(), async (transaction) => {
     const snapshot = await transaction.get(stateRef);
     if (!snapshot.exists()) {
       throw new Error("الفريق غير موجود في المسابقة.");
@@ -106,7 +106,7 @@ export async function updateTeamFullProfile(input: {
   const profileRef = teamRef(input.teamId);
   let beforeValue: Record<string, unknown> | null = null;
 
-  await runTransaction(firestore, async (transaction) => {
+  await runTransaction(getClientFirestore(), async (transaction) => {
     const stateSnapshot = await transaction.get(stateRef);
     if (!stateSnapshot.exists()) {
       throw new Error("الفريق غير موجود في المسابقة.");

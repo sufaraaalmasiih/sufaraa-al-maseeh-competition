@@ -1,4 +1,4 @@
-import {
+﻿import {
   getDoc,
   getDocs,
   query,
@@ -8,7 +8,7 @@ import {
   where,
   writeBatch,
 } from "firebase/firestore";
-import { firestore } from "@/firebase/firebaseClient";
+import { getClientFirestore } from "@/firebase/firebaseClient";
 import {
   answersCollectionRef,
   buildInitialTeamStateDocument,
@@ -45,7 +45,7 @@ export async function deleteTeamAnswers(input: {
 
   for (let index = 0; index < refs.length; index += FIRESTORE_BATCH_LIMIT) {
     const chunk = refs.slice(index, index + FIRESTORE_BATCH_LIMIT);
-    const batch = writeBatch(firestore);
+    const batch = writeBatch(getClientFirestore());
     chunk.forEach((ref) => batch.delete(ref));
     await batch.commit();
   }
@@ -129,7 +129,7 @@ export async function deleteTeamCompletely(input: {
 
   for (let index = 0; index < answerRefs.length; index += FIRESTORE_BATCH_LIMIT) {
     const chunk = answerRefs.slice(index, index + FIRESTORE_BATCH_LIMIT);
-    const batch = writeBatch(firestore);
+    const batch = writeBatch(getClientFirestore());
     chunk.forEach((ref) => batch.delete(ref));
     await batch.commit();
   }
@@ -138,7 +138,7 @@ export async function deleteTeamCompletely(input: {
   const profileRef = teamRef(input.teamId);
   let beforeValue: Record<string, unknown> | null = null;
 
-  await runTransaction(firestore, async (transaction) => {
+  await runTransaction(getClientFirestore(), async (transaction) => {
     const stateSnapshot = await transaction.get(stateRef);
     if (stateSnapshot.exists()) {
       const data = stateSnapshot.data();

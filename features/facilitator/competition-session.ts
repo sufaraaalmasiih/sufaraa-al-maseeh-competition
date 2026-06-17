@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   addDoc,
@@ -15,7 +15,7 @@ import {
   type Timestamp,
 } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { firestore, firebaseAuth } from "@/firebase/firebaseClient";
+import { getClientFirestore, firebaseAuth } from "@/firebase/firebaseClient";
 import { gameFlowRef, MAIN_COMPETITION_ID } from "@/firebase/firestore";
 import type { FinalResultTeam } from "@/features/facilitator/use-final-results";
 import { subscribeFirestoreDoc } from "@/lib/firestore-listener";
@@ -77,11 +77,11 @@ export function getFacilitatorActorName(): string {
 }
 
 function historyCollection() {
-  return collection(firestore, "competitions", MAIN_COMPETITION_ID, "history");
+  return collection(getClientFirestore(), "competitions", MAIN_COMPETITION_ID, "history");
 }
 
 function historyDoc(id: string) {
-  return doc(firestore, "competitions", MAIN_COMPETITION_ID, "history", id);
+  return doc(getClientFirestore(), "competitions", MAIN_COMPETITION_ID, "history", id);
 }
 
 function createEditLogEntryId(): string {
@@ -256,7 +256,7 @@ export async function appendSessionEditLog(
   });
 
   const ref = historyDoc(sessionId);
-  await runTransaction(firestore, async (transaction) => {
+  await runTransaction(getClientFirestore(), async (transaction) => {
     const snapshot = await transaction.get(ref);
     if (!snapshot.exists()) {
       throw new Error("جلسة السجل غير موجودة.");

@@ -1,12 +1,12 @@
-import { doc, serverTimestamp, setDoc } from "firebase/firestore";
-import { firestore } from "@/firebase/firebaseClient";
+﻿import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { getClientFirestore } from "@/firebase/firebaseClient";
 import { MAIN_COMPETITION_ID } from "@/firebase/firestore";
 import { mergeCompetitionContent } from "@/features/competition-content/competition-content-merge";
 import type { CompetitionContentDocument } from "@/features/competition-content/competition-content-types";
 import { subscribeFirestoreDoc } from "@/lib/firestore-listener";
 
 export const competitionContentRef = doc(
-  firestore,
+  getClientFirestore(),
   "competitions",
   MAIN_COMPETITION_ID,
   "system",

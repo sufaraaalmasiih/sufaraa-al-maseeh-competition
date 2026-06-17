@@ -1,5 +1,5 @@
-import { runTransaction, serverTimestamp } from "firebase/firestore";
-import { firebaseAuth, firestore } from "@/firebase/firebaseClient";
+﻿import { runTransaction, serverTimestamp } from "firebase/firestore";
+import { firebaseAuth, getClientFirestore } from "@/firebase/firebaseClient";
 import {
   answerRef,
   gameFlowRef,
@@ -21,7 +21,7 @@ export async function finalizeStage3OwnerNoAnswer(): Promise<ConfirmStage3Answer
     throw new Error("Missing authenticated team.");
   }
 
-  return runTransaction(firestore, async (transaction) => {
+  return runTransaction(getClientFirestore(), async (transaction) => {
     const gameFlowSnapshot = await transaction.get(gameFlowRef);
     const gameFlow = gameFlowSnapshot.data();
 

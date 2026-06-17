@@ -1,12 +1,12 @@
-import { runTransaction, serverTimestamp, setDoc } from "firebase/firestore";
-import { firestore } from "@/firebase/firebaseClient";
+﻿import { runTransaction, serverTimestamp, setDoc } from "firebase/firestore";
+import { getClientFirestore } from "@/firebase/firebaseClient";
 import { gameFlowRef, timerRef } from "@/firebase/firestore";
 
 /**
  * Locks answers — maps old `answer_closed` state.
  */
 export async function closeStage3Answers() {
-  await runTransaction(firestore, async (transaction) => {
+  await runTransaction(getClientFirestore(), async (transaction) => {
     const gameFlowSnapshot = await transaction.get(gameFlowRef);
 
     if (!gameFlowSnapshot.exists()) {

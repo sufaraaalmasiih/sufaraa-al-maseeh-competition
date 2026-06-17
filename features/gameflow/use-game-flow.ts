@@ -101,10 +101,12 @@ function publishGameFlow(next: GameFlowStoreState): void {
 
 function clearLoadTimeout(): void {
   timeoutArmed = false;
-  if (timeoutId !== undefined) {
-    window.clearTimeout(timeoutId);
-    timeoutId = undefined;
+  if (typeof window === "undefined" || timeoutId === undefined) {
+    return;
   }
+
+  window.clearTimeout(timeoutId);
+  timeoutId = undefined;
 }
 
 function settleGameFlowLoading(message: string, debugLabel: string, debugExtra?: Record<string, unknown>): void {
@@ -122,7 +124,7 @@ function settleGameFlowLoading(message: string, debugLabel: string, debugExtra?:
 }
 
 function scheduleLoadTimeout(): void {
-  if (timeoutArmed || !gameFlowStore.loading) {
+  if (typeof window === "undefined" || timeoutArmed || !gameFlowStore.loading) {
     return;
   }
 
@@ -237,7 +239,6 @@ function applyGameFlowSnapshot(
 
 function startGameFlowListener(): void {
   if (typeof window === "undefined" || listenerStarted) {
-    scheduleLoadTimeout();
     return;
   }
 

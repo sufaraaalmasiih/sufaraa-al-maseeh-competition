@@ -1,5 +1,5 @@
-import { runTransaction, serverTimestamp } from "firebase/firestore";
-import { firebaseAuth, firestore } from "@/firebase/firebaseClient";
+﻿import { runTransaction, serverTimestamp } from "firebase/firestore";
+import { firebaseAuth, getClientFirestore } from "@/firebase/firebaseClient";
 import {
   answerRef,
   gameFlowRef,
@@ -60,7 +60,7 @@ export async function confirmStage2ArrangeVerseAnswer({
   const currentTeamStateRef = teamStateRef(MAIN_COMPETITION_ID, teamId);
   const serializedAnswer = serializeArrangeVerseAnswer(orderedFragments);
 
-  return runTransaction(firestore, async (transaction) => {
+  return runTransaction(getClientFirestore(), async (transaction) => {
     const [
       answerSnapshot,
       teamSnapshot,

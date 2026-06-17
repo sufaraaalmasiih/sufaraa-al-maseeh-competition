@@ -1,5 +1,5 @@
-import { runTransaction, serverTimestamp } from "firebase/firestore";
-import { firestore } from "@/firebase/firebaseClient";
+﻿import { runTransaction, serverTimestamp } from "firebase/firestore";
+import { getClientFirestore } from "@/firebase/firebaseClient";
 import { answerRef, gameFlowRef, teamStateRef, timerRef } from "@/firebase/firestore";
 import { buildStage3AnswerId } from "@/features/stage3/stage3-answer-id";
 import { buildStage3AnswerPayload } from "@/features/stage3/stage3-answer-payload";
@@ -23,7 +23,7 @@ export interface HandleStage3SelectionTimeoutResult {
  * reveal screen for audience (same as no-answer flow), then auto-return advances turn.
  */
 export async function handleStage3SelectionTimeout(): Promise<HandleStage3SelectionTimeoutResult> {
-  const result = await runTransaction(firestore, async (transaction) => {
+  const result = await runTransaction(getClientFirestore(), async (transaction) => {
     const [gameFlowSnapshot, timerSnapshot] = await Promise.all([
       transaction.get(gameFlowRef),
       transaction.get(timerRef),

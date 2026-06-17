@@ -1,5 +1,5 @@
-import { runTransaction, serverTimestamp } from "firebase/firestore";
-import { firestore } from "@/firebase/firebaseClient";
+﻿import { runTransaction, serverTimestamp } from "firebase/firestore";
+import { getClientFirestore } from "@/firebase/firebaseClient";
 import { gameFlowRef, timerRef } from "@/firebase/firestore";
 import { buildStage4AnsweringTimerPayload } from "@/features/gameflow/stage4-answering-timer";
 import { parseTimerDurations } from "@/features/facilitator/facilitator-timer-settings";
@@ -10,7 +10,7 @@ import { parseStage4FinishedQuestionIds } from "@/features/stage4/stage4-questio
 export async function openStage4Question() {
   const now = Date.now();
 
-  await runTransaction(firestore, async (transaction) => {
+  await runTransaction(getClientFirestore(), async (transaction) => {
     const gameFlowSnapshot = await transaction.get(gameFlowRef);
 
     if (!gameFlowSnapshot.exists()) {

@@ -1,5 +1,5 @@
-import { getDoc, runTransaction, serverTimestamp, setDoc } from "firebase/firestore";
-import { firestore } from "@/firebase/firebaseClient";
+﻿import { getDoc, runTransaction, serverTimestamp, setDoc } from "firebase/firestore";
+import { getClientFirestore } from "@/firebase/firebaseClient";
 import { gameFlowRef, timerRef } from "@/firebase/firestore";
 import { buildStage3SelectionTimerPayload } from "@/features/stage3/stage3-timer-payload";
 import {
@@ -18,7 +18,7 @@ interface AdvanceStage3TurnInput {
  * Returns to board — optionally rotates to next owner team; restarts 15s selection timer.
  */
 export async function advanceStage3Turn({ rotateOwner = true }: AdvanceStage3TurnInput = {}) {
-  await runTransaction(firestore, async (transaction) => {
+  await runTransaction(getClientFirestore(), async (transaction) => {
     const gameFlowSnapshot = await transaction.get(gameFlowRef);
 
     if (!gameFlowSnapshot.exists()) {

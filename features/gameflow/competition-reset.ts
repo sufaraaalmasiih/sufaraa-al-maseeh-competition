@@ -1,11 +1,11 @@
-import {
+﻿import {
   type DocumentReference,
   getDocs,
   serverTimestamp,
   setDoc,
   writeBatch,
 } from "firebase/firestore";
-import { firestore } from "@/firebase/firebaseClient";
+import { getClientFirestore } from "@/firebase/firebaseClient";
 import {
   answersCollectionRef,
   buildInitialTeamStateDocument,
@@ -89,7 +89,7 @@ async function resetAllTeamStates(competitionId: string): Promise<number> {
   try {
     for (let index = 0; index < docs.length; index += FIRESTORE_BATCH_LIMIT) {
       const chunk = docs.slice(index, index + FIRESTORE_BATCH_LIMIT);
-      const batch = writeBatch(firestore);
+      const batch = writeBatch(getClientFirestore());
 
       chunk.forEach((docSnap) => {
         const data = docSnap.data();
@@ -121,7 +121,7 @@ async function resetAllTeamStates(competitionId: string): Promise<number> {
 async function commitBatchedDeletes(refs: DocumentReference[]): Promise<void> {
   for (let index = 0; index < refs.length; index += FIRESTORE_BATCH_LIMIT) {
     const chunk = refs.slice(index, index + FIRESTORE_BATCH_LIMIT);
-    const batch = writeBatch(firestore);
+    const batch = writeBatch(getClientFirestore());
     chunk.forEach((ref) => batch.delete(ref));
     await batch.commit();
   }

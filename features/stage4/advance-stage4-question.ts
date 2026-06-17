@@ -1,5 +1,5 @@
-import { runTransaction, serverTimestamp } from "firebase/firestore";
-import { firestore } from "@/firebase/firebaseClient";
+﻿import { runTransaction, serverTimestamp } from "firebase/firestore";
+import { getClientFirestore } from "@/firebase/firebaseClient";
 import { gameFlowRef } from "@/firebase/firestore";
 import {
   parseStage4FinishedQuestionIds,
@@ -7,7 +7,7 @@ import {
 } from "@/features/stage4/stage4-question-metadata";
 
 export async function advanceStage4Question() {
-  await runTransaction(firestore, async (transaction) => {
+  await runTransaction(getClientFirestore(), async (transaction) => {
     const gameFlowSnapshot = await transaction.get(gameFlowRef);
 
     if (!gameFlowSnapshot.exists()) {

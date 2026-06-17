@@ -1,4 +1,4 @@
-import {
+﻿import {
   getDocs,
   query,
   runTransaction,
@@ -7,7 +7,7 @@ import {
   where,
   writeBatch,
 } from "firebase/firestore";
-import { firestore } from "@/firebase/firebaseClient";
+import { getClientFirestore } from "@/firebase/firebaseClient";
 import { answersCollectionRef, gameFlowRef, timerRef } from "@/firebase/firestore";
 import {
   parseStage3QuestionMetadata,
@@ -31,7 +31,7 @@ async function markStage3AnswersVisibleToAudience(questionId: string) {
     return;
   }
 
-  const batch = writeBatch(firestore);
+  const batch = writeBatch(getClientFirestore());
 
   for (const answerDoc of answersSnapshot.docs) {
     batch.update(answerDoc.ref, {
@@ -48,7 +48,7 @@ async function markStage3AnswersVisibleToAudience(questionId: string) {
  * and set visibleToAudience so late commits before the transition are included.
  */
 export async function startStage3Reveal() {
-  const { questionId } = await runTransaction(firestore, async (transaction) => {
+  const { questionId } = await runTransaction(getClientFirestore(), async (transaction) => {
     const gameFlowSnapshot = await transaction.get(gameFlowRef);
     const gameFlow = gameFlowSnapshot.data();
 

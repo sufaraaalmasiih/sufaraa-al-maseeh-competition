@@ -1,5 +1,5 @@
-import { getDoc, getDocs, serverTimestamp, updateDoc, writeBatch } from "firebase/firestore";
-import { firestore } from "@/firebase/firebaseClient";
+﻿import { getDoc, getDocs, serverTimestamp, updateDoc, writeBatch } from "firebase/firestore";
+import { getClientFirestore } from "@/firebase/firebaseClient";
 import { MAIN_COMPETITION_ID, teamStateRef, teamStatesCollectionRef } from "@/firebase/firestore";
 import {
   appendTeamAdminAuditLog,
@@ -46,7 +46,7 @@ export async function setTeamStageLocks(input: {
 
   for (let index = 0; index < docs.length; index += FIRESTORE_BATCH_LIMIT) {
     const chunk = docs.slice(index, index + FIRESTORE_BATCH_LIMIT);
-    const batch = writeBatch(firestore);
+    const batch = writeBatch(getClientFirestore());
     chunk.forEach((docSnap) => batch.update(docSnap.ref, patch));
     await batch.commit();
   }
@@ -99,7 +99,7 @@ export async function toggleTeamStageLock(input: {
 
   for (let index = 0; index < docs.length; index += FIRESTORE_BATCH_LIMIT) {
     const chunk = docs.slice(index, index + FIRESTORE_BATCH_LIMIT);
-    const batch = writeBatch(firestore);
+    const batch = writeBatch(getClientFirestore());
     chunk.forEach((docSnap) => batch.update(docSnap.ref, patch));
     await batch.commit();
   }

@@ -1,5 +1,5 @@
-import { getDocs, query, serverTimestamp, where, writeBatch } from "firebase/firestore";
-import { firestore } from "@/firebase/firebaseClient";
+﻿import { getDocs, query, serverTimestamp, where, writeBatch } from "firebase/firestore";
+import { getClientFirestore } from "@/firebase/firebaseClient";
 import { answersCollectionRef } from "@/firebase/firestore";
 
 const MAIN_COMPETITION_ID = "main";
@@ -17,7 +17,7 @@ export async function markStage3AnswersVisibleToAudience(questionId: string) {
     return;
   }
 
-  const batch = writeBatch(firestore);
+  const batch = writeBatch(getClientFirestore());
 
   for (const answerDoc of answersSnapshot.docs) {
     batch.update(answerDoc.ref, {

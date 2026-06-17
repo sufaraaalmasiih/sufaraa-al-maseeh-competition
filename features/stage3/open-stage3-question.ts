@@ -1,5 +1,5 @@
-import { runTransaction, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
-import { firestore } from "@/firebase/firebaseClient";
+﻿import { runTransaction, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
+import { getClientFirestore } from "@/firebase/firebaseClient";
 import { gameFlowRef, teamStateRef, timerRef } from "@/firebase/firestore";
 import {
   parseStage3OpenedQuestionIds,
@@ -29,7 +29,7 @@ export async function selectStage3QuestionByOwner({
 }: SelectStage3QuestionByOwnerInput) {
   const now = Date.now();
 
-  await runTransaction(firestore, async (transaction) => {
+  await runTransaction(getClientFirestore(), async (transaction) => {
     const gameFlowSnapshot = await transaction.get(gameFlowRef);
 
     if (!gameFlowSnapshot.exists()) {

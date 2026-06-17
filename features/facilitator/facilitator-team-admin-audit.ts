@@ -1,5 +1,5 @@
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { firestore, firebaseAuth } from "@/firebase/firebaseClient";
+﻿import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { getClientFirestore, firebaseAuth } from "@/firebase/firebaseClient";
 import { MAIN_COMPETITION_ID } from "@/firebase/firestore";
 import { appendActiveSessionEditLog } from "@/features/facilitator/competition-session";
 
@@ -18,7 +18,7 @@ const AUDIT_ACTION_ALIASES: Record<string, string> = {
 };
 
 function auditLogCollection() {
-  return collection(firestore, "competitions", MAIN_COMPETITION_ID, "auditLog");
+  return collection(getClientFirestore(), "competitions", MAIN_COMPETITION_ID, "auditLog");
 }
 
 /** Best-effort audit trail. Never blocks the primary mutation. */

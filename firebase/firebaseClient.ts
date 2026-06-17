@@ -118,10 +118,11 @@ function resolveFirebaseAuth(): Auth {
 /** Lazy singleton — do not initialize at module import time. */
 export const firebaseAuth = bindLazy(resolveFirebaseAuth);
 
-export const firestore = bindLazy(() => {
+/** Real Firestore instance — required by doc(), collection(), runTransaction(), etc. (Proxy is rejected). */
+export function getClientFirestore(): Firestore {
   lazyFirestore ??= getFirestore(getFirebaseApp());
   return lazyFirestore;
-});
+}
 
 export const firebaseStorage = bindLazy(() => {
   lazyStorage ??= getStorage(getFirebaseApp());

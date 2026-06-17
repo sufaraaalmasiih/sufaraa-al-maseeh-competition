@@ -1,5 +1,5 @@
-import { runTransaction, serverTimestamp } from "firebase/firestore";
-import { firestore } from "@/firebase/firebaseClient";
+﻿import { runTransaction, serverTimestamp } from "firebase/firestore";
+import { getClientFirestore } from "@/firebase/firebaseClient";
 import { MAIN_COMPETITION_ID, teamStateRef } from "@/firebase/firestore";
 import { appendTeamAdminAuditLog } from "@/features/facilitator/facilitator-team-admin-audit";
 import type { AdminStageKey } from "@/features/facilitator/team-control-types";
@@ -19,7 +19,7 @@ export async function adjustTeamScore(input: {
   let beforeValue: Record<string, unknown> | null = null;
   let afterValue: Record<string, unknown> | null = null;
 
-  await runTransaction(firestore, async (transaction) => {
+  await runTransaction(getClientFirestore(), async (transaction) => {
     const snapshot = await transaction.get(ref);
     if (!snapshot.exists()) {
       throw new Error("الفريق غير موجود.");

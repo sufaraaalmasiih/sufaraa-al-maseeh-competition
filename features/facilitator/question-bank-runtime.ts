@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import { doc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { useEffect, useState } from "react";
-import { getClientFirebaseAuth, firestore } from "@/firebase/firebaseClient";
+import { getClientFirebaseAuth, getClientFirestore } from "@/firebase/firebaseClient";
 import { MAIN_COMPETITION_ID } from "@/firebase/firestore";
 import type { Stage2QuestionBank, Stage3BankQuestion } from "@/features/facilitator/question-bank-types";
 import {
@@ -73,14 +73,14 @@ function startBankListeners(): void {
   subscribed = true;
 
   bankUnsubscribes.push(
-    subscribeFirestoreDoc(doc(firestore, ...BANK_ROOT, "stage2"), (snapshot) => {
+    subscribeFirestoreDoc(doc(getClientFirestore(), ...BANK_ROOT, "stage2"), (snapshot) => {
       setRuntimeStage2Bank(parseStage2Data(snapshot.data()));
       notify();
     }),
   );
 
   bankUnsubscribes.push(
-    subscribeFirestoreDoc(doc(firestore, ...BANK_ROOT, "stage3"), (snapshot) => {
+    subscribeFirestoreDoc(doc(getClientFirestore(), ...BANK_ROOT, "stage3"), (snapshot) => {
       const raw = snapshot.data()?.questions;
       setRuntimeStage3Bank(
         raw && typeof raw === "object" && Object.keys(raw).length > 0
@@ -92,7 +92,7 @@ function startBankListeners(): void {
   );
 
   bankUnsubscribes.push(
-    subscribeFirestoreDoc(doc(firestore, ...BANK_ROOT, "stage4"), (snapshot) => {
+    subscribeFirestoreDoc(doc(getClientFirestore(), ...BANK_ROOT, "stage4"), (snapshot) => {
       const questions = snapshot.data()?.questions;
       setRuntimeStage4Bank(
         Array.isArray(questions) && questions.length > 0

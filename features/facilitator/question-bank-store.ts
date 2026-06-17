@@ -1,4 +1,4 @@
-import {
+﻿import {
   collection,
   deleteDoc,
   doc,
@@ -11,7 +11,7 @@ import {
   setDoc,
   updateDoc,
 } from "firebase/firestore";
-import { firestore } from "@/firebase/firebaseClient";
+import { getClientFirestore } from "@/firebase/firebaseClient";
 import { MAIN_COMPETITION_ID } from "@/firebase/firestore";
 import { saveQuestionBankMeta } from "@/features/facilitator/question-bank-meta";
 import type {
@@ -27,15 +27,15 @@ const BANK_ROOT = ["competitions", MAIN_COMPETITION_ID, "questionBanks"] as cons
 const ARCHIVES_PARENT_DOC = "meta";
 
 function stageDoc(stage: "stage1" | "stage2" | "stage3" | "stage4") {
-  return doc(firestore, ...BANK_ROOT, stage);
+  return doc(getClientFirestore(), ...BANK_ROOT, stage);
 }
 
 function archivesCollection() {
-  return collection(firestore, ...BANK_ROOT, ARCHIVES_PARENT_DOC, "archives");
+  return collection(getClientFirestore(), ...BANK_ROOT, ARCHIVES_PARENT_DOC, "archives");
 }
 
 function archiveDoc(id: string) {
-  return doc(firestore, ...BANK_ROOT, ARCHIVES_PARENT_DOC, "archives", id);
+  return doc(getClientFirestore(), ...BANK_ROOT, ARCHIVES_PARENT_DOC, "archives", id);
 }
 
 export async function saveFullQuestionBank(payload: FullQuestionBankPayload): Promise<void> {

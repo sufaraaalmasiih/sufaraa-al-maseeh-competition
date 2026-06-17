@@ -1,4 +1,4 @@
-import {
+﻿import {
   getDoc,
   getDocs,
   runTransaction,
@@ -6,7 +6,7 @@ import {
   updateDoc,
   writeBatch,
 } from "firebase/firestore";
-import { firestore } from "@/firebase/firebaseClient";
+import { getClientFirestore } from "@/firebase/firebaseClient";
 import {
   gameFlowRef,
   MAIN_COMPETITION_ID,
@@ -56,7 +56,7 @@ export async function resetTeamStageProgress(input: {
     patch["progress.stage4QuestionIndex"] = 0;
   }
 
-  await runTransaction(firestore, async (transaction) => {
+  await runTransaction(getClientFirestore(), async (transaction) => {
     const snapshot = await transaction.get(ref);
     if (!snapshot.exists()) {
       throw new Error("الفريق غير موجود.");
@@ -116,7 +116,7 @@ export async function resetAllTeamScores(reason: string): Promise<number> {
 
   for (let index = 0; index < docs.length; index += FIRESTORE_BATCH_LIMIT) {
     const chunk = docs.slice(index, index + FIRESTORE_BATCH_LIMIT);
-    const batch = writeBatch(firestore);
+    const batch = writeBatch(getClientFirestore());
     chunk.forEach((docSnap) => {
       batch.update(docSnap.ref, {
         "stageScores.stage1": 0,
@@ -161,7 +161,7 @@ export async function migrateAllTeamsToStage(
 
   for (let index = 0; index < docs.length; index += FIRESTORE_BATCH_LIMIT) {
     const chunk = docs.slice(index, index + FIRESTORE_BATCH_LIMIT);
-    const batch = writeBatch(firestore);
+    const batch = writeBatch(getClientFirestore());
     chunk.forEach((docSnap) => batch.update(docSnap.ref, patch));
     await batch.commit();
   }

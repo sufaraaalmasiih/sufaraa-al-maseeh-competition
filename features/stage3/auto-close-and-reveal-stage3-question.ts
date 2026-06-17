@@ -1,5 +1,5 @@
-import { runTransaction, serverTimestamp } from "firebase/firestore";
-import { firestore } from "@/firebase/firebaseClient";
+﻿import { runTransaction, serverTimestamp } from "firebase/firestore";
+import { getClientFirestore } from "@/firebase/firebaseClient";
 import { gameFlowRef, timerRef } from "@/firebase/firestore";
 import { markStage3AnswersVisibleToAudience } from "@/features/stage3/mark-stage3-answers-visible";import {
   parseStage3QuestionMetadata,
@@ -24,7 +24,7 @@ export interface AutoCloseAndRevealResult {  skipped: boolean;
  * Safe to call from multiple clients — only the first successful transaction wins.
  */
 export async function autoCloseAndRevealStage3Question(): Promise<AutoCloseAndRevealResult> {
-  const result = await runTransaction(firestore, async (transaction) => {
+  const result = await runTransaction(getClientFirestore(), async (transaction) => {
     const [gameFlowSnapshot, timerSnapshot] = await Promise.all([
       transaction.get(gameFlowRef),
       transaction.get(timerRef),

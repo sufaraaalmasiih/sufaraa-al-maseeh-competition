@@ -1,5 +1,5 @@
-import { runTransaction, serverTimestamp } from "firebase/firestore";
-import { firebaseAuth, firestore } from "@/firebase/firebaseClient";
+﻿import { runTransaction, serverTimestamp } from "firebase/firestore";
+import { firebaseAuth, getClientFirestore } from "@/firebase/firebaseClient";
 import {
   answerRef,
   gameFlowRef,
@@ -64,7 +64,7 @@ export async function confirmStage4Answer({
     throw new Error("Pass submissions cannot include an answer.");
   }
 
-  return runTransaction(firestore, async (transaction) => {
+  return runTransaction(getClientFirestore(), async (transaction) => {
     const gameFlowSnapshot = await transaction.get(gameFlowRef);
 
     if (!gameFlowSnapshot.exists()) {

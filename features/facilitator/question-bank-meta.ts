@@ -1,5 +1,5 @@
-import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
-import { firestore } from "@/firebase/firebaseClient";
+﻿import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
+import { getClientFirestore } from "@/firebase/firebaseClient";
 import { MAIN_COMPETITION_ID } from "@/firebase/firestore";
 import {
   DEFAULT_BANK_SIZES,
@@ -15,7 +15,7 @@ export interface QuestionBankMeta {
 }
 
 function metaDocRef() {
-  return doc(firestore, "competitions", MAIN_COMPETITION_ID, "questionBanks", "meta");
+  return doc(getClientFirestore(), "competitions", MAIN_COMPETITION_ID, "questionBanks", "meta");
 }
 
 const DEFAULT_META: QuestionBankMeta = {

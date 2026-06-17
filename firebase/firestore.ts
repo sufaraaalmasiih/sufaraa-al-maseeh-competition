@@ -1,6 +1,8 @@
-import { collection, doc, serverTimestamp, setDoc } from "firebase/firestore";
-import { firestore } from "@/firebase/firebaseClient";
+﻿import { collection, doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { getClientFirestore } from "@/firebase/firebaseClient";
 import type { InitialTeamStateInput, TeamStateDocument } from "@/types";
+
+const firestore = getClientFirestore();
 
 export const MAIN_COMPETITION_ID = "main";
 
@@ -36,16 +38,16 @@ export const audienceDisplayRef = doc(
   "audienceDisplay",
 );
 
-export const teamRef = (uid: string) => doc(firestore, "teams", uid);
-export const userRef = (uid: string) => doc(firestore, "users", uid);
+export const teamRef = (uid: string) => doc(getClientFirestore(), "teams", uid);
+export const userRef = (uid: string) => doc(getClientFirestore(), "users", uid);
 export const answersCollectionRef = (competitionId: string) =>
-  collection(firestore, "competitions", competitionId, "answers");
+  collection(getClientFirestore(), "competitions", competitionId, "answers");
 export const answerRef = (competitionId: string, answerId: string) =>
-  doc(firestore, "competitions", competitionId, "answers", answerId);
+  doc(getClientFirestore(), "competitions", competitionId, "answers", answerId);
 export const teamStatesCollectionRef = (competitionId: string) =>
-  collection(firestore, "competitions", competitionId, "teamStates");
+  collection(getClientFirestore(), "competitions", competitionId, "teamStates");
 export const teamStateRef = (competitionId: string, uid: string) =>
-  doc(firestore, "competitions", competitionId, "teamStates", uid);
+  doc(getClientFirestore(), "competitions", competitionId, "teamStates", uid);
 
 export function buildInitialTeamStateDocument(
   teamId: string,

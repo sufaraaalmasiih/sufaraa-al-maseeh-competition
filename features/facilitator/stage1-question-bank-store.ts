@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import { doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { firestore } from "@/firebase/firebaseClient";
+import { getClientFirestore } from "@/firebase/firebaseClient";
 import { MAIN_COMPETITION_ID } from "@/firebase/firestore";
 import {
   parseStage1Questions,
@@ -14,7 +14,7 @@ import type { Stage1MockQuestion } from "@/features/stage1/stage1-types";
 export { parseStage1Questions, parseStage1RowsToQuestions };
 
 function bankDocRef() {
-  return doc(firestore, "competitions", MAIN_COMPETITION_ID, "questionBanks", "stage1");
+  return doc(getClientFirestore(), "competitions", MAIN_COMPETITION_ID, "questionBanks", "stage1");
 }
 
 export async function saveStage1Bank(questions: Stage1MockQuestion[]): Promise<void> {

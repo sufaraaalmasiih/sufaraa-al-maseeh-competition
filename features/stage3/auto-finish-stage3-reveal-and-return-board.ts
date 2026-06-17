@@ -1,5 +1,5 @@
-import { runTransaction, serverTimestamp } from "firebase/firestore";
-import { firestore } from "@/firebase/firebaseClient";
+﻿import { runTransaction, serverTimestamp } from "firebase/firestore";
+import { getClientFirestore } from "@/firebase/firebaseClient";
 import { gameFlowRef, timerRef } from "@/firebase/firestore";
 import { buildStage3SelectionTimerPayload } from "@/features/stage3/stage3-timer-payload";
 import {
@@ -21,7 +21,7 @@ export interface AutoFinishStage3RevealResult {
  * Idempotent: after 10s reveal timer → return to board, advance owner, start 15s selection timer.
  */
 export async function autoFinishStage3RevealAndReturnBoard(): Promise<AutoFinishStage3RevealResult> {
-  const result = await runTransaction(firestore, async (transaction) => {
+  const result = await runTransaction(getClientFirestore(), async (transaction) => {
     const [gameFlowSnapshot, timerSnapshot] = await Promise.all([
       transaction.get(gameFlowRef),
       transaction.get(timerRef),
