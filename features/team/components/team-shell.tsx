@@ -20,6 +20,7 @@ import { TeamShellScreens } from "@/features/team/components/team-shell-screens"
 import { useTeamShellView } from "@/features/team/components/use-team-shell-view";
 import { useTeamGameFlow } from "@/features/team/use-team-game-flow";
 import { useTeamStageEarlyFinish } from "@/features/team/use-team-stage-early-finish";
+import { cn } from "@/lib/utils";
 
 function TeamShellAuthenticated() {
   const gameFlow = useTeamGameFlow();
@@ -85,7 +86,10 @@ function TeamShellAuthenticated() {
     <CompetitionGradientShell
       centerContent={shouldCenterTeamShellContent(layoutStatus, gameFlowLoading)}
       scrollable={shellScrollable}
-      className={shellScrollable ? "app-flow-shell" : "app-viewport-fill"}
+      className={cn(
+        "team-player-shell",
+        shellScrollable ? "app-flow-shell" : "app-viewport-fill",
+      )}
       contentClassName={
         gameFlowLoading
           ? "app-loading-screen__content"

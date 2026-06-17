@@ -6,7 +6,7 @@ interface Stage3BoardViewportFitProps {
   children: ReactNode;
 }
 
-const MIN_SCALE = 0.68;
+const MIN_SCALE = 0.62;
 
 /**
  * Scales the stage 3 board when the natural layout exceeds the viewport so all
