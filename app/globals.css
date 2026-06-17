@@ -3242,15 +3242,7 @@
   }
 
   .gameplay-unified-competition-logo {
-    @apply h-[4.5rem] w-[4.5rem] shrink-0 rounded-full sm:h-20 sm:w-20;
-    filter:
-      drop-shadow(0 0 8px rgba(35, 136, 196, 0.7))
-      drop-shadow(0 0 16px rgba(35, 136, 196, 0.45))
-      drop-shadow(0 0 28px rgba(79, 200, 255, 0.35));
-    box-shadow:
-      0 0 0 2px rgba(35, 136, 196, 0.12),
-      0 0 18px rgba(35, 136, 196, 0.38),
-      0 0 36px rgba(35, 136, 196, 0.2);
+    @apply h-[4.5rem] w-[4.5rem] shrink-0 sm:h-20 sm:w-20;
   }
 
   .gameplay-unified-brand {
@@ -5657,7 +5649,7 @@
   }
 
   .app-brand-header__logo {
-    @apply ring-2 ring-[#2388C4]/[0.15];
+    @apply shrink-0;
   }
 
   .app-brand-header__copy {
@@ -5707,7 +5699,7 @@
   }
 
   .app-brand-header--gradient .app-brand-header__logo {
-    @apply border-white/40 ring-white/20;
+    @apply shrink-0;
   }
 
   .facilitator-shell-tabs__panel {
@@ -6839,9 +6831,7 @@
   }
 
   .facilitator-console .app-brand-header__logo {
-    @apply rounded-[1.15rem] ring-0;
-    border-color: rgba(0, 0, 0, 0.06);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    @apply shrink-0;
   }
 
   .facilitator-console .facilitator-shell-tabs__panel {

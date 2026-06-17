@@ -7,6 +7,7 @@ import { BrandLogoMark } from "@/components/competition/brand-logo-mark";
 import { GameplayHeaderTimer } from "@/components/competition/gameplay-header-timer";
 
 import { getCompetitionStageLabel } from "@/features/team/competition-stage-labels";
+import { useCompetitionContent } from "@/features/competition-content/competition-content-runtime";
 
 import { useGameplayHeaderTimer } from "@/features/gameflow/use-gameplay-header-timer";
 
@@ -20,7 +21,9 @@ export function AudienceGameplayHeaderCard() {
 
   const { status } = useGameFlow();
 
-  const stageLabel = getCompetitionStageLabel(status);
+  const content = useCompetitionContent();
+
+  const stageLabel = getCompetitionStageLabel(status, content);
 
   const headerTimer = useGameplayHeaderTimer(status);
 

@@ -3,6 +3,7 @@
 import { BrandLogoMark } from "@/components/competition/brand-logo-mark";
 import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
 import { getCompetitionStageLabel } from "@/features/team/competition-stage-labels";
+import { useCompetitionContent } from "@/features/competition-content/competition-content-runtime";
 import { useTeamCompetitionContext } from "@/features/team/use-team-competition-context";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
 import { cn } from "@/lib/utils";
@@ -13,8 +14,9 @@ interface CompetitionHeaderProps {
 
 export function CompetitionHeader({ className }: CompetitionHeaderProps) {
   const { status } = useGameFlow();
+  const content = useCompetitionContent();
   const { teamName, logoUrl, totalScore, loading } = useTeamCompetitionContext();
-  const stageLabel = getCompetitionStageLabel(status);
+  const stageLabel = getCompetitionStageLabel(status, content);
 
   return (
     <header className={cn("glass-header sticky top-0 z-50", className)}>
