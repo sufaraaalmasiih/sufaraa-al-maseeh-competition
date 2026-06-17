@@ -85,9 +85,7 @@ export function TeamStageIntroScreen({ stage, showWaitStatus = false }: TeamStag
             </GameReadyButton>
           </div>
 
-          {introReady ? (
-            <p className="stage1-intro-screen__hint">{stageContent.hint}</p>
-          ) : null}
+          <p className="stage1-intro-screen__hint">{stageContent.hint}</p>
         </>
       }
     />
