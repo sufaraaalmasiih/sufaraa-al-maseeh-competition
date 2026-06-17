@@ -550,18 +550,28 @@
   }
 
   .app-viewport-fill .team-flow-content--fill:has(.stage3-scene--board),
-  .app-viewport-fill .team-flow-content__body:has(.stage3-scene--board),
-  .app-viewport-fill .stage3-scene--board,
-  .app-viewport-fill .stage3-scene--board .gameplay-flow {
+  .app-viewport-fill .team-flow-content__body:has(.stage3-scene--board) {
     min-height: 0;
+    height: 100%;
     overflow: hidden;
   }
 
   .app-viewport-fill .stage3-scene--board {
     display: flex;
     height: 100%;
+    min-height: 0;
     flex: 1 1 auto;
-    gap: clamp(0.2rem, 0.6dvh, 0.45rem);
+    justify-content: flex-start;
+    gap: 0.35rem;
+  }
+
+  .app-viewport-fill .stage3-scene--board .gameplay-flow {
+    display: flex;
+    min-height: 0;
+    width: 100%;
+    flex: 1 1 auto;
+    flex-direction: column;
+    overflow: hidden;
   }
 
   .app-viewport-fill .stage3-scene--board .gameplay-board-card.stage3-board-unified {
@@ -570,43 +580,51 @@
     flex: 1 1 auto;
     flex-direction: column;
     overflow: hidden;
-    padding: clamp(0.45rem, 1.2dvh, 0.7rem) clamp(0.55rem, 1.4vw, 0.85rem);
+    padding: clamp(0.4rem, 1dvh, 0.65rem) clamp(0.5rem, 1.2vw, 0.8rem);
   }
 
   .app-viewport-fill .stage3-board-unified .stage3-board-hero {
     flex-shrink: 0;
-    padding-bottom: clamp(0.35rem, 0.9dvh, 0.55rem);
+    margin-bottom: 0;
+    padding-bottom: clamp(0.3rem, 0.8dvh, 0.5rem);
+    border-bottom-width: 1px;
   }
 
-  .app-viewport-fill .stage3-board-unified .stage3-board-body {
+  .app-viewport-fill .stage3-board-unified .stage3-board-shell--featured {
     display: flex;
     min-height: 0;
     flex: 1 1 auto;
     flex-direction: column;
     overflow: hidden;
-    padding-top: clamp(0.35rem, 0.9dvh, 0.55rem);
   }
 
-  .app-viewport-fill .stage3-board-shell--featured {
+  .app-viewport-fill .stage3-board-shell--featured .stage3-board-body {
     display: flex;
     min-height: 0;
     flex: 1 1 auto;
     flex-direction: column;
     overflow: hidden;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
   }
 
   .app-viewport-fill .stage3-board-shell--featured .stage3-jeopardy-board {
+    display: grid;
     min-height: 0;
     flex: 1 1 auto;
-    gap: clamp(0.18rem, 0.55dvh, 0.4rem);
-    padding: clamp(0.22rem, 0.7dvh, 0.42rem);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-content: stretch;
+    gap: clamp(0.2rem, 0.5dvh, 0.5rem);
+    padding: clamp(0.25rem, 0.65dvh, 0.5rem);
   }
 
   .app-viewport-fill .stage3-board-shell--featured .stage3-category-col {
-    display: flex;
+    display: grid;
     min-height: 0;
-    flex-direction: column;
-    padding: clamp(0.22rem, 0.65dvh, 0.38rem);
+    height: 100%;
+    grid-template-rows: auto minmax(0, 1fr);
+    padding: clamp(0.2rem, 0.55dvh, 0.4rem);
   }
 
   .app-viewport-fill .stage3-board-shell--featured .stage3-category-col__title {
@@ -618,18 +636,18 @@
   }
 
   .app-viewport-fill .stage3-board-shell--featured .stage3-category-col__tiles {
-    display: flex;
+    display: grid;
     min-height: 0;
-    flex: 1 1 auto;
-    flex-direction: column;
-    gap: clamp(0.12rem, 0.42dvh, 0.28rem);
+    height: 100%;
+    grid-template-rows: repeat(5, minmax(0, 1fr));
+    gap: clamp(0.12rem, 0.38dvh, 0.3rem);
   }
 
   .app-viewport-fill .stage3-board-shell--featured .stage3-q-tile {
-    height: auto;
-    min-height: 0;
+    height: 100%;
+    min-height: clamp(1.85rem, 4.8dvh, 3.25rem);
     max-height: none;
-    flex: 1 1 0;
+    flex: none;
     padding-inline: clamp(0.2rem, 0.5vw, 0.35rem);
     border-radius: clamp(0.55rem, 1.2dvh, 0.85rem);
   }
