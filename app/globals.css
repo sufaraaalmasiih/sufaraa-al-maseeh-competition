@@ -559,19 +559,23 @@
 
   .auth-portal-section__tiles {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.625rem;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .auth-screen__card--hub .auth-portal-section__tiles {
+    grid-template-columns: 1fr;
   }
 
   .auth-portal-tile {
     display: flex;
     min-width: 0;
-    min-height: 4.5rem;
+    min-height: 3.75rem;
     align-items: center;
-    gap: 0.75rem;
-    border-radius: 1rem;
+    gap: 0.625rem;
+    border-radius: 0.875rem;
     border: 1px solid rgba(35, 136, 196, 0.14);
-    padding: 0.75rem 0.875rem;
+    padding: 0.625rem 0.75rem;
     background: rgba(255, 255, 255, 0.92);
     text-decoration: none;
     transition:
@@ -596,8 +600,8 @@
   }
 
   .auth-portal-tile--span-full {
-    grid-column: 1 / -1;
-    min-height: 4.75rem;
+    grid-column: auto;
+    min-height: 4rem;
   }
 
   .auth-portal-tile__icon {
@@ -841,7 +845,9 @@
   }
 
   .auth-screen__wrap--hub {
-    width: min(clamp(20rem, 94vw, 48rem), calc(100vw - 1.5rem));
+    width: min(100%, 24rem);
+    max-width: 24rem;
+    padding-inline: 0.75rem;
   }
 
   .auth-screen__card {
@@ -1148,8 +1154,44 @@
     @apply space-y-2 sm:space-y-3;
   }
 
+  .competition-intro-screen__wrap .competition-intro {
+    display: flex;
+    width: 100%;
+    max-height: 100%;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+    gap: clamp(0.25rem, 1.2vh, 0.625rem);
+  }
+
+  .competition-intro-screen__wrap .competition-intro__stages {
+    max-height: min(52dvh, 24rem);
+    overflow: hidden;
+  }
+
+  .audience-intro-screen__wrap .competition-intro__stages {
+    max-height: min(52dvh, 24rem);
+    overflow: hidden;
+  }
+
+  .competition-flow-shell__wrap,
+  .audience-flow-shell__wrap,
+  .competition-centered-screen__wrap,
+  .audience-centered-screen__wrap {
+    @apply overflow-hidden;
+  }
+
+  body:has(.competition-intro-screen__wrap),
+  body:has(.audience-intro-screen__wrap),
+  body:has(.competition-flow-shell__wrap),
+  body:has(.audience-flow-shell__wrap),
+  body:has(.competition-centered-screen__wrap),
+  body:has(.audience-centered-screen__wrap) {
+    overflow: hidden;
+  }
+
   .competition-intro-screen__wrap {
-    @apply mx-auto flex h-[100dvh] max-h-[100dvh] w-full max-w-3xl flex-col items-center justify-center overflow-hidden text-center;
+    @apply mx-auto flex h-[100dvh] max-h-[100dvh] w-full max-w-3xl flex-col items-center justify-center overflow-hidden px-4 py-4 text-center sm:px-6 sm:py-6;
   }
 
   .audience-intro-screen__wrap {
@@ -1159,13 +1201,13 @@
   }
 
   .audience-flow-shell__wrap {
-    @apply mx-auto flex min-h-[100dvh] w-full flex-col justify-center px-4 py-6 sm:px-8 sm:py-8;
+    @apply mx-auto flex h-[100dvh] max-h-[100dvh] w-full flex-col justify-center overflow-hidden px-4 py-4 sm:px-8 sm:py-6;
     max-width: min(96vw, 96rem);
     width: min(96vw, 96rem);
   }
 
   .audience-centered-screen__wrap {
-    @apply mx-auto flex min-h-[100dvh] w-full flex-col justify-center px-6 py-8 sm:px-10 sm:py-10;
+    @apply mx-auto flex h-[100dvh] max-h-[100dvh] w-full flex-col justify-center overflow-hidden px-6 py-6 sm:px-10 sm:py-8;
     max-width: min(96vw, 96rem);
     width: min(96vw, 96rem);
   }
@@ -1278,7 +1320,7 @@
   }
 
   .competition-centered-screen__wrap {
-    @apply mx-auto flex min-h-[100dvh] w-full max-w-[76rem] flex-col justify-center px-4 py-6 sm:py-8;
+    @apply mx-auto flex h-[100dvh] max-h-[100dvh] w-full max-w-[76rem] flex-col justify-center overflow-hidden px-4 py-4 sm:py-6;
   }
 
   .competition-centered-screen__wrap .team-flow-content {
@@ -2312,11 +2354,11 @@
   }
 
   .competition-intro__stages {
-    @apply mx-auto grid w-full max-w-3xl gap-3 pt-2 sm:grid-cols-2;
+    @apply mx-auto grid w-full max-w-3xl gap-2 pt-1 sm:grid-cols-2 sm:gap-3;
   }
 
   .competition-intro__stage {
-    @apply glass-card-white px-4 py-4 text-right;
+    @apply glass-card-white px-3 py-3 text-right sm:px-4 sm:py-3.5;
   }
 
   .competition-intro__stage-number {
@@ -2344,17 +2386,23 @@
   }
 
   .competition-intro--gradient .competition-intro__title {
-    @apply text-4xl font-extrabold text-white sm:text-5xl;
+    @apply font-extrabold text-white;
+    font-size: clamp(1.65rem, 3.2vw, 2.5rem);
     text-shadow: 0 0 28px rgba(45, 180, 237, 0.35);
   }
 
   .competition-intro--gradient .competition-intro__slogan {
-    @apply mt-2 text-lg font-bold text-[#9fe64a] sm:text-xl;
+    @apply font-bold text-[#9fe64a];
+    margin-top: clamp(0.125rem, 0.8vh, 0.5rem);
+    font-size: clamp(0.9rem, 1.8vw, 1.15rem);
     text-shadow: 0 0 20px rgba(159, 230, 74, 0.28);
   }
 
   .competition-intro--gradient .competition-intro__lead {
-    @apply mt-3 text-sm leading-8 text-white sm:text-base;
+    @apply text-white;
+    margin-top: clamp(0.25rem, 1vh, 0.75rem);
+    font-size: clamp(0.75rem, 1.4vw, 0.95rem);
+    line-height: 1.5;
   }
 
   .competition-intro--gradient .competition-intro__stage {
@@ -9659,18 +9707,22 @@
   /* ===== Responsive — هاتف → شاشة كبيرة / عرض جمهور ===== */
 
   @media (min-width: 1024px) {
-    .auth-screen__wrap,
+    .auth-screen__wrap:not(.auth-screen__wrap--hub) {
+      width: min(clamp(24rem, 40vw, 40rem), calc(100vw - 2rem));
+    }
+
     .auth-screen__wrap--hub {
-      width: min(clamp(28rem, 48vw, 52rem), calc(100vw - 2rem));
+      width: min(100%, 26rem);
+      max-width: 26rem;
     }
 
     .auth-portal-section__tiles {
-      gap: 0.75rem;
+      gap: 0.5rem;
     }
 
     .auth-portal-tile {
-      min-height: 5rem;
-      padding: 0.875rem 1rem;
+      min-height: 3.75rem;
+      padding: 0.625rem 0.75rem;
     }
   }
 
