@@ -560,7 +560,7 @@
     height: 100%;
     min-height: 0;
     flex: 1 1 auto;
-    justify-content: flex-start;
+    justify-content: center;
   }
 
   .app-viewport-fill .stage3-scene--board .gameplay-flow {
@@ -577,7 +577,7 @@
     width: 100%;
     min-height: 0;
     flex: 1 1 auto;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
     overflow: hidden;
   }
@@ -973,11 +973,12 @@
   }
 
   .team-waiting-screen {
-    @apply flex w-full flex-col items-center text-center;
+    @apply flex w-full max-w-full flex-col items-center text-center;
   }
 
   .team-waiting-screen__content {
     @apply mx-auto flex h-full max-h-full w-full flex-col items-center justify-center overflow-hidden px-4 py-3 text-center sm:px-5;
+    width: min(100%, clamp(20rem, 92vw, 48rem));
     max-width: min(100%, clamp(20rem, 92vw, 48rem));
   }
 
@@ -1248,7 +1249,7 @@
   }
 
   .competition-intro-screen__wrap {
-    @apply mx-auto flex h-[100dvh] max-h-[100dvh] w-full max-w-3xl flex-col items-center justify-center overflow-hidden px-4 py-4 text-center sm:px-6 sm:py-6;
+    @apply mx-auto flex h-[100dvh] max-h-[100dvh] w-full max-w-[min(100%,48rem)] flex-col items-center justify-center overflow-hidden px-4 py-4 text-center sm:max-w-[min(100%,52rem)] sm:px-6 sm:py-6;
   }
 
   .audience-intro-screen__wrap {
@@ -9524,9 +9525,14 @@
     }
 
     .team-player-shell.app-viewport-fill .gameplay-board-card:has(.gameplay-matching-zone) .matching-card {
-      min-height: 2.75rem;
-      font-size: 0.72rem;
-      padding: 0.3rem 0.4rem;
+      min-height: 3rem;
+      font-size: 0.82rem;
+      padding: 0.35rem 0.45rem;
+    }
+
+    .team-player-shell.app-viewport-fill .gameplay-board-card:has(.gameplay-matching-zone) .challenge-board-column {
+      grid-template-rows: repeat(5, minmax(3rem, auto));
+      gap: 0.35rem;
     }
 
     .team-player-shell.app-viewport-fill .content-shell-arena--stage2 .gameplay-scene--centered {
@@ -9562,11 +9568,6 @@
     .team-player-shell.app-viewport-fill .content-shell-arena--stage2 .gameplay-flow:has(.gameplay-arrange-zone),
     .team-player-shell.app-viewport-fill .content-shell-arena--stage2 .gameplay-flow:has(.gameplay-matching-zone) {
       min-height: 0;
-    }
-
-    .team-player-shell.app-viewport-fill .gameplay-board-card:has(.gameplay-matching-zone) .challenge-board-column {
-      grid-template-rows: repeat(5, minmax(2.75rem, auto));
-      gap: 0.35rem;
     }
 
     .team-player-shell .gameplay-header-meta {
@@ -9641,13 +9642,22 @@
     }
 
     .team-player-shell.app-viewport-fill .stage3-board-shell--featured .stage3-q-tile {
-      height: 2.55rem;
-      min-height: 2.55rem;
-      max-height: 2.55rem;
+      height: 2.85rem;
+      min-height: 2.85rem;
+      max-height: 2.85rem;
     }
 
     .team-player-shell.app-viewport-fill .stage3-board-shell--featured .stage3-q-tile__label {
-      font-size: 0.66rem;
+      font-size: 0.7rem;
+    }
+
+    .team-player-shell.app-viewport-fill .stage3-board-shell--featured .stage3-category-col__title {
+      font-size: 0.72rem;
+    }
+
+    .team-player-shell.app-viewport-fill .stage3-board-viewport-fit {
+      align-items: center;
+      justify-content: center;
     }
   }
 
@@ -9796,6 +9806,266 @@
 
     .team-player-shell .stage1-intro-screen__video {
       min-height: clamp(8rem, 18vh, 10rem);
+    }
+
+    .team-player-shell .stage1-intro-screen__wrap,
+    .team-player-shell .competition-flow-shell__wrap {
+      overflow-y: auto;
+    }
+  }
+
+  /* إخفاء رقم المرحلة داخل البطاقة عند وجود هيدر اللعب (الاسم يظهر في الوسط) */
+  .team-player-shell .team-flow-content:has(> .team-flow-content__header) .stage1-intro-screen__stage-block .competition-intro__stage-number {
+    @apply hidden;
+  }
+
+  /* ===== Mobile — team player (<640px) ===== */
+  @media (max-width: 639px) {
+    body:has(.team-player-shell.app-flow-shell) {
+      overflow-y: auto;
+    }
+
+    .team-player-shell.app-flow-shell {
+      height: auto;
+      min-height: 100dvh;
+      max-height: none;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    .team-player-shell .competition-intro-screen__wrap,
+    .team-player-shell .stage1-intro-screen__wrap,
+    .team-player-shell .competition-flow-shell__wrap,
+    .team-player-shell .competition-centered-screen__wrap,
+    .team-player-shell .stage2-reading-screen__wrap,
+    .team-player-shell .stage2-role-assignment-screen__wrap {
+      height: auto;
+      min-height: 100dvh;
+      max-height: none;
+      overflow-x: hidden;
+      overflow-y: auto;
+      padding: 0.5rem 0.75rem;
+    }
+
+    .team-player-shell .team-waiting-screen__content {
+      width: min(100%, 100%);
+      max-width: min(100%, 26rem);
+      padding: 0.75rem 1rem 1.25rem;
+    }
+
+    .team-player-shell .team-waiting-screen {
+      width: 100%;
+    }
+
+    .team-player-shell .team-waiting-screen__title {
+      font-size: clamp(1.65rem, 8vw, 2.15rem);
+    }
+
+    .team-player-shell .team-waiting-screen__slogan {
+      font-size: clamp(0.95rem, 4.2vw, 1.1rem);
+    }
+
+    .team-player-shell .competition-intro-screen__wrap {
+      max-width: min(100%, 100%);
+    }
+
+    .team-player-shell .competition-intro__stages {
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
+    }
+
+    .team-player-shell .stage1-intro-screen__content-row {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+
+    .team-player-shell .stage1-intro-screen__rules {
+      grid-template-columns: 1fr;
+    }
+
+    .team-player-shell .stage1-intro-screen__video {
+      min-height: clamp(8.5rem, 28vw, 11rem);
+    }
+
+    .team-player-shell .gameplay-unified-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-rows: auto auto;
+      gap: 0.35rem;
+      padding: 0.45rem 0.6rem;
+      border-radius: 1rem;
+    }
+
+    .team-player-shell .gameplay-unified-header__side--start {
+      grid-column: 1;
+      grid-row: 1;
+      justify-content: flex-start;
+    }
+
+    .team-player-shell .gameplay-unified-header__center {
+      grid-column: 2;
+      grid-row: 1;
+      align-self: center;
+    }
+
+    .team-player-shell .gameplay-unified-header__side--end {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      justify-content: stretch;
+    }
+
+    .team-player-shell .gameplay-unified-header--has-timer .gameplay-unified-header__center {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      order: unset;
+    }
+
+    .team-player-shell .gameplay-unified-header--has-timer .gameplay-unified-header__side--end {
+      grid-row: 3;
+    }
+
+    .team-player-shell .gameplay-unified-slogan {
+      display: none;
+    }
+
+    .team-player-shell .gameplay-unified-competition-logo {
+      height: 2.5rem;
+      width: 2.5rem;
+    }
+
+    .team-player-shell .gameplay-unified-title {
+      font-size: 0.92rem;
+      line-height: 1.1;
+    }
+
+    .team-player-shell .gameplay-unified-stage.gameplay-unified-stage--center {
+      font-size: 0.72rem;
+      padding: 0.25rem 0.55rem;
+    }
+
+    .team-player-shell .gameplay-header-meta {
+      width: 100%;
+      flex-wrap: nowrap;
+      justify-content: space-between;
+      gap: 0.35rem 0.5rem;
+      padding: 0.35rem 0.5rem;
+    }
+
+    .team-player-shell .gameplay-unified-team-name {
+      max-width: min(6.5rem, 34vw);
+      font-size: 0.75rem;
+    }
+
+    .team-player-shell .gameplay-unified-score {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.45rem;
+    }
+
+    .team-player-shell .gameplay-header-timer {
+      width: 100%;
+      max-width: 12rem;
+      padding: 0.3rem 0.65rem;
+    }
+
+    .team-player-shell .gameplay-header-timer__value {
+      font-size: 1.15rem;
+    }
+
+    .team-player-shell.app-viewport-fill .content-shell-arena,
+    .team-player-shell.app-viewport-fill .content-shell-arena--stage2,
+    .team-player-shell.app-viewport-fill .content-shell-arena--stage3,
+    .team-player-shell.app-viewport-fill .content-shell-arena--stage4 {
+      --shell-gutter: 0.35rem;
+      padding-top: 0.25rem;
+      padding-bottom: 0.25rem;
+    }
+
+    .team-player-shell.app-viewport-fill .gameplay-unified-header {
+      padding: 0.4rem 0.55rem;
+    }
+
+    .team-player-shell.app-viewport-fill .gameplay-board-card {
+      padding: 0.55rem 0.65rem;
+    }
+
+    .team-player-shell.app-viewport-fill .arena-question-text {
+      font-size: 1.1rem;
+      line-height: 1.3;
+    }
+
+    .team-player-shell.app-viewport-fill .quiz-choice-card {
+      min-height: 2.85rem;
+      font-size: 0.88rem;
+      padding: 0.4rem 0.45rem;
+    }
+
+    .team-player-shell.app-viewport-fill .gameplay-board-card:has(.gameplay-matching-zone) .challenge-board {
+      grid-template-columns: 1fr;
+      gap: 0.65rem;
+    }
+
+    .team-player-shell.app-viewport-fill .gameplay-board-card:has(.gameplay-matching-zone) .matching-card {
+      min-height: 2.85rem;
+      font-size: 0.8rem;
+    }
+
+    .team-player-shell.app-viewport-fill .gameplay-board-card:has(.gameplay-matching-zone) .challenge-board-column {
+      grid-template-rows: repeat(5, minmax(2.85rem, auto));
+    }
+
+    .team-player-shell.app-viewport-fill .competition-stage-screen--reading .competition-stage-screen__reference-text {
+      font-size: clamp(1.15rem, 5.5vw, 1.45rem);
+    }
+
+    .team-player-shell.app-viewport-fill .competition-stage-screen__reference-passage {
+      max-height: min(28vh, 10rem);
+      font-size: 0.88rem;
+    }
+
+    .team-player-shell .team-flow-content {
+      gap: 0.35rem;
+    }
+  }
+
+  /* ===== Desktop — team player (>1280px) ===== */
+  @media (min-width: 1281px) {
+    .team-player-shell .content-shell-arena,
+    .team-player-shell .content-shell-arena--stage2,
+    .team-player-shell .content-shell-arena--stage3.content-shell-arena--stage3-board,
+    .team-player-shell .content-shell-arena--stage4 {
+      max-width: min(100%, 84rem);
+    }
+
+    .team-player-shell .team-flow-content__header .gameplay-unified-header,
+    .team-player-shell .gameplay-board-card,
+    .team-player-shell .gameplay-board-card.stage4-team-card {
+      max-width: 84rem;
+    }
+
+    .team-player-shell.app-viewport-fill .stage3-board-shell--featured .stage3-q-tile {
+      height: 3.1rem;
+      min-height: 3.1rem;
+      max-height: 3.1rem;
+    }
+
+    .team-player-shell.app-viewport-fill .stage3-board-shell--featured .stage3-q-tile__label {
+      font-size: 0.74rem;
+    }
+
+    .team-player-shell.app-viewport-fill .stage3-board-shell--featured .stage3-category-col__title {
+      font-size: 0.82rem;
+    }
+
+    .team-player-shell .competition-intro-screen__wrap {
+      max-width: min(94vw, 58rem);
+    }
+
+    .team-player-shell .stage1-intro-screen__wrap {
+      max-width: min(96vw, 80rem);
+    }
+
+    .team-player-shell .gameplay-unified-slogan {
+      display: block;
     }
   }
 
