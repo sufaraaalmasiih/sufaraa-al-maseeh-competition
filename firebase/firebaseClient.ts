@@ -12,12 +12,36 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+/** Allows Next.js build/prerender to finish when Netlify env vars are not yet set. */
+const buildStubFirebaseConfig = {
+  apiKey: "AIzaSy000000000000000000000000000000",
+  authDomain: "build-stub.firebaseapp.com",
+  projectId: "build-stub",
+  storageBucket: "build-stub.appspot.com",
+  messagingSenderId: "000000000000",
+  appId: "1:000000000000:web:buildstub000000",
+};
+
 function isFirebaseConfigured(): boolean {
   return Boolean(
     firebaseConfig.apiKey &&
       firebaseConfig.authDomain &&
       firebaseConfig.projectId &&
       firebaseConfig.appId,
+  );
+}
+
+function resolveFirebaseConfig() {
+  if (isFirebaseConfigured()) {
+    return firebaseConfig;
+  }
+
+  if (typeof window === "undefined") {
+    return buildStubFirebaseConfig;
+  }
+
+  throw new Error(
+    "Missing Firebase configuration. Set NEXT_PUBLIC_FIREBASE_* environment variables.",
   );
 }
 
@@ -33,13 +57,7 @@ export function getFirebaseApp(): FirebaseApp {
     return appInstance;
   }
 
-  if (!isFirebaseConfigured()) {
-    throw new Error(
-      "Missing Firebase configuration. Set NEXT_PUBLIC_FIREBASE_* environment variables.",
-    );
-  }
-
-  appInstance = initializeApp(firebaseConfig);
+  appInstance = initializeApp(resolveFirebaseConfig());
   return appInstance;
 }
 
@@ -69,6 +87,12 @@ let persistenceConfigured = false;
 let persistencePromise: Promise<void> | null = null;
 
 function resolveFirebaseAuth(): Auth {
+  if (!isFirebaseConfigured() && typeof window === "undefined") {
+    throw new Error(
+      "Firebase Auth is not available during SSR without NEXT_PUBLIC_FIREBASE_* variables.",
+    );
+  }
+
   lazyAuth ??= getAuth(getFirebaseApp());
   return lazyAuth;
 }
@@ -125,17 +149,19 @@ export function ensureAuthPersistence(): Promise<void> {
  * Auth instance for creating staff accounts without signing out the current super admin.
  */
 export function getSecondaryFirebaseAuth(): Auth {
+  const config = resolveFirebaseConfig();
+
   if (typeof window === "undefined") {
     const secondaryApp =
       getApps().find((app) => app.name === SECONDARY_APP_NAME) ??
-      initializeApp(firebaseConfig, SECONDARY_APP_NAME);
+      initializeApp(config, SECONDARY_APP_NAME);
     return getAuth(secondaryApp);
   }
 
   if (!secondaryAuth) {
     const secondaryApp =
       getApps().find((app) => app.name === SECONDARY_APP_NAME) ??
-      initializeApp(firebaseConfig, SECONDARY_APP_NAME);
+      initializeApp(config, SECONDARY_APP_NAME);
     secondaryAuth = getAuth(secondaryApp);
   }
 
