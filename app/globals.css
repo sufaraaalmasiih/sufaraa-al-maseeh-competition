@@ -91,6 +91,10 @@
   body:has(.content-shell-arena--stage2 .gameplay-matching-zone) {
     overflow: hidden;
   }
+
+  body:has(.stage3-scene--board) {
+    overflow: hidden;
+  }
 }
 
 @layer components {
@@ -533,6 +537,141 @@
 
   .content-shell-arena--stage3.content-shell-arena--stage3-board {
     max-width: min(100%, 96rem);
+    overflow: hidden;
+    padding-top: clamp(0.25rem, 0.8dvh, 0.5rem);
+    padding-bottom: clamp(0.25rem, 0.8dvh, 0.5rem);
+  }
+
+  .app-viewport-fill .content-shell-arena--stage3.content-shell-arena--stage3-board,
+  .app-viewport-fill .content-shell-arena--stage3:has(.stage3-scene--board) {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .app-viewport-fill .team-flow-content--fill:has(.stage3-scene--board),
+  .app-viewport-fill .team-flow-content__body:has(.stage3-scene--board),
+  .app-viewport-fill .stage3-scene--board,
+  .app-viewport-fill .stage3-scene--board .gameplay-flow {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .app-viewport-fill .stage3-scene--board {
+    display: flex;
+    height: 100%;
+    flex: 1 1 auto;
+    gap: clamp(0.2rem, 0.6dvh, 0.45rem);
+  }
+
+  .app-viewport-fill .stage3-scene--board .gameplay-board-card.stage3-board-unified {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    overflow: hidden;
+    padding: clamp(0.45rem, 1.2dvh, 0.7rem) clamp(0.55rem, 1.4vw, 0.85rem);
+  }
+
+  .app-viewport-fill .stage3-board-unified .stage3-board-hero {
+    flex-shrink: 0;
+    padding-bottom: clamp(0.35rem, 0.9dvh, 0.55rem);
+  }
+
+  .app-viewport-fill .stage3-board-unified .stage3-board-body {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    overflow: hidden;
+    padding-top: clamp(0.35rem, 0.9dvh, 0.55rem);
+  }
+
+  .app-viewport-fill .stage3-board-shell--featured {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .app-viewport-fill .stage3-board-shell--featured .stage3-jeopardy-board {
+    min-height: 0;
+    flex: 1 1 auto;
+    gap: clamp(0.18rem, 0.55dvh, 0.4rem);
+    padding: clamp(0.22rem, 0.7dvh, 0.42rem);
+  }
+
+  .app-viewport-fill .stage3-board-shell--featured .stage3-category-col {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+    padding: clamp(0.22rem, 0.65dvh, 0.38rem);
+  }
+
+  .app-viewport-fill .stage3-board-shell--featured .stage3-category-col__title {
+    flex-shrink: 0;
+    margin-bottom: clamp(0.1rem, 0.28dvh, 0.2rem);
+    padding: 0.1rem;
+    font-size: clamp(0.62rem, 1.05dvh, 0.8rem);
+    line-height: 1.1;
+  }
+
+  .app-viewport-fill .stage3-board-shell--featured .stage3-category-col__tiles {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: clamp(0.12rem, 0.42dvh, 0.28rem);
+  }
+
+  .app-viewport-fill .stage3-board-shell--featured .stage3-q-tile {
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    flex: 1 1 0;
+    padding-inline: clamp(0.2rem, 0.5vw, 0.35rem);
+    border-radius: clamp(0.55rem, 1.2dvh, 0.85rem);
+  }
+
+  .app-viewport-fill .stage3-board-shell--featured .stage3-q-tile__label {
+    font-size: clamp(0.58rem, 0.95dvh, 0.72rem);
+    line-height: 1;
+  }
+
+  .app-viewport-fill .stage3-board-shell--featured .stage3-q-tile__pts {
+    font-size: clamp(0.52rem, 0.85dvh, 0.64rem);
+    padding: 0.08rem 0.28rem;
+    line-height: 1;
+  }
+
+  .app-viewport-fill .content-shell-arena--stage3 .stage3-board-hero .stage3-turn-banner--hero {
+    padding: clamp(0.35rem, 0.95dvh, 0.55rem) clamp(0.5rem, 1.1vw, 0.75rem);
+  }
+
+  .app-viewport-fill .content-shell-arena--stage3 .stage3-board-hero .stage3-turn-banner--hero .stage3-turn-banner__title {
+    margin-top: 0;
+    font-size: clamp(0.92rem, 1.9dvh, 1.2rem);
+    line-height: 1.2;
+  }
+
+  .app-viewport-fill .content-shell-arena--stage3 .stage3-board-hero .stage3-turn-banner--hero .stage3-turn-banner__subtitle {
+    margin-top: 0.15rem;
+    font-size: clamp(0.72rem, 1.45dvh, 0.88rem);
+    line-height: 1.25;
+  }
+
+  .app-viewport-fill:has(.stage3-scene--board) .gameplay-unified-slogan {
+    display: none;
+  }
+
+  .app-viewport-fill:has(.stage3-scene--board) .gameplay-unified-header {
+    padding: clamp(0.35rem, 0.9dvh, 0.55rem) clamp(0.5rem, 1.1vw, 0.75rem);
+  }
+
+  .app-viewport-fill:has(.stage3-scene--board) .gameplay-unified-competition-logo {
+    height: clamp(2.35rem, 5.5dvh, 2.85rem);
+    width: clamp(2.35rem, 5.5dvh, 2.85rem);
   }
 
   /* ===== Auth portal (بوابة الدخول) ===== */
@@ -845,8 +984,8 @@
   }
 
   .auth-screen__wrap--hub {
-    width: min(100%, 24rem);
-    max-width: 24rem;
+    width: min(100%, 23.5rem);
+    max-width: 23.5rem;
     padding-inline: 0.75rem;
   }
 
@@ -9795,8 +9934,8 @@
     }
 
     .auth-screen__wrap--hub {
-      width: min(100%, 26rem);
-      max-width: 26rem;
+      width: min(100%, 24rem);
+      max-width: 24rem;
     }
 
     .auth-portal-section__tiles {
