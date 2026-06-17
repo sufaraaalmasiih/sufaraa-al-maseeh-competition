@@ -2,8 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
-import { TimerCountdown } from "@/features/gameflow/components/timer-countdown";
-import { useCompetitionTimer } from "@/features/gameflow/use-competition-timer";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
 import { Stage1QuestionCard } from "@/features/stage1/components/stage1-question-card";
 import type { Stage1MockQuestion } from "@/features/stage1/stage1-types";
@@ -31,7 +29,6 @@ function formatSaveError(error: unknown): string {
 export function Stage4TeamQuestionScreen() {
   const { stage4ActiveQuestion, stage4QuestionIndex, stage4QuestionCount, status } =
     useGameFlow();
-  const { timer, remainingSeconds, isExpired } = useCompetitionTimer();
   const { answerState, loading: answerLoading } = useStage4MyAnswer(
     stage4ActiveQuestion?.id ?? null,
   );
@@ -50,9 +47,6 @@ export function Stage4TeamQuestionScreen() {
   }, [stage4ActiveQuestion]);
 
   const arrangeShuffleSeed = `${stage4ActiveQuestion?.id ?? "stage4"}-arrange`;
-  const isAnswerTimer = Boolean(
-    timer?.active && timer.stage === "stage4" && timer.purpose === "answering",
-  );
 
   useEffect(() => {
     if (answerState?.confirmed) {
@@ -133,33 +127,23 @@ export function Stage4TeamQuestionScreen() {
     <div className="gameplay-scene gameplay-scene--centered stage4-scene stage4-scene--question-open">
       <div className="gameplay-flow">
         <section className="gameplay-board-card stage4-unified-card stage4-unified-card--glass stage4-team-card stage4-question-open-card">
-          {isAnswerTimer ? (
-            <header className="stage4-question-top">
-              <div className="stage4-question-top__meta">
-                <div className="stage4-question-top__bar">
-                  <div className="stage4-question-top__lead">
-                    <p className="stage4-question-top__label">اثبتوا بالحق</p>
-                    <p className="stage4-question-top__progress">
-                      السؤال {stage4QuestionIndex + 1} من {stage4QuestionCount}
-                    </p>
-                  </div>
-                  {stage4ActiveQuestion ? (
-                    <span className="stage4-question-top__type-badge">
-                      {getStage4QuestionTypeLabel(stage4ActiveQuestion.type)}
-                    </span>
-                  ) : null}
+          <header className="stage4-question-top">
+            <div className="stage4-question-top__meta">
+              <div className="stage4-question-top__bar">
+                <div className="stage4-question-top__lead">
+                  <p className="stage4-question-top__label">اثبتوا بالحق</p>
+                  <p className="stage4-question-top__progress">
+                    السؤال {stage4QuestionIndex + 1} من {stage4QuestionCount}
+                  </p>
                 </div>
+                {stage4ActiveQuestion ? (
+                  <span className="stage4-question-top__type-badge">
+                    {getStage4QuestionTypeLabel(stage4ActiveQuestion.type)}
+                  </span>
+                ) : null}
               </div>
-              <div className="stage4-question-top__timer">
-                <TimerCountdown
-                  remainingSeconds={remainingSeconds}
-                  isExpired={isExpired}
-                  label="وقت الإجابة"
-                  variant="embedded"
-                />
-              </div>
-            </header>
-          ) : null}
+            </div>
+          </header>
 
           <Stage4QuestionDisplay
             question={stage4ActiveQuestion}
@@ -167,7 +151,7 @@ export function Stage4TeamQuestionScreen() {
             questionCount={stage4QuestionCount}
             variant="team"
             embedded
-            hideMeta={isAnswerTimer}
+            hideMeta
           />
 
           <div className="stage4-answer-zone stage4-answer-zone--interactive">

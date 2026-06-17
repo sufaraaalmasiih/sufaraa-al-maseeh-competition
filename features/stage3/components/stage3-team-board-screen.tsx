@@ -59,8 +59,17 @@ export function Stage3TeamBoardScreen({
         callerTeamId: teamId,
         callerTeamName: teamName || "فريق",
       });
-    } catch {
-      setActionError("تعذر فتح السؤال. تأكد أنك فريق صاحب الدور وأن السؤال لم يُستخدم.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message.toLowerCase() : "";
+      if (message.includes("permission") || message.includes("insufficient")) {
+        setActionError("تعذر فتح السؤال — صلاحية غير كافية. أبلغ الميسّر بتحديث قواعد Firestore.");
+      } else if (message.includes("already been used")) {
+        setActionError("هذا السؤال مُستخدم ولا يمكن اختياره مرة أخرى.");
+      } else if (message.includes("turn owner")) {
+        setActionError("فقط فريق صاحب الدور يمكنه اختيار السؤال.");
+      } else {
+        setActionError("تعذر فتح السؤال. تحقق من الاتصال وحاول مرة أخرى.");
+      }
     } finally {
       setSelectingQuestionId(null);
     }

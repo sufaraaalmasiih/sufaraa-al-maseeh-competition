@@ -9,6 +9,7 @@ import {
   Trophy,
 } from "lucide-react";
 import type { FacilitatorPhasePlan } from "@/features/facilitator/facilitator-flow-plan";
+import { FacilitatorAdvanceConfirmDialog } from "@/features/facilitator/components/facilitator-advance-confirm-dialog";
 import type { GameFlowStatus } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +42,7 @@ export function FacilitatorHeroAction({
 }: FacilitatorHeroActionProps) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const hero = plan.hero;
   const showHint = shouldShowHint(status, plan);
@@ -62,8 +64,11 @@ export function FacilitatorHeroAction({
       return;
     }
 
-    const confirmed = window.confirm(`هل تريد تنفيذ: «${hero.label}»؟`);
-    if (!confirmed) {
+    setConfirmOpen(true);
+  }
+
+  async function handleConfirmedAdvance() {
+    if (pending || readinessBlocked || !hero) {
       return;
     }
 
@@ -71,6 +76,7 @@ export function FacilitatorHeroAction({
     setError(null);
     try {
       await onAdvance(plan);
+      setConfirmOpen(false);
     } catch {
       setError("تعذر تنفيذ الإجراء. حاول مرة أخرى.");
     } finally {
@@ -82,7 +88,24 @@ export function FacilitatorHeroAction({
   const showHead = showHint || showWorkspaceNote;
 
   return (
-    <div
+    <>
+      <FacilitatorAdvanceConfirmDialog
+        open={confirmOpen}
+        title={hero?.label ?? "تأكيد الانتقال"}
+        description={`هل تريد الانتقال إلى: «${hero?.label ?? "المرحلة التالية"}»؟`}
+        confirmLabel={hero?.label ?? "تأكيد الانتقال"}
+        pending={pending}
+        onClose={() => {
+          if (!pending) {
+            setConfirmOpen(false);
+          }
+        }}
+        onConfirm={() => {
+          void handleConfirmedAdvance();
+        }}
+      />
+
+      <div
       className={cn(
         embedded ? "flow-command__hero" : "flow-action",
         !embedded && plan.managedByPanel && "flow-action--managed",
@@ -135,5 +158,6 @@ export function FacilitatorHeroAction({
       ) : null}
       {error ? <p className="facilitator-inline-error">{error}</p> : null}
     </div>
+    </>
   );
 }

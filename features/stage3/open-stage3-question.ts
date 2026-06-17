@@ -1,4 +1,4 @@
-﻿import { runTransaction, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
+﻿import { runTransaction, serverTimestamp } from "firebase/firestore";
 import { getClientFirestore } from "@/firebase/firebaseClient";
 import { gameFlowRef, teamStateRef, timerRef } from "@/firebase/firestore";
 import {
@@ -31,6 +31,7 @@ export async function selectStage3QuestionByOwner({
 
   await runTransaction(getClientFirestore(), async (transaction) => {
     const gameFlowSnapshot = await transaction.get(gameFlowRef);
+    const teamStateSnapshot = await transaction.get(teamStateRef(MAIN_COMPETITION_ID, callerTeamId));
 
     if (!gameFlowSnapshot.exists()) {
       throw new Error("Game flow document is missing.");
@@ -82,13 +83,15 @@ export async function selectStage3QuestionByOwner({
       buildStage3AnsweringTimerPayload(now, serverTimestamp(), answerSeconds),
       { merge: true },
     );
-  });
 
-  await updateDoc(teamStateRef(MAIN_COMPETITION_ID, callerTeamId), {
-    "progress.stage3SelectedQuestionId": question.id,
-    "progress.stage3.currentField": question.fieldId,
-    "progress.stage3.questionIndex": question.questionNumber,
-    updatedAt: serverTimestamp(),
+    if (teamStateSnapshot.exists()) {
+      transaction.update(teamStateRef(MAIN_COMPETITION_ID, callerTeamId), {
+        "progress.stage3SelectedQuestionId": question.id,
+        "progress.stage3.currentField": question.fieldId,
+        "progress.stage3.questionIndex": question.questionNumber,
+        updatedAt: serverTimestamp(),
+      });
+    }
   });
 }
 

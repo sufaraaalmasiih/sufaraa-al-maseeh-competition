@@ -79,12 +79,46 @@ service cloud.firestore {
       allow create, update, delete: if isSuperAdmin();
     }
 
+    function teamStateProgressUpdateAllowed() {
+      let oldTotal = resource.data.totalScore is int ? resource.data.totalScore : 0;
+      let newTotal = request.resource.data.totalScore is int ? request.resource.data.totalScore : 0;
+      return oldTotal == newTotal;
+    }
+
+    function stage3OwnerSelectingQuestion(competitionId) {
+      let prev = resource.data;
+      let next = request.resource.data;
+      return teamDocExists()
+        && prev.status == 'stage3_board'
+        && prev.stage3OwnerTeamId == request.auth.uid
+        && next.status == 'stage3_question_open'
+        && next.currentStage == 'stage3'
+        && next.stage3OwnerTeamId == prev.stage3OwnerTeamId
+        && next.competitionFrozen == prev.competitionFrozen;
+    }
+
+    function teamStage3AnsweringTimerAllowed(competitionId) {
+      let gameFlow = get(/databases/$(database)/documents/competitions/$(competitionId)/system/gameFlow);
+      let data = request.resource.data;
+      return teamDocExists()
+        && gameFlow.data.stage3OwnerTeamId == request.auth.uid
+        && gameFlow.data.status in ['stage3_board', 'stage3_question_open']
+        && data.stage == 'stage3'
+        && data.purpose == 'answering'
+        && data.active == true
+        && data.durationSeconds is int
+        && data.durationSeconds > 0
+        && data.durationSeconds <= 120;
+    }
+
     // Competition data
     match /competitions/{competitionId} {
       // Public read for audience screens (gameFlow + timer)
       match /system/{docId} {
         allow read: if true;
-        allow write: if isFacilitator();
+        allow write: if isFacilitator()
+          || (docId == 'gameFlow' && stage3OwnerSelectingQuestion(competitionId))
+          || (docId == 'timer' && teamStage3AnsweringTimerAllowed(competitionId));
       }
 
       // Rankings visible to audience; teams update own doc with bounded score deltas
@@ -92,7 +126,7 @@ service cloud.firestore {
         allow read: if true;
         allow create: if isOwner(teamId);
         allow update: if isFacilitator()
-          || (isOwner(teamId) && teamStateScoreUpdateAllowed());
+          || (isOwner(teamId) && (teamStateScoreUpdateAllowed() || teamStateProgressUpdateAllowed()));
         allow delete: if isFacilitator();
       }
 
