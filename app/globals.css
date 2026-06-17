@@ -698,12 +698,13 @@
 
   .auth-portal-section__tiles {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.625rem;
   }
 
-  .auth-screen__card--hub .auth-portal-section__tiles {
-    grid-template-columns: 1fr;
+  .auth-portal-tile--span-full {
+    grid-column: 1 / -1;
+    min-height: 4rem;
   }
 
   .auth-portal-tile {
@@ -736,11 +737,6 @@
     opacity: 0.72;
     cursor: wait;
     pointer-events: none;
-  }
-
-  .auth-portal-tile--span-full {
-    grid-column: auto;
-    min-height: 4rem;
   }
 
   .auth-portal-tile__icon {
@@ -822,7 +818,8 @@
 
   @media (max-width: 40rem) {
     .auth-screen__wrap--hub {
-      width: min(100%, 20.5rem);
+      width: min(100%, calc(100vw - 1.25rem));
+      max-width: none;
       padding-inline: 0.625rem;
     }
 
@@ -984,9 +981,9 @@
   }
 
   .auth-screen__wrap--hub {
-    width: min(100%, 23.5rem);
-    max-width: 23.5rem;
-    padding-inline: 0.75rem;
+    width: min(100%, clamp(28rem, 88vw, 40rem));
+    max-width: min(100%, clamp(28rem, 88vw, 40rem));
+    padding-inline: clamp(0.75rem, 2vw, 1.25rem);
   }
 
   .auth-screen__card {
@@ -9934,17 +9931,17 @@
     }
 
     .auth-screen__wrap--hub {
-      width: min(100%, 24rem);
-      max-width: 24rem;
+      width: min(100%, clamp(36rem, 46vw, 48rem));
+      max-width: min(100%, clamp(36rem, 46vw, 48rem));
     }
 
     .auth-portal-section__tiles {
-      gap: 0.5rem;
+      gap: 0.75rem;
     }
 
     .auth-portal-tile {
-      min-height: 3.75rem;
-      padding: 0.625rem 0.75rem;
+      min-height: 4.25rem;
+      padding: 0.75rem 0.875rem;
     }
   }
 
