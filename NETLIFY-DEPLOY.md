@@ -41,7 +41,10 @@ git push -u origin main
 
 ## 3) متغيرات البيئة في Netlify
 
-**Site settings** → **Environment variables** → **Add a variable** (لكل سطر):
+**مهم جداً:** متغيرات `NEXT_PUBLIC_*` يجب أن تكون متوفرة **أثناء البناء (Build)** وليس فقط Runtime — وإلا يفشل `npm run build:netlify` مع `auth/invalid-api-key`.
+
+في Netlify: **Site settings** → **Environment variables** → **Add a variable**  
+لكل متغير اختر **Scopes: All scopes** (أو Build + Runtime معاً).
 
 ### Firebase (عام — `NEXT_PUBLIC_`)
 

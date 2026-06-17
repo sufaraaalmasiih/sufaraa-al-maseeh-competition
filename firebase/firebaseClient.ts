@@ -1,7 +1,7 @@
-import { getApp, getApps, initializeApp } from "firebase/app";
+import { getApp, getApps, initializeApp, type FirebaseApp } from "firebase/app";
 import { browserLocalPersistence, getAuth, setPersistence, type Auth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { getFirestore, type Firestore } from "firebase/firestore";
+import { getStorage, type FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -12,22 +12,87 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-export const firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+function isFirebaseConfigured(): boolean {
+  return Boolean(
+    firebaseConfig.apiKey &&
+      firebaseConfig.authDomain &&
+      firebaseConfig.projectId &&
+      firebaseConfig.appId,
+  );
+}
+
+let appInstance: FirebaseApp | undefined;
+
+export function getFirebaseApp(): FirebaseApp {
+  if (appInstance) {
+    return appInstance;
+  }
+
+  if (getApps().length) {
+    appInstance = getApp();
+    return appInstance;
+  }
+
+  if (!isFirebaseConfigured()) {
+    throw new Error(
+      "Missing Firebase configuration. Set NEXT_PUBLIC_FIREBASE_* environment variables.",
+    );
+  }
+
+  appInstance = initializeApp(firebaseConfig);
+  return appInstance;
+}
+
+function bindLazy<T extends object>(resolve: () => T): T {
+  return new Proxy({} as T, {
+    get(_target, prop) {
+      const instance = resolve();
+      const value = Reflect.get(instance, prop, instance);
+      return typeof value === "function"
+        ? (value as (...args: unknown[]) => unknown).bind(instance)
+        : value;
+    },
+  });
+}
+
+/** Lazy singleton — avoids Firebase Auth init during Next.js prerender/build. */
+export const firebaseApp = bindLazy(getFirebaseApp);
 
 const SECONDARY_APP_NAME = "sufaraa-staff-bootstrap";
 
 let clientAuth: Auth | null = null;
 let secondaryAuth: Auth | null = null;
+let lazyAuth: Auth | undefined;
+let lazyFirestore: Firestore | undefined;
+let lazyStorage: FirebaseStorage | undefined;
 let persistenceConfigured = false;
 let persistencePromise: Promise<void> | null = null;
+
+function resolveFirebaseAuth(): Auth {
+  lazyAuth ??= getAuth(getFirebaseApp());
+  return lazyAuth;
+}
+
+/** Lazy singleton — do not initialize at module import time. */
+export const firebaseAuth = bindLazy(resolveFirebaseAuth);
+
+export const firestore = bindLazy(() => {
+  lazyFirestore ??= getFirestore(getFirebaseApp());
+  return lazyFirestore;
+});
+
+export const firebaseStorage = bindLazy(() => {
+  lazyStorage ??= getStorage(getFirebaseApp());
+  return lazyStorage;
+});
 
 /** Single auth instance for the browser — Firebase returns the same object per app. */
 export function getClientFirebaseAuth(): Auth {
   if (typeof window === "undefined") {
-    return getAuth(firebaseApp);
+    return resolveFirebaseAuth();
   }
 
-  clientAuth ??= getAuth(firebaseApp);
+  clientAuth ??= resolveFirebaseAuth();
   return clientAuth;
 }
 
@@ -61,14 +126,16 @@ export function ensureAuthPersistence(): Promise<void> {
  */
 export function getSecondaryFirebaseAuth(): Auth {
   if (typeof window === "undefined") {
-    const secondaryApp = getApps().find((app) => app.name === SECONDARY_APP_NAME)
-      ?? initializeApp(firebaseConfig, SECONDARY_APP_NAME);
+    const secondaryApp =
+      getApps().find((app) => app.name === SECONDARY_APP_NAME) ??
+      initializeApp(firebaseConfig, SECONDARY_APP_NAME);
     return getAuth(secondaryApp);
   }
 
   if (!secondaryAuth) {
-    const secondaryApp = getApps().find((app) => app.name === SECONDARY_APP_NAME)
-      ?? initializeApp(firebaseConfig, SECONDARY_APP_NAME);
+    const secondaryApp =
+      getApps().find((app) => app.name === SECONDARY_APP_NAME) ??
+      initializeApp(firebaseConfig, SECONDARY_APP_NAME);
     secondaryAuth = getAuth(secondaryApp);
   }
 
@@ -78,8 +145,3 @@ export function getSecondaryFirebaseAuth(): Auth {
 export function logFirebaseClientInit(): void {
   // no-op — kept for call-site compatibility
 }
-
-/** Same singleton as getClientFirebaseAuth(); prefer getClientFirebaseAuth() in new code. */
-export const firebaseAuth = getAuth(firebaseApp);
-export const firestore = getFirestore(firebaseApp);
-export const firebaseStorage = getStorage(firebaseApp);
