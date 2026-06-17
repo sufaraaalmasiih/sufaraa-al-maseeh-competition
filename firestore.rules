@@ -85,7 +85,7 @@ service cloud.firestore {
       return oldTotal == newTotal;
     }
 
-    function stage3OwnerSelectingQuestion(competitionId) {
+    function stage3OwnerSelectingQuestion() {
       let prev = resource.data;
       let next = request.resource.data;
       return teamDocExists()
@@ -117,7 +117,7 @@ service cloud.firestore {
       match /system/{docId} {
         allow read: if true;
         allow write: if isFacilitator()
-          || (docId == 'gameFlow' && stage3OwnerSelectingQuestion(competitionId))
+          || (docId == 'gameFlow' && stage3OwnerSelectingQuestion())
           || (docId == 'timer' && teamStage3AnsweringTimerAllowed(competitionId));
       }
 

@@ -13,6 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "generate:questions-template": "npx --yes tsx scripts/build-professional-questions-template.ts && npx --yes tsx scripts/verify-question-type-alignment.ts",
+    "generate:easy-bible-bank": "npx --yes tsx scripts/build-easy-bible-questions-bank.ts",
+    "simulate:question-import": "npx --yes tsx scripts/simulate-question-bank-import.ts",
     "firebase:deploy": "firebase deploy --only firestore:rules,firestore:indexes,storage --project sufaraaalmasiih-53478",
     "firebase:seed": "node scripts/seed-firestore-bootstrap.mjs"
   },
