@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ErrorState } from "@/components/layout/state-view";
 import { useAuthRole } from "@/hooks/use-auth-role";
 import { Stage3Board } from "@/features/stage3/components/stage3-board";
+import { Stage3BoardViewportFit } from "@/features/stage3/components/stage3-board-viewport-fit";
 import { selectStage3QuestionByOwner } from "@/features/stage3/open-stage3-question";
 import { boardQuestionToMetadata } from "@/features/stage3/stage3-question-metadata";
 import type { Stage3BoardQuestion } from "@/features/stage3/stage3-board-data";
@@ -70,33 +71,34 @@ export function Stage3TeamBoardScreen({
       <div className="gameplay-flow">
         <Stage3SelectionTimeoutBanner notice={selectionTimeoutNotice} />
 
-        <section className="gameplay-board-card stage3-unified-card stage3-unified-card--glass stage3-board-unified">
-          <header className="stage3-board-hero">
-            <TurnBanner
-              isOwner={isOwner}
-              ownerReady={ownerReady}
+        <Stage3BoardViewportFit>
+          <section className="gameplay-board-card stage3-unified-card stage3-unified-card--glass stage3-board-unified">
+            <header className="stage3-board-hero">
+              <TurnBanner
+                isOwner={isOwner}
+                ownerReady={ownerReady}
+                ownerTeamName={ownerTeamName}
+              />
+            </header>
+
+            {actionError ? <ErrorState title="تعذر المتابعة" description={actionError} /> : null}
+
+            <Stage3Board
+              embedded
+              featured
+              hideHeader
+              variant="team"
+              canChoose={isOwner}
+              pendingQuestionId={selectingQuestionId}
+              openedQuestionIds={openedQuestionIds}
+              usedQuestionIds={usedQuestionIds}
               ownerTeamName={ownerTeamName}
+              onSelectQuestion={(question, fieldLabel) => {
+                void handleSelectQuestion(question, fieldLabel);
+              }}
             />
-          </header>
-
-          {actionError ? <ErrorState title="تعذر المتابعة" description={actionError} /> : null}
-
-          <Stage3Board
-            embedded
-            featured
-            hideHeader
-            variant="team"
-            canChoose={isOwner}
-            pendingQuestionId={selectingQuestionId}
-            openedQuestionIds={openedQuestionIds}
-            usedQuestionIds={usedQuestionIds}
-            ownerTeamName={ownerTeamName}
-            onSelectQuestion={(question, fieldLabel) => {
-              void handleSelectQuestion(question, fieldLabel);
-            }}
-          />
-
-        </section>
+          </section>
+        </Stage3BoardViewportFit>
       </div>
     </div>
   );

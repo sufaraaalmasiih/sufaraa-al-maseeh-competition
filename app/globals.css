@@ -538,8 +538,6 @@
   .content-shell-arena--stage3.content-shell-arena--stage3-board {
     max-width: min(100%, 96rem);
     overflow: hidden;
-    padding-top: clamp(0.25rem, 0.8dvh, 0.5rem);
-    padding-bottom: clamp(0.25rem, 0.8dvh, 0.5rem);
   }
 
   .app-viewport-fill .content-shell-arena--stage3.content-shell-arena--stage3-board,
@@ -550,7 +548,8 @@
   }
 
   .app-viewport-fill .team-flow-content--fill:has(.stage3-scene--board),
-  .app-viewport-fill .team-flow-content__body:has(.stage3-scene--board) {
+  .app-viewport-fill .team-flow-content__body:has(.stage3-scene--board),
+  .app-viewport-fill .audience-flow-content:has(.stage3-scene--board) {
     min-height: 0;
     height: 100%;
     overflow: hidden;
@@ -562,7 +561,6 @@
     min-height: 0;
     flex: 1 1 auto;
     justify-content: flex-start;
-    gap: 0.35rem;
   }
 
   .app-viewport-fill .stage3-scene--board .gameplay-flow {
@@ -574,122 +572,27 @@
     overflow: hidden;
   }
 
-  .app-viewport-fill .stage3-scene--board .gameplay-board-card.stage3-board-unified {
+  .stage3-board-viewport-fit {
     display: flex;
+    width: 100%;
     min-height: 0;
     flex: 1 1 auto;
-    flex-direction: column;
-    overflow: hidden;
-    padding: clamp(0.4rem, 1dvh, 0.65rem) clamp(0.5rem, 1.2vw, 0.8rem);
-  }
-
-  .app-viewport-fill .stage3-board-unified .stage3-board-hero {
-    flex-shrink: 0;
-    margin-bottom: 0;
-    padding-bottom: clamp(0.3rem, 0.8dvh, 0.5rem);
-    border-bottom-width: 1px;
-  }
-
-  .app-viewport-fill .stage3-board-unified .stage3-board-shell--featured {
-    display: flex;
-    min-height: 0;
-    flex: 1 1 auto;
-    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
     overflow: hidden;
   }
 
-  .app-viewport-fill .stage3-board-shell--featured .stage3-board-body {
-    display: flex;
-    min-height: 0;
-    flex: 1 1 auto;
-    flex-direction: column;
-    overflow: hidden;
-    margin-top: 0;
-    padding-top: 0;
-    border-top: 0;
+  .stage3-board-viewport-fit__inner {
+    width: 100%;
+    max-width: 100%;
   }
 
-  .app-viewport-fill .stage3-board-shell--featured .stage3-jeopardy-board {
-    display: grid;
-    min-height: 0;
-    flex: 1 1 auto;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    align-content: stretch;
-    gap: clamp(0.2rem, 0.5dvh, 0.5rem);
-    padding: clamp(0.25rem, 0.65dvh, 0.5rem);
-  }
-
-  .app-viewport-fill .stage3-board-shell--featured .stage3-category-col {
-    display: grid;
-    min-height: 0;
-    height: 100%;
-    grid-template-rows: auto minmax(0, 1fr);
-    padding: clamp(0.2rem, 0.55dvh, 0.4rem);
-  }
-
-  .app-viewport-fill .stage3-board-shell--featured .stage3-category-col__title {
-    flex-shrink: 0;
-    margin-bottom: clamp(0.1rem, 0.28dvh, 0.2rem);
-    padding: 0.1rem;
-    font-size: clamp(0.62rem, 1.05dvh, 0.8rem);
-    line-height: 1.1;
-  }
-
-  .app-viewport-fill .stage3-board-shell--featured .stage3-category-col__tiles {
-    display: grid;
-    min-height: 0;
-    height: 100%;
-    grid-template-rows: repeat(5, minmax(0, 1fr));
-    gap: clamp(0.12rem, 0.38dvh, 0.3rem);
-  }
-
-  .app-viewport-fill .stage3-board-shell--featured .stage3-q-tile {
-    height: 100%;
-    min-height: clamp(1.85rem, 4.8dvh, 3.25rem);
-    max-height: none;
-    flex: none;
-    padding-inline: clamp(0.2rem, 0.5vw, 0.35rem);
-    border-radius: clamp(0.55rem, 1.2dvh, 0.85rem);
-  }
-
-  .app-viewport-fill .stage3-board-shell--featured .stage3-q-tile__label {
-    font-size: clamp(0.58rem, 0.95dvh, 0.72rem);
-    line-height: 1;
-  }
-
-  .app-viewport-fill .stage3-board-shell--featured .stage3-q-tile__pts {
-    font-size: clamp(0.52rem, 0.85dvh, 0.64rem);
-    padding: 0.08rem 0.28rem;
-    line-height: 1;
-  }
-
-  .app-viewport-fill .content-shell-arena--stage3 .stage3-board-hero .stage3-turn-banner--hero {
-    padding: clamp(0.35rem, 0.95dvh, 0.55rem) clamp(0.5rem, 1.1vw, 0.75rem);
-  }
-
-  .app-viewport-fill .content-shell-arena--stage3 .stage3-board-hero .stage3-turn-banner--hero .stage3-turn-banner__title {
-    margin-top: 0;
-    font-size: clamp(0.92rem, 1.9dvh, 1.2rem);
-    line-height: 1.2;
-  }
-
-  .app-viewport-fill .content-shell-arena--stage3 .stage3-board-hero .stage3-turn-banner--hero .stage3-turn-banner__subtitle {
-    margin-top: 0.15rem;
-    font-size: clamp(0.72rem, 1.45dvh, 0.88rem);
-    line-height: 1.25;
+  .stage3-board-viewport-fit .gameplay-board-card.stage3-board-unified {
+    overflow: visible;
   }
 
   .app-viewport-fill:has(.stage3-scene--board) .gameplay-unified-slogan {
     display: none;
-  }
-
-  .app-viewport-fill:has(.stage3-scene--board) .gameplay-unified-header {
-    padding: clamp(0.35rem, 0.9dvh, 0.55rem) clamp(0.5rem, 1.1vw, 0.75rem);
-  }
-
-  .app-viewport-fill:has(.stage3-scene--board) .gameplay-unified-competition-logo {
-    height: clamp(2.35rem, 5.5dvh, 2.85rem);
-    width: clamp(2.35rem, 5.5dvh, 2.85rem);
   }
 
   /* ===== Auth portal (بوابة الدخول) ===== */
@@ -3791,11 +3694,11 @@
   }
 
   .stage3-scene--board {
-    @apply flex w-full min-h-full flex-1 flex-col justify-center gap-3 sm:gap-3.5;
+    @apply flex w-full min-h-full flex-1 flex-col justify-start gap-3 sm:gap-3.5;
   }
 
   .stage3-scene--board .gameplay-flow {
-    @apply min-h-0 flex-none;
+    @apply flex min-h-0 w-full flex-1 flex-col;
   }
 
   .stage3-scene--question {
@@ -9403,6 +9306,10 @@
     .app-viewport-fill .gameplay-board-card {
       padding: 0.65rem 0.85rem;
       overflow: hidden;
+    }
+
+    .app-viewport-fill .stage3-board-viewport-fit .gameplay-board-card.stage3-board-unified {
+      overflow: visible;
     }
 
     .app-viewport-fill .gameplay-board-body {
