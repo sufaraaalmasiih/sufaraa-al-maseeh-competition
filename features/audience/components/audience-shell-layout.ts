@@ -2,7 +2,6 @@ import {
   getCompetitionShellContentClassName,
   isArenaGameplayStatus,
   shouldCenterCompetitionShellContent,
-  shouldScrollCompetitionShellContent,
 } from "@/features/gameflow/flow-shell-layout";
 import type { GameFlowStatus } from "@/types";
 
@@ -78,5 +77,5 @@ export function shouldScrollAudienceShellContent(
     return false;
   }
 
-  return shouldScrollCompetitionShellContent(status, loading);
+  return !shouldCenterCompetitionShellContent(status, loading);
 }

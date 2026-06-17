@@ -37,5 +37,5 @@ export function shouldScrollTeamShellContent(
     return false;
   }
 
-  return true;
+  return !shouldCenterCompetitionShellContent(status, loading);
 }
