@@ -1,3 +1,4 @@
+import { seededShuffleStage1Parts } from "@/features/stage1/stage1-arrange";
 import {
   STAGE2_MATCHING_PAIR_DELIMITER,
   STAGE2_MATCHING_PAIR_SEPARATOR,
@@ -24,4 +25,17 @@ export function areAllMatchingPairsFilled(
   pairings: Stage2MatchingPairings,
 ): boolean {
   return question.pairs.every((pair) => Boolean(pairings[pair.left]));
+}
+
+/** Right-column pool for team UI — must not rely on stripped `correctRight`. */
+export function getShuffledMatchingRightOptions(
+  question: Stage2MatchingQuestion,
+): string[] {
+  const fromBank = (question.rightOptions ?? []).map((option) => option.trim()).filter(Boolean);
+  const fromPairs = question.pairs
+    .map((pair) => pair.correctRight.trim())
+    .filter(Boolean);
+  const pool = fromBank.length > 0 ? fromBank : fromPairs;
+
+  return seededShuffleStage1Parts(pool, `${question.id}-right`);
 }

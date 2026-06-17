@@ -9,6 +9,7 @@ interface CompetitionConfirmButtonProps {
   disabled?: boolean;
   confirmed?: boolean;
   confirmedLabel?: string;
+  confirmMessage?: string;
   buttonClassName?: string;
   onClick: () => void;
   className?: string;
@@ -19,10 +20,21 @@ function CompetitionConfirmButtonInner({
   disabled,
   confirmed = false,
   confirmedLabel = "تم تأكيد الإجابة",
+  confirmMessage,
   buttonClassName,
   onClick,
   className,
 }: CompetitionConfirmButtonProps) {
+  function handleClick() {
+    if (disabled || confirmed) {
+      return;
+    }
+    if (confirmMessage && !window.confirm(confirmMessage)) {
+      return;
+    }
+    onClick();
+  }
+
   return (
     <div className={cn("game-ready-btn-wrap", className)}>
       <GameReadyButton
@@ -30,7 +42,7 @@ function CompetitionConfirmButtonInner({
         disabled={disabled}
         forcePressed={confirmed}
         type="button"
-        onClick={onClick}
+        onClick={handleClick}
       >
         {confirmed ? confirmedLabel : children}
       </GameReadyButton>

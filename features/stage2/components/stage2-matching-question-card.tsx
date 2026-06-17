@@ -6,8 +6,10 @@ import { CompetitionConfirmButton } from "@/components/competition/competition-c
 import { MatchingCard, type MatchingPairTone } from "@/components/competition/matching-card";
 import { QuestionPrompt } from "@/components/competition/question-prompt";
 import type { Stage2MatchingPairings } from "@/features/stage2/stage2-matching";
-import { seededShuffleStage1Parts } from "@/features/stage1/stage1-arrange";
-import { areAllMatchingPairsFilled } from "@/features/stage2/stage2-matching";
+import {
+  areAllMatchingPairsFilled,
+  getShuffledMatchingRightOptions,
+} from "@/features/stage2/stage2-matching";
 import type { Stage2MatchingQuestion } from "@/features/stage2/stage2-matching-types";
 
 interface Stage2MatchingQuestionCardProps {
@@ -36,13 +38,14 @@ export function Stage2MatchingQuestionCard({
   const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
   const [pairings, setPairings] = useState<Stage2MatchingPairings>({});
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [statusHint, setStatusHint] = useState(
+    "اختر عبارة من العمود الأول ثم اختر الإجابة المطابقة من العمود الثاني.",
+  );
 
-  const pairCount = question.pairs.length;
-
-  const shuffledRightOptions = useMemo(() => {
-    const correctOptions = question.pairs.map((pair) => pair.correctRight);
-    return seededShuffleStage1Parts(correctOptions, `${question.id}-right`);
-  }, [question.id, question.pairs]);
+  const shuffledRightOptions = useMemo(
+    () => getShuffledMatchingRightOptions(question),
+    [question],
+  );
 
   const leftToPairIndex = useMemo(() => {
     const map = new Map<string, number>();
@@ -64,6 +67,9 @@ export function Stage2MatchingQuestionCard({
     setSelectedLeft(null);
     setPairings({});
     setValidationError(null);
+    setStatusHint(
+      "اختر عبارة من العمود الأول ثم اختر الإجابة المطابقة من العمود الثاني.",
+    );
   }, [question.id]);
 
   function getLeftPairIndex(left: string): number | null {
@@ -75,10 +81,12 @@ export function Stage2MatchingQuestionCard({
     if (confirmed || disabled || saving) return;
     if (selectedLeft === left) {
       setSelectedLeft(null);
+      setStatusHint("اختر عبارة من العمود الأول ثم اختر الإجابة المطابقة من العمود الثاني.");
       return;
     }
     setSelectedLeft(left);
     setValidationError(null);
+    setStatusHint(`اختر الإجابة المناسبة لـ: ${left}`);
   }
 
   function handleRightClick(right: string) {
@@ -93,11 +101,12 @@ export function Stage2MatchingQuestionCard({
       });
       setSelectedLeft(existingLeft);
       setValidationError(null);
+      setStatusHint(`اختر الإجابة المناسبة لـ: ${existingLeft}`);
       return;
     }
 
     if (!selectedLeft) {
-      setValidationError("اختر من اليسار أولاً");
+      setValidationError("اختر عبارة من العمود الأول أولاً");
       return;
     }
 
@@ -111,6 +120,7 @@ export function Stage2MatchingQuestionCard({
     });
     setSelectedLeft(null);
     setValidationError(null);
+    setStatusHint("اختر عبارة من العمود الأول ثم اختر الإجابة المطابقة من العمود الثاني.");
   }
 
   function handleUnpair(left: string) {
@@ -121,6 +131,7 @@ export function Stage2MatchingQuestionCard({
       return next;
     });
     setSelectedLeft(left);
+    setStatusHint(`اختر الإجابة المناسبة لـ: ${left}`);
   }
 
   function handleConfirm() {
@@ -144,8 +155,11 @@ export function Stage2MatchingQuestionCard({
         </QuestionPrompt>
       )}
 
+      <p className="matching-board-help">{statusHint}</p>
+
       <div className="challenge-board">
         <div className="challenge-board-column">
+          <h4 className="matching-board-column-title">العمود الأول</h4>
           {question.pairs.map((pair) => {
             const pairIndex = getLeftPairIndex(pair.left);
             const pairedRight = pairings[pair.left];
@@ -178,6 +192,7 @@ export function Stage2MatchingQuestionCard({
         </div>
 
         <div className="challenge-board-column">
+          <h4 className="matching-board-column-title">العمود الثاني</h4>
           {shuffledRightOptions.map((right, index) => {
             const pairedLeft = rightToLeft.get(right);
             const pairIndex =
@@ -208,6 +223,7 @@ export function Stage2MatchingQuestionCard({
       ) : null}
       <CompetitionConfirmButton
         className="mx-auto"
+        confirmMessage="هل أنتم متأكدون من توصيلاتكم؟ لن تتمكنوا من تعديلها بعد التأكيد."
         confirmed={confirmed}
         disabled={disabled || saving || !allPaired}
         onClick={handleConfirm}

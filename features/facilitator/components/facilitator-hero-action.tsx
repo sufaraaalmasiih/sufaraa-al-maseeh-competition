@@ -61,6 +61,12 @@ export function FacilitatorHeroAction({
     if (pending || readinessBlocked || !hero) {
       return;
     }
+
+    const confirmed = window.confirm(`هل تريد تنفيذ: «${hero.label}»؟`);
+    if (!confirmed) {
+      return;
+    }
+
     setPending(true);
     setError(null);
     try {
