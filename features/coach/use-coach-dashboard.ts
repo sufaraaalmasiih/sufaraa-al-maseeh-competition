@@ -179,7 +179,7 @@ export function useCoachDashboard() {
           })
           .filter((item): item is CoachHistoryItem & { createdAtMs: number } => item !== null)
           .sort((first, second) => second.createdAtMs - first.createdAtMs)
-          .slice(0, 3)
+          .slice(0, 5)
           .map(({ createdAtMs: _createdAtMs, ...row }) => row);
 
         setHistory(items);

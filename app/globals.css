@@ -9595,15 +9595,17 @@
     margin: 0.35rem 0 0;
     font-size: 1rem;
     font-weight: 700;
-    color: #143a5a;
+    color: #ffffff;
+    text-shadow: 0 1px 10px rgba(8, 24, 40, 0.35);
   }
 
   .coach-card,
   .coach-stat,
   .coach-history__item {
     border-radius: 1rem;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.92);
     box-shadow: 0 8px 24px rgba(8, 24, 40, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.65);
   }
 
   .coach-card {
@@ -9611,11 +9613,18 @@
   }
 
   .coach-card__label,
-  .coach-stat__label,
-  .coach-history__title {
+  .coach-stat__label {
     margin: 0;
     font-size: 0.82rem;
     color: rgba(20, 58, 90, 0.72);
+  }
+
+  .coach-history__title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #ffffff;
+    text-shadow: 0 1px 10px rgba(8, 24, 40, 0.35);
   }
 
   .coach-card__value,
@@ -9643,17 +9652,11 @@
     gap: 0.55rem;
   }
 
-  .coach-history__title {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: #143a5a;
-  }
-
   .coach-history__empty {
     margin: 0;
     padding: 1rem;
     border-radius: 1rem;
-    background: rgba(255, 255, 255, 0.75);
+    background: rgba(255, 255, 255, 0.82);
     color: rgba(20, 58, 90, 0.7);
     text-align: center;
   }
@@ -9664,23 +9667,78 @@
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 0.55rem;
+    gap: 0.45rem;
   }
 
   .coach-history__item {
-    padding: 0.9rem 1rem;
+    padding: 0.85rem 0.95rem;
+  }
+
+  .coach-history__item--latest {
+    border-color: rgba(123, 200, 62, 0.42);
+    box-shadow:
+      0 10px 24px rgba(8, 24, 40, 0.1),
+      inset 0 0 0 1px rgba(123, 200, 62, 0.18);
+  }
+
+  .coach-history__item--past {
+    padding: 0.7rem 0.85rem;
+    background: rgba(255, 255, 255, 0.78);
+    opacity: 0.94;
+  }
+
+  .coach-history__item-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .coach-history__stage {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 0.15rem 0.55rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #2388c4;
+    background: rgba(35, 136, 196, 0.12);
+  }
+
+  .coach-history__badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.66rem;
+    font-weight: 800;
+    color: #3f6212;
+    background: rgba(123, 200, 62, 0.22);
   }
 
   .coach-history__question {
     margin: 0;
     font-weight: 700;
     color: #143a5a;
+    font-size: 0.92rem;
+    line-height: 1.45;
+  }
+
+  .coach-history__item--past .coach-history__question {
+    font-size: 0.86rem;
+    color: rgba(20, 58, 90, 0.88);
   }
 
   .coach-history__answer,
   .coach-history__result {
-    margin: 0.35rem 0 0;
-    font-size: 0.9rem;
+    margin: 0.3rem 0 0;
+    font-size: 0.84rem;
+  }
+
+  .coach-history__item--past .coach-history__answer,
+  .coach-history__item--past .coach-history__result {
+    font-size: 0.8rem;
   }
 
   .coach-history__result--ok {
@@ -9694,14 +9752,39 @@
   }
 
   .coach-shell__footer {
-    margin-top: 0.5rem;
-    text-align: center;
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    margin-top: 0.25rem;
+    padding: 0.65rem 0 0.35rem;
+    background: linear-gradient(180deg, rgba(8, 24, 40, 0) 0%, rgba(8, 24, 40, 0.42) 38%);
   }
 
-  .coach-shell__link {
-    color: #143a5a;
-    font-weight: 700;
-    text-decoration: underline;
+  .coach-shell__cta {
+    display: flex;
+    width: 100%;
+    min-height: 3.25rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 1rem;
+    background: #7bc83e;
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 800;
+    text-decoration: none;
+    box-shadow:
+      inset 0 0 1.2em -0.45em #4f8f1a,
+      0 10px 22px rgba(8, 24, 40, 0.18);
+    transition: transform 140ms ease, background-color 140ms ease;
+  }
+
+  .coach-shell__cta:hover {
+    background: #6bb534;
+    transform: translateY(-1px);
+  }
+
+  .coach-shell__cta:active {
+    transform: translateY(0);
   }
 
   /* ===== Responsive — هاتف → شاشة كبيرة / عرض جمهور ===== */

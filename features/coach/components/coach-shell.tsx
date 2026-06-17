@@ -65,8 +65,15 @@ export function CoachShell() {
           <p className="coach-history__empty">لا توجد أسئلة مُعلنة بعد لفرقك.</p>
         ) : (
           <ul className="coach-history__list">
-            {history.map((item) => (
-              <li key={item.id} className="coach-history__item">
+            {history.map((item, index) => (
+              <li
+                key={item.id}
+                className={index === 0 ? "coach-history__item coach-history__item--latest" : "coach-history__item coach-history__item--past"}
+              >
+                <div className="coach-history__item-head">
+                  <span className="coach-history__stage">{item.stage}</span>
+                  {index === 0 ? <span className="coach-history__badge">الأحدث</span> : null}
+                </div>
                 <p className="coach-history__question">{item.questionText}</p>
                 <p className="coach-history__answer">إجابتكم: {item.answer || "—"}</p>
                 <p className={item.isCorrect ? "coach-history__result coach-history__result--ok" : "coach-history__result coach-history__result--bad"}>
@@ -79,7 +86,7 @@ export function CoachShell() {
       </section>
 
       <div className="coach-shell__footer">
-        <Link href="/team" className="coach-shell__link">
+        <Link href="/team" prefetch className="coach-shell__cta">
           الانتقال لشاشة المتسابق
         </Link>
       </div>
