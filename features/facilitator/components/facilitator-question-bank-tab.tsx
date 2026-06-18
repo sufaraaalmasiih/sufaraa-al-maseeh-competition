@@ -468,7 +468,12 @@ export function FacilitatorQuestionBankTab() {
   }
 
   if (loading) {
-    return <LoadingState variant="page" />;
+    return (
+      <LoadingState
+        variant="page"
+        title="جارٍ تجهيز بنك الأسئلة... لحظات من فضلك"
+      />
+    );
   }
 
   return (
