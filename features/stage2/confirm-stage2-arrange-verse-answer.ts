@@ -1,5 +1,6 @@
 ﻿import { runTransaction, serverTimestamp } from "firebase/firestore";
 import { firebaseAuth, getClientFirestore } from "@/firebase/firebaseClient";
+import { getSyncedNowMs } from "@/lib/server-clock-sync";
 import {
   answerRef,
   gameFlowRef,
@@ -149,7 +150,7 @@ export async function confirmStage2ArrangeVerseAnswer({
       "stageScores.stage2": currentStage2Score + pointsDelta,
       totalScore: currentTotalScore + pointsDelta,
       "progress.stage2QuestionIndex": questionIndex + 1,
-      "progress.stage2FinishedAtMs": Date.now(),
+      "progress.stage2FinishedAtMs": getSyncedNowMs(),
       updatedAt: serverTimestamp(),
     });
 

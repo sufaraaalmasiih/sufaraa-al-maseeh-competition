@@ -1,5 +1,6 @@
 ﻿import { runTransaction, serverTimestamp } from "firebase/firestore";
 import { firebaseAuth, getClientFirestore } from "@/firebase/firebaseClient";
+import { getSyncedNowMs } from "@/lib/server-clock-sync";
 import {
   answerRef,
   gameFlowRef,
@@ -183,7 +184,7 @@ export async function confirmStage4Answer({
       "stage4.nextCorrectPoints": nextCorrectPoints,
       "progress.stage4Streak": streakAfter,
       "progress.stage4AnsweredQuestionIds": nextAnsweredIds,
-      "progress.stage4FinishedAtMs": Date.now(),
+      "progress.stage4FinishedAtMs": getSyncedNowMs(),
       updatedAt: serverTimestamp(),
     });
 
