@@ -92,6 +92,7 @@ export function FacilitatorControlsTab() {
             onToggleLock={controls.requestToggleLock}
             onDeleteAnswers={controls.requestDeleteAnswers}
             onResetTeamData={controls.requestResetTeamData}
+            onRemoveTeamFromCompetition={controls.requestRemoveTeamFromCompetition}
             onDeleteTeamCompletely={controls.requestDeleteTeamCompletely}
           />
         </>

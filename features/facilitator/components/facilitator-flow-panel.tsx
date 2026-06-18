@@ -5,7 +5,6 @@ import { useMemo, useState } from "react";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
 import { useCompetitionTimer } from "@/features/gameflow/use-competition-timer";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
-import { isTrainingMode } from "@/features/facilitator/competition-mode";
 import { useStage1Ranking } from "@/features/stage1/use-stage1-ranking";
 import { isTeamReadyForReadiness } from "@/features/facilitator/facilitator-readiness";
 import {
@@ -29,17 +28,21 @@ import { FacilitatorSessionStartDialog } from "@/features/facilitator/components
 import { FacilitatorStagePanel } from "@/features/facilitator/components/facilitator-stage-panel";
 import { FacilitatorStageRail } from "@/features/facilitator/components/facilitator-stage-rail";
 import { useLiveResults } from "@/features/facilitator/use-live-results";
+import { useFinalResults } from "@/features/facilitator/use-final-results";
+import { endCompetition } from "@/features/facilitator/competition-session";
 import { cn } from "@/lib/utils";
 
 export function FacilitatorFlowPanel() {
   const [sessionDialogOpen, setSessionDialogOpen] = useState(false);
+  const [endState, setEndState] = useState<"idle" | "confirm" | "pending">("idle");
+  const [endError, setEndError] = useState<string | null>(null);
+  const { teams: finalResultTeams } = useFinalResults();
   const {
     status,
     stage3OwnerTeamId,
     stage4QuestionIndex,
     stage4QuestionCount,
     competitionFrozen,
-    competitionMode,
     loading,
     error,
   } = useGameFlow();
@@ -130,16 +133,28 @@ export function FacilitatorFlowPanel() {
       return;
     }
 
-    if (
-      status === "waiting_players" &&
-      hero.nextStatus === "competition_intro" &&
-      !isTrainingMode(competitionMode)
-    ) {
+    if (status === "waiting_players" && hero.nextStatus === "competition_intro") {
       setSessionDialogOpen(true);
       return;
     }
 
     await runAdvance(activePlan);
+  }
+
+  const showEndCompetition = status === "final_results" || status === "podium";
+
+  async function handleEndCompetition() {
+    setEndState("pending");
+    setEndError(null);
+    try {
+      await endCompetition(finalResultTeams);
+      setEndState("idle");
+    } catch (mutationError) {
+      setEndError(
+        mutationError instanceof Error ? mutationError.message : "تعذر إنهاء المسابقة.",
+      );
+      setEndState("confirm");
+    }
   }
 
   if (loading) {
@@ -178,6 +193,54 @@ export function FacilitatorFlowPanel() {
       />
 
       <FacilitatorCompetitionFreeze frozen={competitionFrozen} />
+
+      {showEndCompetition ? (
+        <div className="facilitator-card">
+          <div className="facilitator-card__head">
+            <div>
+              <h3 className="facilitator-card__title">إنهاء المسابقة</h3>
+              <p className="facilitator-card__desc">
+                يحفظ السجل النهائي ويسجّل خروج كل الفرق ويعيدها لصفحة الدخول. تبقى
+                نتائج المسابقة محفوظة في السجل ولا تُحذف.
+              </p>
+            </div>
+          </div>
+          <div className="facilitator-timer__buttons">
+            {endState === "idle" ? (
+              <button
+                type="button"
+                className="facilitator-btn facilitator-btn--danger"
+                onClick={() => {
+                  setEndError(null);
+                  setEndState("confirm");
+                }}
+              >
+                إنهاء المسابقة
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="facilitator-btn facilitator-btn--danger"
+                  disabled={endState === "pending"}
+                  onClick={() => void handleEndCompetition()}
+                >
+                  {endState === "pending" ? "جارٍ الإنهاء..." : "تأكيد إنهاء المسابقة"}
+                </button>
+                <button
+                  type="button"
+                  className="facilitator-btn facilitator-btn--outline"
+                  disabled={endState === "pending"}
+                  onClick={() => setEndState("idle")}
+                >
+                  تراجع
+                </button>
+              </>
+            )}
+          </div>
+          {endError ? <p className="facilitator-inline-error">{endError}</p> : null}
+        </div>
+      ) : null}
 
       <div className={cn("flow-cockpit__grid", stackScoreboard && "flow-cockpit__grid--stacked")}>
         <section className="flow-cockpit__main">

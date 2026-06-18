@@ -39,6 +39,8 @@ export interface GameFlow {
   competitionMode?: "official" | "training";
   trainingEndsAtMs?: number | null;
   stage4QuestionOpenedAtMs?: number | null;
+  /** طابع زمني يُضبط عند «إنهاء المسابقة» لإخراج كل الفرق وتسجيل خروجها. */
+  teamSignOutAt?: number | null;
 }
 
 export type TimerPurpose = "answering" | "reading" | "selection" | "reveal" | "none";

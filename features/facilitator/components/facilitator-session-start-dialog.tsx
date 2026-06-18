@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ClipboardList, MapPin, X } from "lucide-react";
+import { ClipboardList, GraduationCap, Trophy, X } from "lucide-react";
 import { createCompetitionSession } from "@/features/facilitator/competition-session";
+import { writeCompetitionMode, type CompetitionMode } from "@/features/facilitator/competition-mode";
 
 interface FacilitatorSessionStartDialogProps {
   open: boolean;
@@ -10,13 +11,21 @@ interface FacilitatorSessionStartDialogProps {
   onStarted: () => Promise<void>;
 }
 
+function toEndsAtMs(value: string): number | null {
+  if (!value) {
+    return null;
+  }
+  const parsed = new Date(value).getTime();
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
 export function FacilitatorSessionStartDialog({
   open,
   onClose,
   onStarted,
 }: FacilitatorSessionStartDialogProps) {
-  const [version, setVersion] = useState("");
-  const [hostGovernorate, setHostGovernorate] = useState("");
+  const [mode, setMode] = useState<CompetitionMode>("official");
+  const [trainingEndsAt, setTrainingEndsAt] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,16 +37,24 @@ export function FacilitatorSessionStartDialog({
     setPending(true);
     setError(null);
     try {
-      await createCompetitionSession({ version, hostGovernorate });
+      if (mode === "training") {
+        const endsAtMs = toEndsAtMs(trainingEndsAt);
+        if (endsAtMs !== null && endsAtMs <= Date.now()) {
+          throw new Error("وقت انتهاء التدريب يجب أن يكون في المستقبل.");
+        }
+        await writeCompetitionMode({ mode: "training", trainingEndsAtMs: endsAtMs });
+      } else {
+        await writeCompetitionMode({ mode: "official", trainingEndsAtMs: null });
+        await createCompetitionSession();
+      }
+
       await onStarted();
-      setVersion("");
-      setHostGovernorate("");
+      setMode("official");
+      setTrainingEndsAt("");
       onClose();
     } catch (mutationError) {
       setError(
-        mutationError instanceof Error
-          ? mutationError.message
-          : "تعذر إنشاء سجل المسابقة.",
+        mutationError instanceof Error ? mutationError.message : "تعذر بدء المسابقة.",
       );
     } finally {
       setPending(false);
@@ -67,7 +84,7 @@ export function FacilitatorSessionStartDialog({
             <div>
               <p className="facilitator-controls-confirm__kicker">بدء مسابقة جديدة</p>
               <h3 id="facilitator-session-start-title" className="facilitator-controls-confirm__title">
-                سجل نسخة المسابقة
+                اختر نوع الجلسة
               </h3>
             </div>
           </div>
@@ -83,40 +100,60 @@ export function FacilitatorSessionStartDialog({
         </div>
 
         <div className="facilitator-controls-confirm__reason-wrap space-y-4">
-          <label className="facilitator-controls-confirm__reason">
-            <span className="facilitator-controls-confirm__reason-label">
-              نسخة المسابقة
-              <em>إلزامي</em>
-            </span>
-            <input
-              type="text"
-              className="facilitator-input"
-              placeholder="مثال: النسخة الأولى"
-              value={version}
-              onChange={(event) => setVersion(event.target.value)}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              className={`flex flex-col items-center gap-2 rounded-2xl border-2 p-4 text-center transition ${
+                mode === "official"
+                  ? "border-[#2388C4] bg-[#E9F6FC] text-[#143A5A]"
+                  : "border-[#E2E8F0] bg-white text-[#5A6B7D] hover:border-[#2388C4]/40"
+              }`}
+              onClick={() => setMode("official")}
               disabled={pending}
-            />
-          </label>
+            >
+              <Trophy className="h-6 w-6" aria-hidden />
+              <span className="text-base font-black">مسابقة رسمية</span>
+              <span className="text-xs font-semibold opacity-80">
+                تُحفظ النتائج النهائية في السجل
+              </span>
+            </button>
+            <button
+              type="button"
+              className={`flex flex-col items-center gap-2 rounded-2xl border-2 p-4 text-center transition ${
+                mode === "training"
+                  ? "border-[#4F8A10] bg-[#F0FAE6] text-[#143A5A]"
+                  : "border-[#E2E8F0] bg-white text-[#5A6B7D] hover:border-[#4F8A10]/40"
+              }`}
+              onClick={() => setMode("training")}
+              disabled={pending}
+            >
+              <GraduationCap className="h-6 w-6" aria-hidden />
+              <span className="text-base font-black">تدريب</span>
+              <span className="text-xs font-semibold opacity-80">
+                بدون سجل — تُمسح البيانات عند الانتهاء
+              </span>
+            </button>
+          </div>
 
-          <label className="facilitator-controls-confirm__reason">
-            <span className="facilitator-controls-confirm__reason-label">
-              <MapPin className="inline h-4 w-4" aria-hidden />
-              المحافظة
-              <em>إلزامي</em>
-            </span>
-            <input
-              type="text"
-              className="facilitator-input"
-              placeholder="مثال: دمشق"
-              value={hostGovernorate}
-              onChange={(event) => setHostGovernorate(event.target.value)}
-              disabled={pending}
-            />
-          </label>
+          {mode === "training" ? (
+            <label className="facilitator-controls-confirm__reason">
+              <span className="facilitator-controls-confirm__reason-label">
+                وقت انتهاء التدريب (اختياري — تُمسح البيانات تلقائياً عنده)
+              </span>
+              <input
+                type="datetime-local"
+                className="facilitator-input"
+                value={trainingEndsAt}
+                onChange={(event) => setTrainingEndsAt(event.target.value)}
+                disabled={pending}
+              />
+            </label>
+          ) : null}
 
           <p className="text-sm font-bold leading-7 text-[#143A5A]/65">
-            سيُنشأ سجل بعنوان مثل: «مسابقة سفراء المسيح النسخة الأولى في محافظة دمشق»،
-            ويُحفظ فيه النتائج النهائية وتعديلات الميسر.
+            {mode === "official"
+              ? "ستبدأ مسابقة رسمية وسيُنشأ سجل تلقائياً لحفظ النتائج النهائية وتعديلات الميسر."
+              : "ستبدأ جلسة تدريب: السير والإجابات تعمل بشكل طبيعي، ولا يُنشأ سجل، وتُمسح البيانات عند الانتهاء."}
           </p>
         </div>
 
@@ -138,12 +175,14 @@ export function FacilitatorSessionStartDialog({
           <button
             type="button"
             className="facilitator-controls-confirm__submit"
-            disabled={
-              pending || version.trim().length < 2 || hostGovernorate.trim().length < 2
-            }
+            disabled={pending}
             onClick={() => void handleSubmit()}
           >
-            {pending ? "جاري الحفظ..." : "بدء المسابقة وحفظ السجل"}
+            {pending
+              ? "جارٍ البدء..."
+              : mode === "official"
+                ? "بدء المسابقة الرسمية"
+                : "بدء التدريب"}
           </button>
         </div>
       </div>

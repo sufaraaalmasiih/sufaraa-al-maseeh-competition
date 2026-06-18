@@ -21,6 +21,7 @@ import {
   fetchCompetitionMode,
   isTrainingMode,
 } from "@/features/facilitator/competition-mode";
+import { wipeTrainingCompetitionData } from "@/features/facilitator/training-mode-wipe";
 import type { FinalResultTeam } from "@/features/facilitator/use-final-results";
 import { subscribeFirestoreDoc } from "@/lib/firestore-listener";
 
@@ -296,18 +297,24 @@ export async function appendActiveSessionEditLog(
   }
 }
 
+function defaultSessionVersion(): string {
+  const now = new Date();
+  const pad = (value: number) => value.toString().padStart(2, "0");
+  return `${now.getFullYear()}/${pad(now.getMonth() + 1)}/${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+}
+
 export async function createCompetitionSession(input: {
-  version: string;
-  hostGovernorate: string;
-}): Promise<string> {
-  const version = input.version.trim();
-  const hostGovernorate = input.hostGovernorate.trim();
-  if (!version || !hostGovernorate) {
-    throw new Error("أدخل نسخة المسابقة والمحافظة.");
-  }
+  version?: string;
+  hostGovernorate?: string;
+} = {}): Promise<string> {
+  // النسخة/المحافظة لم تعد تُطلب عند البدء — نُولّد عنواناً افتراضياً واضحاً للأرشيف.
+  const version = (input.version ?? "").trim() || defaultSessionVersion();
+  const hostGovernorate = (input.hostGovernorate ?? "").trim();
 
   const facilitatorName = getFacilitatorActorName();
-  const title = buildSessionTitle(version, hostGovernorate);
+  const title = hostGovernorate
+    ? buildSessionTitle(version, hostGovernorate)
+    : `مسابقة سفراء المسيح — ${version}`;
 
   const created = await addDoc(historyCollection(), {
     title,
@@ -404,6 +411,35 @@ export async function completeActiveSession(): Promise<void> {
 
 export async function clearActiveSessionLink(): Promise<void> {
   await updateDoc(gameFlowRef, { activeSessionId: null });
+}
+
+/**
+ * إنهاء المسابقة نهائياً: يحفظ السجل النهائي (في الوضع الرسمي)، يفصل السجل النشط،
+ * ويسجّل خروج كل الفرق عبر `teamSignOutAt`. تبقى بيانات الأرشيف محفوظة.
+ */
+export async function endCompetition(teams: FinalResultTeam[]): Promise<void> {
+  const competitionMode = await fetchCompetitionMode();
+
+  if (isTrainingMode(competitionMode)) {
+    // تدريب: لا أرشيف — تُمسح بيانات المسابقة مباشرة مع الإبقاء على الفرق والبنك.
+    await wipeTrainingCompetitionData();
+  } else {
+    const sessionId = await readActiveSessionId();
+    if (sessionId) {
+      await saveSessionResults(
+        sessionId,
+        teams,
+        "manual",
+        "إنهاء المسابقة وحفظ السجل النهائي",
+      );
+    }
+  }
+
+  await updateDoc(gameFlowRef, {
+    activeSessionId: null,
+    teamSignOutAt: Date.now(),
+    updatedAt: serverTimestamp(),
+  });
 }
 
 export async function updateSessionMetadata(

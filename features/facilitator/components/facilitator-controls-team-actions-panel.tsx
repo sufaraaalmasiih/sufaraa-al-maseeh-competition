@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Download, Eye, Lock, LockOpen, RotateCcw, Trash2, Wand2 } from "lucide-react";
+import { Download, Eye, Lock, LockOpen, LogOut, RotateCcw, Trash2, Wand2 } from "lucide-react";
 import { EmptyState } from "@/components/layout/empty-state";
 import { LoadingState } from "@/components/layout/state-view";
 import {
@@ -60,6 +60,7 @@ interface FacilitatorControlsTeamActionsPanelProps {
   onToggleLock: (stage: AdminStageKey, locked: boolean) => void;
   onDeleteAnswers: () => void;
   onResetTeamData: () => void;
+  onRemoveTeamFromCompetition: () => void;
   onDeleteTeamCompletely: () => void;
 }
 
@@ -88,6 +89,7 @@ export function FacilitatorControlsTeamActionsPanel({
   onToggleLock,
   onDeleteAnswers,
   onResetTeamData,
+  onRemoveTeamFromCompetition,
   onDeleteTeamCompletely,
 }: FacilitatorControlsTeamActionsPanelProps) {
   const answersTableRef = useRef<HTMLDivElement | null>(null);
@@ -360,12 +362,22 @@ export function FacilitatorControlsTeamActionsPanel({
       </div>
 
       <div className="facilitator-controls-section">
-        <h4 className="facilitator-controls-section__title">حذف بيانات الفريق</h4>
+        <h4 className="facilitator-controls-section__title">إخراج / حذف بيانات الفريق</h4>
         <p className="facilitator-card__desc">
-          يحذف النقاط والتقدم والإجابات ويُعيد ضبط حالة المسابقة لهذا الفريق مع
-          الإبقاء على حساب الفريق وبياناته الأساسية.
+          «إخراج من المسابقة» يزيل الفريق من اللعب الحالي فقط دون حذف حساب الدخول
+          (يمكنه العودة لاحقاً). «حذف بيانات الفريق» يحذف النقاط والتقدم والإجابات
+          مع إبقاء الحساب. «حذف الفريق بالكامل» يحذف كل شيء بما فيه حساب الدخول.
         </p>
         <div className="facilitator-timer__buttons">
+          <button
+            type="button"
+            className="facilitator-btn facilitator-btn--outline"
+            disabled={confirmRequest !== null}
+            onClick={onRemoveTeamFromCompetition}
+          >
+            <LogOut className="h-4 w-4" aria-hidden />
+            إخراج من المسابقة (دون حذف الحساب)
+          </button>
           <button
             type="button"
             className="facilitator-btn facilitator-btn--danger"

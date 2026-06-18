@@ -10,6 +10,7 @@ import {
   clearTeamFacilitatorOverride,
   deleteTeamAnswers,
   deleteTeamCompletely,
+  removeTeamFromCompetition,
   resetTeamCompetitionData,
   setTeamFacilitatorOverride,
   toggleTeamStageLock,
@@ -320,6 +321,30 @@ export function useFacilitatorControlsTab() {
     });
   }
 
+  function requestRemoveTeamFromCompetition() {
+    if (!selectedTeam) return;
+
+    openConfirm({
+      title: "إخراج الفريق من المسابقة",
+      tone: "danger",
+      details: [
+        { label: "الفريق", value: selectedTeam.teamName },
+        { label: "يحدث", value: "يخرج الفريق من اللعب الحالي ولا يظهر في المسابقة" },
+        { label: "يبقى", value: "حساب الدخول وملف الفريق — يمكنه التسجيل/العودة لاحقاً" },
+      ],
+      confirmLabel: "إخراج من المسابقة",
+      onConfirm: async (reason) => {
+        await removeTeamFromCompetition({
+          teamId: selectedTeam.teamId,
+          teamName: selectedTeam.teamName,
+          reason,
+        });
+        setSelectedTeamId("");
+        setToast("تم إخراج الفريق من المسابقة الحالية دون حذف حسابه.");
+      },
+    });
+  }
+
   function requestDeleteTeamCompletely() {
     if (!selectedTeam) return;
 
@@ -432,6 +457,7 @@ export function useFacilitatorControlsTab() {
     requestClearOverride,
     requestToggleLock,
     requestResetTeamData,
+    requestRemoveTeamFromCompetition,
     requestDeleteTeamCompletely,
     requestDeleteAnswers,
   };

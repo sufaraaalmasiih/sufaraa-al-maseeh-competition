@@ -194,6 +194,8 @@ function parseGameFlowSnapshot(snapshot: DocumentSnapshot): GameFlowSnapshotResu
       trainingEndsAtMs: parseTrainingEndsAtMs(data.trainingEndsAtMs),
       stage4QuestionOpenedAtMs:
         typeof data.stage4QuestionOpenedAtMs === "number" ? data.stage4QuestionOpenedAtMs : null,
+      teamSignOutAt:
+        typeof data.teamSignOutAt === "number" ? data.teamSignOutAt : null,
     },
     stage3ActiveQuestion: parseStage3QuestionMetadata(data.stage3ActiveQuestion),
     stage3OpenedQuestionIds: parseStage3OpenedQuestionIds(data.stage3OpenedQuestionIds),
@@ -377,6 +379,7 @@ interface UseGameFlowResult {
   competitionMode: "official" | "training";
   trainingEndsAtMs: number | null;
   stage4QuestionOpenedAtMs: number | null;
+  teamSignOutAt: number | null;
   loading: boolean;
   error: string | null;
 }
@@ -412,6 +415,7 @@ export function useGameFlow(): UseGameFlowResult {
     competitionMode: state.competitionMode,
     trainingEndsAtMs: state.trainingEndsAtMs,
     stage4QuestionOpenedAtMs: state.stage4QuestionOpenedAtMs,
+    teamSignOutAt: state.gameFlow?.teamSignOutAt ?? null,
     loading: state.loading,
     error: state.error,
   };

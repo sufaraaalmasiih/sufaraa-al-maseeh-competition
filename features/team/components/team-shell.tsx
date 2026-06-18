@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { onAuthStateChanged } from "firebase/auth";
-import { useEffect } from "react";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { useEffect, useRef } from "react";
+import { useGameFlow } from "@/features/gameflow/use-game-flow";
 import { CompetitionGradientShell } from "@/components/layout/competition-gradient-shell";
 import { CompetitionFrozenBanner } from "@/components/layout/competition-frozen-banner";
 import { AuthGate } from "@/features/auth/components/auth-gate";
@@ -66,6 +67,22 @@ function TeamShellAuthenticated() {
   useQuestionBankRuntimeSync();
   useCompetitionContentSync();
   useCompetitionReauthGuard(true);
+
+  // إنهاء المسابقة من الميسّر: يسجّل خروج كل الفرق ويعيدها لصفحة الدخول.
+  const { teamSignOutAt } = useGameFlow();
+  const mountedAtRef = useRef(Date.now());
+  const signOutHandledRef = useRef(false);
+  useEffect(() => {
+    if (signOutHandledRef.current) {
+      return;
+    }
+    if (typeof teamSignOutAt === "number" && teamSignOutAt > mountedAtRef.current) {
+      signOutHandledRef.current = true;
+      void signOut(firebaseAuth)
+        .catch(() => {})
+        .finally(() => router.replace("/login"));
+    }
+  }, [router, teamSignOutAt]);
 
   useEffect(() => {
     return onAuthStateChanged(firebaseAuth, (user) => {
