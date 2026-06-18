@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "set NEXT_TEST_WASM=1&& set NEXT_TEST_WASM_DIR=node_modules\\@next\\swc-wasm-nodejs&& set NEXT_SWC_CACHE_DIR=.next-swc-cache&& next dev -p 3000",
+    "dev": "set NEXT_TEST_WASM=1&& set NEXT_TEST_WASM_DIR=node_modules\\@next\\swc-wasm-nodejs&& set NEXT_SWC_CACHE_DIR=.next-swc-cache&& next dev -p 3000 -H 0.0.0.0",
     "dev:clean": "node -e \"const fs=require('fs');['.next','.next-swc-cache'].forEach((d)=>fs.rmSync(d,{recursive:true,force:true}));\" && npm run dev",
     "build": "set NEXT_TEST_WASM=1&& set NEXT_TEST_WASM_DIR=node_modules\\@next\\swc-wasm-nodejs&& set NEXT_SWC_CACHE_DIR=.next-swc-cache&& next build",
     "build:netlify": "next build",

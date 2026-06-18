@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FirebaseError } from "firebase/app";
 import { LogIn } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -13,7 +12,8 @@ import {
   logout,
 } from "@/firebase/auth";
 import { stampCompetitionReauthEpoch } from "@/features/competition-session/competition-session-controls";
-import { getClientFirebaseAuth } from "@/firebase/firebaseClient";
+import { getClientFirebaseAuth, isFirebaseClientConfigured } from "@/firebase/firebaseClient";
+import { mapFirebaseAuthError } from "@/lib/map-firebase-auth-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,6 +51,12 @@ export function LoginForm({
 
   async function onSubmit(values: LoginInput) {
     setFormError(null);
+    if (!isFirebaseClientConfigured()) {
+      setFormError(
+        "إعداد Firebase غير مكتمل على الاستضافة. تحقق من متغيرات NEXT_PUBLIC_FIREBASE_* في Vercel ثم أعد النشر.",
+      );
+      return;
+    }
     try {
       const credential = await loginWithEmail(values.email, values.password);
       const role = await getUserRole(credential.user.uid);
@@ -74,8 +80,9 @@ export function LoginForm({
         setFormError("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
         return;
       }
-      if (error instanceof FirebaseError && error.code === "auth/network-request-failed") {
-        setFormError("تعذر الاتصال بخدمة المصادقة. تحقق من الإنترنت ثم حاول مرة أخرى.");
+      const mapped = mapFirebaseAuthError(error);
+      if (mapped) {
+        setFormError(mapped);
         return;
       }
       setFormError("تعذر تسجيل الدخول. حاول مرة أخرى بعد قليل.");

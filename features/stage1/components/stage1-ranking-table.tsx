@@ -1,3 +1,5 @@
+"use client";
+
 import { EmptyState } from "@/components/layout/empty-state";
 import {
   Card,
@@ -7,7 +9,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { CompetitionRankingBoard } from "@/components/competition/competition-ranking-board";
+import { useCompetitionContent } from "@/features/competition-content/competition-content-runtime";
 import type { RankedStage1Team } from "@/features/stage1/stage1-ranking";
+import { getStageDisplayName, getStageScoreLabel } from "@/features/team/competition-stage-labels";
 
 interface Stage1RankingTableProps {
   teams: RankedStage1Team[];
@@ -49,15 +53,16 @@ export function Stage1RankingTable({
   layoutReorder = false,
   hideHeader = false,
 }: Stage1RankingTableProps) {
+  const content = useCompetitionContent();
+  const stageName = getStageDisplayName("stage1", content);
   const audience = variant === "audience";
   const resolvedTitle =
-    title ??
-    (audience ? "ترتيب المرحلة الأولى" : "ترتيب المرحلة الأولى المباشر");
+    title ?? (audience ? `ترتيب ${stageName}` : `ترتيب ${stageName} المباشر`);
   const resolvedDescription =
     description ??
     (audience
-      ? "ترتيب مباشر حسب نقاط المرحلة الأولى."
-      : "يعتمد الترتيب على نقاط المرحلة الأولى ثم المجموع ثم اسم الفريق.");
+      ? `ترتيب مباشر حسب نقاط ${stageName}.`
+      : `يعتمد الترتيب على نقاط ${stageName} ثم المجموع ثم اسم الفريق.`);
 
   const board = (
     <CompetitionRankingBoard
@@ -69,7 +74,7 @@ export function Stage1RankingTable({
       error={error}
       extraColumnLabel="السؤال الحالي"
       loading={loading}
-      scoreLabel="نقاط المرحلة الأولى"
+      scoreLabel={getStageScoreLabel("stage1", content)}
       showExtraColumn={!audience}
       showGovernorate={!audience}
       showTotalScore={!audience}

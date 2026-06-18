@@ -5,6 +5,7 @@ import { getStorage, type FirebaseStorage } from "firebase/storage";
 
 /** Public defaults for project sufaraaalmasiih-53478 (safe to embed in client). */
 const PROJECT_DEFAULTS = {
+  apiKey: "AIzaSyCEjE9aNu2o0RFodEyjOeekodmzyGnrYnU",
   authDomain: "sufaraaalmasiih-53478.firebaseapp.com",
   projectId: "sufaraaalmasiih-53478",
   storageBucket: "sufaraaalmasiih-53478.firebasestorage.app",
@@ -26,7 +27,8 @@ function normalizeEnvValue(value: string | undefined): string | undefined {
 }
 
 const firebaseConfig = {
-  apiKey: normalizeEnvValue(process.env.NEXT_PUBLIC_FIREBASE_API_KEY),
+  apiKey:
+    normalizeEnvValue(process.env.NEXT_PUBLIC_FIREBASE_API_KEY) ?? PROJECT_DEFAULTS.apiKey,
   authDomain:
     normalizeEnvValue(process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN) ??
     PROJECT_DEFAULTS.authDomain,

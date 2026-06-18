@@ -529,8 +529,10 @@
   }
 
   .competition-ranking-table__audience-score-label {
-    @apply mb-1 block text-sm font-bold sm:text-base;
+    @apply mb-1 block text-sm font-bold leading-snug sm:text-base;
     color: rgba(20, 58, 90, 0.52);
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .competition-ranking-table__bars--audience .competition-ranking-table__bar {
@@ -538,7 +540,7 @@
   }
 
   .competition-ranking-table__bars--audience .competition-ranking-table__bars-value {
-    @apply min-w-[3rem] text-2xl font-black sm:text-3xl;
+    @apply min-w-[3.25rem] text-3xl font-black leading-none text-[#2388C4] sm:min-w-[3.5rem] sm:text-4xl;
   }
 
   .competition-ranking-scroll--audience {

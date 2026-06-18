@@ -9157,6 +9157,10 @@
     @apply text-4xl sm:text-5xl;
   }
 
+  .audience-display .competition-ranking-table__bars--audience .competition-ranking-table__bars-value {
+    @apply min-w-[3.5rem] text-4xl leading-none sm:min-w-[3.75rem] sm:text-5xl;
+  }
+
   .audience-display .competition-ranking-panel__title {
     @apply text-2xl font-black text-[#0b2d45] sm:text-3xl;
   }

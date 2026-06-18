@@ -1,3 +1,5 @@
+"use client";
+
 import { EmptyState } from "@/components/layout/empty-state";
 import {
   Card,
@@ -7,7 +9,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { CompetitionRankingBoard } from "@/components/competition/competition-ranking-board";
+import { useCompetitionContent } from "@/features/competition-content/competition-content-runtime";
 import type { RankedStage2Team } from "@/features/stage2/stage2-ranking";
+import { getStageDisplayName, getStageScoreLabel } from "@/features/team/competition-stage-labels";
 
 interface Stage2RankingTableProps {
   teams: RankedStage2Team[];
@@ -48,13 +52,15 @@ export function Stage2RankingTable({
   layoutReorder = false,
   hideHeader = false,
 }: Stage2RankingTableProps) {
+  const content = useCompetitionContent();
+  const stageName = getStageDisplayName("stage2", content);
   const audience = variant === "audience";
-  const resolvedTitle = title ?? "نتائج مرحلة فتشوا الكتب";
+  const resolvedTitle = title ?? `نتائج مرحلة ${stageName}`;
   const resolvedDescription =
     description ??
     (audience
-      ? "ترتيب مباشر حسب نقاط المرحلة الثانية."
-      : "يعتمد الترتيب على نقاط المرحلة الثانية ثم المجموع ثم اسم الفريق.");
+      ? `ترتيب مباشر حسب نقاط ${stageName}.`
+      : `يعتمد الترتيب على نقاط ${stageName} ثم المجموع ثم اسم الفريق.`);
 
   const board = (
     <CompetitionRankingBoard
@@ -65,7 +71,7 @@ export function Stage2RankingTable({
       emptyTitle="بانتظار تسجيل الفرق"
       error={error}
       loading={loading}
-      scoreLabel="نقاط المرحلة الثانية"
+      scoreLabel={getStageScoreLabel("stage2", content)}
       showGovernorate={!audience}
       showTotalScore={!audience}
       teams={toRankingEntries(teams)}

@@ -2,7 +2,7 @@ import { DEFAULT_COMPETITION_CONTENT } from "@/features/competition-content/comp
 import type { CompetitionContentDocument } from "@/features/competition-content/competition-content-types";
 import type { GameFlowStatus } from "@/types";
 
-type CompetitionStageKey = keyof CompetitionContentDocument["stages"];
+export type CompetitionStageKey = keyof CompetitionContentDocument["stages"];
 
 function getStageKeyFromStatus(status: GameFlowStatus): CompetitionStageKey | null {
   if (status.startsWith("stage1_")) {
@@ -46,6 +46,20 @@ export function getCompetitionStageLabel(
   }
 
   return "المسابقة";
+}
+
+export function getStageDisplayName(
+  stageKey: CompetitionStageKey,
+  content: CompetitionContentDocument = DEFAULT_COMPETITION_CONTENT,
+): string {
+  return content.stages[stageKey].name;
+}
+
+export function getStageScoreLabel(
+  stageKey: CompetitionStageKey,
+  content: CompetitionContentDocument = DEFAULT_COMPETITION_CONTENT,
+): string {
+  return `نقاط ${getStageDisplayName(stageKey, content)}`;
 }
 
 export function isTeamGameplayStatus(status: GameFlowStatus | null): boolean {

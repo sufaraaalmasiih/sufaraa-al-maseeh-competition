@@ -3,12 +3,12 @@ import { LoginForm } from "@/features/auth/components/login-form";
 export default function FacilitatorLoginPage() {
   return (
     <LoginForm
-      allowedRoles={["facilitator"]}
+      allowedRoles={["facilitator", "super_admin"]}
       title="دخول الميسر"
-      description="هذه الصفحة مخصصة لحسابات الميسر فقط. المشرف العام يدخل من «دخول المشرف العام»."
+      description="للميسّر والمشرف العام — تشغيل المسابقة وإدارة المراحل."
       switchHref="/login"
       switchLabel="العودة إلى بوابة الدخول"
-      roleErrorMessage="هذا الحساب ليس حساب ميسر. استخدم بوابة المشرف العام إن كنت مشرفاً عاماً."
+      roleErrorMessage="هذا الحساب ليس حساب ميسّر أو مشرف عام."
     />
   );
 }
