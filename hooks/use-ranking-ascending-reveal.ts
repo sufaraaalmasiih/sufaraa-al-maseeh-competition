@@ -35,10 +35,11 @@ export function useRankingAscendingReveal<T extends RankingRevealTeam>(
 ): { visibleTeams: T[]; revealedCount: number; totalCount: number } {
   const worstFirst = useMemo(() => sortRankingWorstFirst(teams), [teams]);
 
-  const intervalMs = options.intervalMs ?? 520;
+  const intervalMs = options.intervalMs ?? 1_100;
   const revealedWorstFirst = useGradualReveal(worstFirst, enabled ? intervalMs : 0, {
-    maxDurationMs: options.maxDurationMs ?? 12_000,
-    minIntervalMs: options.minIntervalMs ?? 140,
+    maxDurationMs: options.maxDurationMs ?? 28_000,
+    minIntervalMs: options.minIntervalMs ?? 380,
+    batchSize: 1,
   });
 
   const revealedIds = useMemo(

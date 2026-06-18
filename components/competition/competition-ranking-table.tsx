@@ -140,9 +140,9 @@ interface RankRowProps {
 
 const LAYOUT_SPRING = {
   type: "spring" as const,
-  stiffness: 420,
-  damping: 34,
-  mass: 0.85,
+  stiffness: 260,
+  damping: 32,
+  mass: 1.15,
 };
 
 function RankRow({
@@ -174,17 +174,18 @@ function RankRow({
     ? {
         hidden: {
           opacity: 0,
-          y: 28,
-          scale: 0.94,
+          y: 36,
+          scale: 0.92,
+          filter: "blur(4px)",
         },
         visible: {
           opacity: 1,
           y: 0,
           scale: 1,
+          filter: "blur(0px)",
           transition: {
-            type: "spring" as const,
-            stiffness: 360,
-            damping: 28,
+            duration: 0.9,
+            ease: [0.22, 1, 0.36, 1] as const,
           },
         },
       }
@@ -394,7 +395,7 @@ export function CompetitionRankingTable({
     setClimbingTeamIds(climbed);
     const timeoutId = window.setTimeout(() => {
       setClimbingTeamIds(new Set());
-    }, 950);
+    }, 1_450);
 
     return () => window.clearTimeout(timeoutId);
   }, [layoutReorder, teams]);

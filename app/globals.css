@@ -9088,12 +9088,20 @@
   }
 
   .audience-display .competition-stage-screen__title {
-    @apply mt-4 text-5xl font-black leading-[1.12] text-[#0b2d45] sm:text-6xl lg:text-7xl;
+    @apply mt-4 text-4xl font-black leading-[1.2] text-[#0b2d45] sm:text-5xl lg:text-6xl;
+    overflow: visible;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    text-wrap: balance;
   }
 
   .audience-display .competition-stage-screen__subtitle {
-    @apply mt-4 text-xl font-bold leading-8 sm:text-2xl;
+    @apply mt-4 text-lg font-bold leading-8 sm:text-xl;
     color: rgba(11, 45, 69, 0.84);
+    overflow: visible;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    text-wrap: balance;
   }
 
   .audience-display .competition-stage-screen__wait-title {
@@ -9119,11 +9127,19 @@
   }
 
   .audience-display .competition-stage-screen--finished .competition-stage-screen__title {
-    @apply text-4xl sm:text-5xl;
+    @apply px-1 text-3xl leading-[1.22] sm:text-4xl;
+  }
+
+  .audience-display .competition-stage-screen--finished .competition-stage-screen__subtitle {
+    @apply px-1 text-base leading-7 sm:text-lg;
   }
 
   .audience-display .audience-stage-screen-card__body {
-    @apply mt-4 space-y-3;
+    @apply mt-4 space-y-3 overflow-visible;
+  }
+
+  .audience-display .competition-stage-screen__card {
+    overflow: visible;
   }
 
   .audience-display .competition-ranking-table__audience-card {
@@ -9131,7 +9147,10 @@
   }
 
   .audience-display .competition-ranking-table__team-name--audience {
-    @apply text-3xl sm:text-4xl;
+    @apply text-2xl leading-tight sm:text-3xl;
+    overflow: visible;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .audience-display .competition-ranking-table__rank--audience {

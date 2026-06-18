@@ -472,9 +472,10 @@
 
   .competition-ranking-table__audience-card {
     display: grid;
-    grid-template-columns: auto auto minmax(0, 1fr) minmax(0, 1.15fr) auto;
+    grid-template-columns: auto auto minmax(0, 1.35fr) minmax(7rem, 1fr) auto;
     align-items: center;
     gap: 0.85rem 1rem;
+    overflow: visible;
     border: 2px solid rgba(35, 136, 196, 0.34);
     border-radius: 1.25rem;
     background: rgba(255, 255, 255, 0.96);
@@ -505,19 +506,26 @@
 
   .competition-ranking-table__team-name--audience {
     @apply whitespace-normal break-words text-2xl font-black leading-tight text-[#143A5A] sm:text-3xl;
+    overflow: visible;
+    text-overflow: unset;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .competition-ranking-table__team-meta--audience {
     @apply mt-1 text-base font-bold sm:text-lg;
     color: rgba(20, 58, 90, 0.62);
+    overflow: visible;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .competition-ranking-table__audience-main {
-    @apply min-w-0 text-right;
+    @apply min-w-0 overflow-visible text-right;
   }
 
   .competition-ranking-table__audience-score {
-    @apply min-w-0 text-right;
+    @apply min-w-0 overflow-visible text-right;
   }
 
   .competition-ranking-table__audience-score-label {
@@ -549,11 +557,13 @@
     }
 
     .competition-ranking-table__audience-card {
-      grid-template-columns: auto minmax(0, 1fr) auto;
+      grid-template-columns: auto minmax(0, 1fr);
       grid-template-areas:
-        "rank team tier"
-        "logo score score";
+        "rank team"
+        "logo score";
       row-gap: 0.75rem;
+      column-gap: 0.85rem;
+      align-items: start;
     }
 
     .competition-ranking-table__rank--audience {
@@ -566,6 +576,7 @@
 
     .competition-ranking-table__audience-main {
       grid-area: team;
+      padding-inline-start: 0.15rem;
     }
 
     .competition-ranking-table__audience-score {
@@ -573,7 +584,7 @@
     }
 
     .competition-ranking-table__audience-card .competition-ranking-table__tier {
-      grid-area: tier;
+      display: none;
     }
   }
 
@@ -588,7 +599,7 @@
 
   .competition-ranking-table__row--climbing,
   .competition-ranking-table__audience-card--climbing {
-    animation: competition-ranking-climb 0.95s cubic-bezier(0.22, 1, 0.36, 1);
+    animation: competition-ranking-climb 1.45s cubic-bezier(0.22, 1, 0.36, 1);
     box-shadow:
       0 0 0 2px rgba(35, 136, 196, 0.28),
       0 14px 34px rgba(35, 136, 196, 0.18);
