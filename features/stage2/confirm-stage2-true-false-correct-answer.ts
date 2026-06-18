@@ -7,10 +7,7 @@ import {
   teamStateRef,
   timerRef,
 } from "@/firebase/firestore";
-import {
-  evaluateTrueFalseCorrectAnswer,
-  serializeTrueFalseCorrectAnswer,
-} from "@/features/stage2/stage2-true-false-evaluation";
+import { serializeTrueFalseCorrectAnswer } from "@/features/stage2/stage2-true-false-evaluation";
 import { getAuthoritativeStage2TrueFalseQuestion } from "@/features/facilitator/question-bank-runtime-cache";
 import type {
   Stage2TrueFalseChoice,
@@ -120,11 +117,17 @@ export async function confirmStage2TrueFalseCorrectAnswer({
       typeof teamState.totalScore === "number" ? teamState.totalScore : 0;
     const scoredQuestion =
       getAuthoritativeStage2TrueFalseQuestion(question.id) ?? question;
-    const isCorrect = evaluateTrueFalseCorrectAnswer(
-      scoredQuestion,
-      selectedChoice,
-      trimmedCorrectionText,
-    );
+
+    // قواعد النقاط الجزئية (النقطة 7):
+    // - عبارة صحيحة + المتسابق ضغط «صح» ⇒ +15 مباشرة (إجابة صحيحة).
+    // - عبارة خاطئة + المتسابق ضغط «خطأ» ⇒ مسار تحكيم الميسّر التدريجي (5+5+5).
+    //   تبدأ النقاط بـ 0 ويمنحها الميسّر على ثلاث خطوات من لوحة التحكيم.
+    // - غير ذلك (لم يتعرّف على نوع العبارة) ⇒ 0.
+    const statementIsTrue = scoredQuestion.correctIsTrue;
+    const needsFacilitatorGrading =
+      !statementIsTrue && selectedChoice === "false";
+
+    const isCorrect = statementIsTrue && selectedChoice === "true";
     const pointsDelta = isCorrect ? CORRECT_ANSWER_POINTS : 0;
 
     transaction.set(confirmedAnswerRef, {
@@ -140,10 +143,17 @@ export async function confirmStage2TrueFalseCorrectAnswer({
       selectedChoice,
       correctionText: trimmedCorrectionText,
       expectedCorrection: question.expectedCorrection ?? "",
+      statementIsTrue,
       confirmed: true,
       confirmedAt: serverTimestamp(),
       isCorrect,
       pointsDelta,
+      // حقول تحكيم النقاط الجزئية
+      needsGrading: needsFacilitatorGrading,
+      gradingComplete: !needsFacilitatorGrading,
+      facilitatorMarkedWrong: false,
+      wrongPartIdentified: false,
+      correctionApproved: false,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });

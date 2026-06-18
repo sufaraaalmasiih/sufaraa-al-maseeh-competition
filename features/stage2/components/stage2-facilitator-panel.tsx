@@ -10,6 +10,7 @@ import {
   useStage2TeamProgressList,
   type Stage2TeamProgressRow,
 } from "@/features/stage2/use-stage2-team-progress-list";
+import { Stage2TrueFalseGradingPanel } from "@/features/stage2/components/stage2-true-false-grading-panel";
 
 function isTeamReadyForNextField(team: Stage2TeamProgressRow): boolean {
   return isStage2FieldQuestionsComplete(
@@ -106,6 +107,8 @@ export function Stage2FacilitatorPanel() {
 
         {loading ? <LoadingState variant="inline" /> : null}
         {error ? <ErrorState title="تعذر تحميل التقدم" description={error} /> : null}
+
+        <Stage2TrueFalseGradingPanel />
 
         {!loading && !error && teams.length > 0 ? (
           <div className="stage2-facilitator-table-wrap">
