@@ -7,7 +7,7 @@ interface TeamLogoBadgeProps {
   logoUrl?: string | null;
   teamName: string;
   className?: string;
-  variant?: "default" | "hud" | "header";
+  variant?: "default" | "hud" | "header" | "ranking";
 }
 
 export function TeamLogoBadge({
@@ -17,7 +17,13 @@ export function TeamLogoBadge({
   variant = "default",
 }: TeamLogoBadgeProps) {
   const sizeClass =
-    variant === "header" ? "h-12 w-12 sm:h-[3.35rem] sm:w-[3.35rem]" : variant === "hud" ? "h-9 w-9" : "h-10 w-10";
+    variant === "ranking"
+      ? "h-14 w-14 sm:h-16 sm:w-16"
+      : variant === "header"
+        ? "h-12 w-12 sm:h-[3.35rem] sm:w-[3.35rem]"
+        : variant === "hud"
+          ? "h-9 w-9"
+          : "h-10 w-10";
 
   if (logoUrl) {
     return (
@@ -49,7 +55,11 @@ export function TeamLogoBadge({
     >
       <Users
         aria-hidden
-        className={variant === "header" ? "h-6 w-6 text-primary" : "h-4 w-4 text-primary"}
+        className={cn(
+          variant === "ranking" && "h-7 w-7 text-primary",
+          variant === "header" && "h-6 w-6 text-primary",
+          variant !== "ranking" && variant !== "header" && "h-4 w-4 text-primary",
+        )}
       />
     </div>
   );

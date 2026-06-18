@@ -6,6 +6,8 @@ import {
   CompetitionRankingTable,
   type CompetitionRankingTableEntry,
 } from "@/components/competition/competition-ranking-table";
+import { useTeamLogosMap } from "@/features/gameflow/team-logos-store";
+import { resolveTeamLogoUrl } from "@/lib/resolve-team-logo-url";
 import { cn } from "@/lib/utils";
 
 export interface CompetitionRankingEntry {
@@ -34,18 +36,23 @@ interface CompetitionRankingBoardProps {
   extraColumnLabel?: string;
   showGovernorate?: boolean;
   showExtraColumn?: boolean;
+  showTotalScore?: boolean;
+  dualColumnMinTeams?: number;
   /** Skip outer panel wrapper when parent already provides layout chrome. */
   bare?: boolean;
 }
 
-function toTableEntries(teams: CompetitionRankingEntry[]): CompetitionRankingTableEntry[] {
+function toTableEntries(
+  teams: CompetitionRankingEntry[],
+  logosMap: ReadonlyMap<string, string>,
+): CompetitionRankingTableEntry[] {
   return teams.map((team) => ({
     teamId: team.teamId,
     teamName: team.teamName,
     rank: team.rank,
     stageScore: team.stageScore,
     governorate: team.governorate,
-    logoUrl: team.logoUrl,
+    logoUrl: resolveTeamLogoUrl(team.teamId, team.logoUrl, logosMap),
     totalScore: team.totalScore,
     meta: team.meta,
     extraValue: team.extraValue,
@@ -66,8 +73,12 @@ export function CompetitionRankingBoard({
   extraColumnLabel,
   showGovernorate = true,
   showExtraColumn = false,
+  showTotalScore = true,
+  dualColumnMinTeams = 8,
   bare = false,
 }: CompetitionRankingBoardProps) {
+  const logosMap = useTeamLogosMap();
+
   if (loading) {
     return <LoadingState variant="inline" />;
   }
@@ -80,7 +91,8 @@ export function CompetitionRankingBoard({
     return <EmptyState title={emptyTitle} />;
   }
 
-  const compact = variant === "audience" || variant === "team" || variant === "embedded";
+  const isAudience = variant === "audience";
+  const compact = isAudience || variant === "team" || variant === "embedded";
   const densityClass =
     teams.length > 12
       ? "competition-ranking-scroll--dense"
@@ -91,28 +103,30 @@ export function CompetitionRankingBoard({
   const table = (
     <CompetitionRankingTable
       animate={animate || variant === "team"}
+      audience={isAudience}
       className={cn(bare && className)}
       compact={compact}
+      dualColumnMinTeams={dualColumnMinTeams}
       extraColumnLabel={extraColumnLabel}
       scoreLabel={scoreLabel}
       showExtraColumn={showExtraColumn}
       showGovernorate={showGovernorate}
+      showTotalScore={showTotalScore}
       subtitle={subtitle}
-      teams={toTableEntries(teams)}
+      teams={toTableEntries(teams, logosMap)}
       title={title}
     />
   );
 
+  const scrollClass = cn(
+    "competition-ranking-scroll competition-ranking-scroll--cards competition-ranking-scroll--live",
+    isAudience && "competition-ranking-scroll--audience",
+    densityClass,
+  );
+
   if (bare) {
     return (
-      <div
-        className={cn(
-          "competition-ranking-scroll competition-ranking-scroll--cards competition-ranking-scroll--live",
-          densityClass,
-        )}
-        role="list"
-        aria-label="ترتيب الفرق"
-      >
+      <div className={scrollClass} role="list" aria-label="ترتيب الفرق">
         {table}
       </div>
     );
@@ -123,18 +137,11 @@ export function CompetitionRankingBoard({
       className={cn(
         "competition-ranking-panel competition-ranking-panel--live competition-ranking-panel--table",
         variant === "embedded" && "competition-ranking-panel--embedded",
-        variant === "audience" && "competition-ranking-panel--audience",
+        isAudience && "competition-ranking-panel--audience",
         className,
       )}
     >
-      <div
-        className={cn(
-          "competition-ranking-scroll competition-ranking-scroll--cards competition-ranking-scroll--live",
-          densityClass,
-        )}
-        role="list"
-        aria-label="ترتيب الفرق"
-      >
+      <div className={scrollClass} role="list" aria-label="ترتيب الفرق">
         {table}
       </div>
     </div>

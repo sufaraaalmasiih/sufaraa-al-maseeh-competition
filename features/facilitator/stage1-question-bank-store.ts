@@ -54,6 +54,13 @@ export function getActiveStage1Bank(): Stage1MockQuestion[] {
   return cache && cache.length > 0 ? cache : [...stage1MockQuestions];
 }
 
+/** Resolve a question from the live bank by id (for authoritative scoring). */
+export function getAuthoritativeStage1Question(
+  questionId: string,
+): Stage1MockQuestion | null {
+  return getActiveStage1Bank().find((question) => question.id === questionId) ?? null;
+}
+
 /** Subscribe to bank changes so consumers re-render when it updates. */
 export function useStage1BankSync(): void {
   const [, setVersion] = useState(0);

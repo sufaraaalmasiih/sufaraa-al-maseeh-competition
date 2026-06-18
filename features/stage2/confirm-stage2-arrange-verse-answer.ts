@@ -27,8 +27,9 @@ export function serializeArrangeVerseAnswer(orderedFragments: string[]): string 
 export function isArrangeVerseOrderCorrect(
   orderedFragments: string[],
   correctOrder: string[],
+  fallbackFragments: string[] = [],
 ): boolean {
-  return isStage2ArrangeOrderCorrect(orderedFragments, correctOrder);
+  return isStage2ArrangeOrderCorrect(orderedFragments, correctOrder, fallbackFragments);
 }
 
 interface ConfirmStage2ArrangeVerseAnswerInput {
@@ -122,6 +123,7 @@ export async function confirmStage2ArrangeVerseAnswer({
     const isCorrect = isArrangeVerseOrderCorrect(
       orderedFragments,
       scoredQuestion.correctOrder,
+      scoredQuestion.fragments,
     );
     const pointsDelta = isCorrect ? CORRECT_ANSWER_POINTS : 0;
 

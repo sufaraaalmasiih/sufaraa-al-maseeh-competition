@@ -1,5 +1,6 @@
 import { STAGE1_ARRANGE_ANSWER_SEPARATOR } from "@/features/stage1/stage1-constants";
 import type { Stage1ArrangeQuestion } from "@/features/stage1/stage1-types";
+import { normalizeStage1AnswerText } from "@/features/stage1/stage1-answer-validation";
 
 function hashSeed(seed: string): number {
   let hash = 0;
@@ -37,6 +38,30 @@ export function getStage1ArrangeExpectedAnswer(question: Stage1ArrangeQuestion):
 
 export function formatStage1ArrangeSubmission(picked: string[]): string {
   return picked.join(STAGE1_ARRANGE_ANSWER_SEPARATOR);
+}
+
+export function splitStage1ArrangeAnswer(answer: string): string[] {
+  return String(answer ?? "")
+    .split(STAGE1_ARRANGE_ANSWER_SEPARATOR)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+export function isStage1ArrangeOrderCorrect(
+  submittedAnswer: string,
+  question: Stage1ArrangeQuestion,
+): boolean {
+  const expected = getStage1ArrangeCorrectOrder(question);
+  const submitted = splitStage1ArrangeAnswer(submittedAnswer);
+
+  if (submitted.length !== expected.length) {
+    return false;
+  }
+
+  return submitted.every(
+    (part, index) =>
+      normalizeStage1AnswerText(part) === normalizeStage1AnswerText(expected[index] ?? ""),
+  );
 }
 
 export function getStage1ArrangeDisplayParts(

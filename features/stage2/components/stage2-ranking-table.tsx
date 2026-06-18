@@ -61,8 +61,9 @@ export function Stage2RankingTable({
       loading={loading}
       scoreLabel="نقاط المرحلة الثانية"
       showGovernorate={!audience}
+      showTotalScore={!audience}
       teams={toRankingEntries(teams)}
-      variant={audience ? "embedded" : "facilitator"}
+      variant={audience ? "audience" : "facilitator"}
     />
   );
 

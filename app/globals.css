@@ -1336,10 +1336,10 @@
     height: 100%;
     max-height: 100%;
     width: 100%;
-    max-width: min(98vw, 80rem);
+    max-width: min(98vw, 92rem);
     flex-direction: column;
     align-items: stretch;
-    justify-content: center;
+    justify-content: flex-start;
     overflow: hidden;
     padding-inline: clamp(0.75rem, 2vw, 1.25rem);
     padding-block: clamp(0.75rem, 2vh, 1.25rem);
@@ -1362,8 +1362,8 @@
   .audience-display .audience-live-scene .audience-live-panel {
     width: 100%;
     max-width: 100%;
-    min-height: min(68vh, 36rem);
-    padding: clamp(1.25rem, 3vw, 2rem);
+    min-height: 0;
+    padding: clamp(1rem, 2.5vw, 1.75rem);
   }
 
   .audience-display .audience-live-panel__status {
@@ -2649,6 +2649,132 @@
     }
   }
 
+  .competition-ranking-table--audience {
+    @apply w-full;
+  }
+
+  .competition-ranking-table--audience .competition-ranking-table__rows {
+    @apply gap-3;
+  }
+
+  .competition-ranking-table__rows--dual {
+    @apply gap-3;
+  }
+
+  .competition-ranking-table__dual-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+  }
+
+  .competition-ranking-table__audience-card {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr) minmax(0, 1.15fr) auto;
+    align-items: center;
+    gap: 0.85rem 1rem;
+    border: 2px solid rgba(35, 136, 196, 0.34);
+    border-radius: 1.25rem;
+    background: rgba(255, 255, 255, 0.96);
+    padding: clamp(0.85rem, 1.8vw, 1.15rem) clamp(1rem, 2vw, 1.35rem);
+    box-shadow:
+      0 10px 28px rgba(20, 58, 90, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  }
+
+  .competition-ranking-table__audience-card--gold {
+    border-color: rgba(212, 160, 23, 0.42);
+    background: linear-gradient(180deg, rgba(255, 251, 236, 0.98) 0%, rgba(255, 255, 255, 0.96) 100%);
+  }
+
+  .competition-ranking-table__audience-card--silver {
+    border-color: rgba(35, 136, 196, 0.36);
+    background: linear-gradient(180deg, rgba(243, 250, 255, 0.98) 0%, rgba(255, 255, 255, 0.96) 100%);
+  }
+
+  .competition-ranking-table__audience-card--bronze {
+    border-color: rgba(184, 115, 51, 0.36);
+  }
+
+  .competition-ranking-table__rank--audience {
+    @apply text-3xl font-black sm:text-4xl;
+    min-width: 2.75rem;
+  }
+
+  .competition-ranking-table__team-name--audience {
+    @apply whitespace-normal break-words text-2xl font-black leading-tight text-[#143A5A] sm:text-3xl;
+  }
+
+  .competition-ranking-table__team-meta--audience {
+    @apply mt-1 text-base font-bold sm:text-lg;
+    color: rgba(20, 58, 90, 0.62);
+  }
+
+  .competition-ranking-table__audience-main {
+    @apply min-w-0 text-right;
+  }
+
+  .competition-ranking-table__audience-score {
+    @apply min-w-0 text-right;
+  }
+
+  .competition-ranking-table__audience-score-label {
+    @apply mb-1 block text-xs font-bold sm:text-sm;
+    color: rgba(20, 58, 90, 0.52);
+  }
+
+  .competition-ranking-table__bars--audience .competition-ranking-table__bar {
+    @apply h-6 w-2;
+  }
+
+  .competition-ranking-table__bars--audience .competition-ranking-table__bars-value {
+    @apply text-xl font-black sm:text-2xl;
+  }
+
+  .competition-ranking-scroll--audience {
+    max-height: none;
+    overflow: visible;
+    padding: 0;
+  }
+
+  .competition-ranking-panel--audience.competition-ranking-panel--table {
+    @apply mt-0 bg-transparent p-0 shadow-none;
+  }
+
+  @media (max-width: 900px) {
+    .competition-ranking-table__dual-row {
+      grid-template-columns: 1fr;
+    }
+
+    .competition-ranking-table__audience-card {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      grid-template-areas:
+        "rank team tier"
+        "logo score score";
+      row-gap: 0.75rem;
+    }
+
+    .competition-ranking-table__rank--audience {
+      grid-area: rank;
+    }
+
+    .competition-ranking-table__audience-card .competition-ranking-table__logo {
+      grid-area: logo;
+    }
+
+    .competition-ranking-table__audience-main {
+      grid-area: team;
+    }
+
+    .competition-ranking-table__audience-score {
+      grid-area: score;
+    }
+
+    .competition-ranking-table__audience-card .competition-ranking-table__tier {
+      grid-area: tier;
+    }
+  }
+
+  .stage3-selection-pill {
     @apply mx-auto mt-2 w-fit rounded-full px-4 py-2 text-center text-sm font-black;
     color: #0f5f8f;
     background: rgba(243, 250, 255, 0.95);
@@ -3559,6 +3685,14 @@
 
   .gameplay-scene--centered {
     @apply flex min-h-full w-full flex-1 flex-col;
+  }
+
+  .gameplay-scene--top {
+    @apply flex w-full flex-1 flex-col justify-start;
+  }
+
+  .gameplay-scene--top .gameplay-flow {
+    @apply justify-start;
   }
 
   .gameplay-flow {
@@ -5505,7 +5639,7 @@
   }
 
   .audience-stage-finished .competition-stage-screen__card {
-    @apply w-full max-w-[min(96vw,58rem)];
+    @apply w-full max-w-[min(98vw,92rem)];
   }
 
   .audience-final-screen .competition-ranking-scroll--final,
@@ -5516,7 +5650,7 @@
   html.audience-fullscreen-mode .competition-stage-screen--final-results .competition-stage-screen__card,
   html.audience-fullscreen-mode .competition-stage-screen--podium .competition-stage-screen__card,
   html.audience-fullscreen-mode .audience-stage-finished .competition-stage-screen__card {
-    @apply max-w-[min(94vw,64rem)];
+    @apply max-w-[min(96vw,96rem)];
   }
 
   html.audience-fullscreen-mode .competition-ranking-scroll {
@@ -9566,7 +9700,19 @@
   }
 
   .audience-display .audience-stage-screen-card__body {
-    @apply mt-8 space-y-5;
+    @apply mt-4 space-y-3;
+  }
+
+  .audience-display .competition-ranking-table__audience-card {
+    border-width: 2px;
+  }
+
+  .audience-display .competition-ranking-table__team-name--audience {
+    @apply text-3xl sm:text-4xl;
+  }
+
+  .audience-display .competition-ranking-table__rank--audience {
+    @apply text-4xl sm:text-5xl;
   }
 
   .audience-display .competition-ranking-panel__title {

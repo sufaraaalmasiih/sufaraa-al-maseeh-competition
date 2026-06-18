@@ -8,6 +8,7 @@ import {
   timerRef,
 } from "@/firebase/firestore";
 import { evaluateStage1Answer } from "@/features/stage1/stage1-answer-validation";
+import { getAuthoritativeStage1Question } from "@/features/facilitator/stage1-question-bank-store";
 import { assertTeamStageUnlocked } from "@/features/facilitator/team-control-types";
 import {
   assertAnsweringTimerOpen,
@@ -118,7 +119,9 @@ export async function confirmStage1Answer({
         : 0;
     const currentTotalScore =
       typeof teamState.totalScore === "number" ? teamState.totalScore : 0;
-    const isCorrect = evaluateStage1Answer(question, answer);
+    const scoredQuestion =
+      getAuthoritativeStage1Question(question.id) ?? question;
+    const isCorrect = evaluateStage1Answer(scoredQuestion, answer);
     const pointsDelta: number = isCorrect ? CORRECT_ANSWER_POINTS : 0;
 
     const answerPayload = {

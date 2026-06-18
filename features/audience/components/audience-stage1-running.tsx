@@ -9,7 +9,7 @@ export function AudienceStage1Running() {
 
   return (
     <motion.div
-      className="gameplay-scene gameplay-scene--centered audience-live-scene"
+      className="gameplay-scene gameplay-scene--top audience-live-scene"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.32 }}

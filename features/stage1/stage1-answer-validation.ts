@@ -1,6 +1,6 @@
 import { STAGE1_ARRANGE_ANSWER_SEPARATOR } from "@/features/stage1/stage1-constants";
 import type { Stage1MockQuestion } from "@/features/stage1/stage1-types";
-import { getStage1ArrangeExpectedAnswer } from "@/features/stage1/stage1-arrange";
+import { isStage1ArrangeOrderCorrect } from "@/features/stage1/stage1-arrange";
 
 /**
  * Arabic answer normalization (old project: normalizeText / norm).
@@ -30,7 +30,7 @@ export function evaluateStage1Answer(
   answer: string,
 ): boolean {
   if (question.type === "arrange") {
-    return stage1AnswersMatch(answer, getStage1ArrangeExpectedAnswer(question));
+    return isStage1ArrangeOrderCorrect(answer, question);
   }
 
   return stage1AnswersMatch(answer, question.correctAnswer);

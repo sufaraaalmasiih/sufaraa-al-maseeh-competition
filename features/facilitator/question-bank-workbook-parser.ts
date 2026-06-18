@@ -301,7 +301,8 @@ function buildStage2Bank(rows: Record<string, unknown>[]): Stage2QuestionBank {
 
     if (type === "arrangeVerse") {
       const fragments = splitPipeList(row.data);
-      const correctOrder = parseExcelCorrectOrderList(row.correct) || fragments;
+      const parsedCorrect = parseExcelCorrectOrderList(row.correct);
+      const correctOrder = parsedCorrect.length >= 2 ? parsedCorrect : fragments;
       if (fragments.length >= 2) {
         arrangeVerse.push({
           id,
