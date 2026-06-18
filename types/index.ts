@@ -81,6 +81,7 @@ export interface TeamStateDocument {
   teamId: string;
   teamName: string;
   governorate: string;
+  logoUrl?: string;
   ready: boolean;
   readiness: {
     competitionIntro: boolean;

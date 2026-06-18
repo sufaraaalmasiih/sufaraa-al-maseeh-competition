@@ -26,11 +26,15 @@ export function AuthLayout({
 
   return (
     <CompetitionGradientShell
-      centerContent
+      centerContent={variant !== "form-wide"}
       animateBackground={false}
-      scrollable={isHub}
+      scrollable={isHub || variant === "form-wide"}
       className="app-viewport-fill"
-      contentClassName={cn("auth-screen__wrap", isHub && "auth-screen__wrap--hub")}
+      contentClassName={cn(
+        "auth-screen__wrap",
+        isHub && "auth-screen__wrap--hub",
+        variant === "form-wide" && "auth-screen__wrap--form-wide",
+      )}
     >
       <article
         className={cn(

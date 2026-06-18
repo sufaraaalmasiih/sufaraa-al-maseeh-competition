@@ -69,6 +69,16 @@ export function shouldScrollAudienceShellContent(
   }
 
   if (
+    status === "competition_intro" ||
+    status === "stage1_intro" ||
+    status === "stage2_intro" ||
+    status === "stage3_intro" ||
+    status === "stage4_intro"
+  ) {
+    return true;
+  }
+
+  if (
     isArenaGameplayStatus(status) ||
     status === "stage1_running" ||
     status === "stage2_role_assignment" ||

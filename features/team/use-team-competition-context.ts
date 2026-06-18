@@ -103,6 +103,9 @@ export function useTeamCompetitionContext(): TeamCompetitionContext {
         (snapshot) => {
           const data = snapshot.data();
           setPlayers(Array.isArray(data?.players) ? data.players : []);
+          if (typeof data?.logoUrl === "string" && data.logoUrl.length > 0) {
+            setLogoUrl(data.logoUrl);
+          }
         },
         () => {
           setPlayers([]);
@@ -140,7 +143,9 @@ export function useTeamCompetitionContext(): TeamCompetitionContext {
 
           const data = snapshot.data();
           setTeamName(typeof data.teamName === "string" ? data.teamName : "فريق");
-          setLogoUrl(typeof data.logoUrl === "string" ? data.logoUrl : null);
+          if (typeof data.logoUrl === "string" && data.logoUrl.length > 0) {
+            setLogoUrl(data.logoUrl);
+          }
           setReady(data.ready === true);
           const readiness = data.readiness as Record<string, unknown> | undefined;
           setCompetitionIntroReady(readiness?.competitionIntro === true);

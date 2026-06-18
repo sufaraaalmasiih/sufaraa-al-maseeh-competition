@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 import { CompetitionGradientShell } from "@/components/layout/competition-gradient-shell";
 import { CompetitionFrozenBanner } from "@/components/layout/competition-frozen-banner";
 import { AuthGate } from "@/features/auth/components/auth-gate";
@@ -11,6 +13,8 @@ import { useTeamStage2Progress } from "@/features/stage2/use-team-stage2-progres
 import { CompetitionStage3Automation } from "@/features/stage3/competition-stage3-automation";
 import { useStage3Ranking } from "@/features/stage3/use-stage3-ranking";
 import { TeamFlowContent } from "@/features/team/components/team-flow-content";
+import { TeamCoachModeBanner } from "@/features/team/components/team-coach-mode-banner";
+import { TeamFullscreenPrompt } from "@/features/team/components/team-fullscreen-prompt";
 import {
   getTeamShellContentClassName,
   shouldCenterTeamShellContent,
@@ -20,9 +24,13 @@ import { TeamShellScreens } from "@/features/team/components/team-shell-screens"
 import { useTeamShellView } from "@/features/team/components/use-team-shell-view";
 import { useTeamGameFlow } from "@/features/team/use-team-game-flow";
 import { useTeamStageEarlyFinish } from "@/features/team/use-team-stage-early-finish";
+import { isCoachDashboardPreferred, setCoachViewMode } from "@/lib/coach-view-mode";
 import { cn } from "@/lib/utils";
 
 function TeamShellAuthenticated() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const viewPlayer = searchParams.get("view") === "player";
   const gameFlow = useTeamGameFlow();
   const {
     status,
@@ -40,6 +48,17 @@ function TeamShellAuthenticated() {
     error,
     lockedStageKey,
   } = gameFlow;
+
+  useEffect(() => {
+    if (viewPlayer && status !== "waiting_players" && status !== null) {
+      setCoachViewMode("player");
+      return;
+    }
+
+    if (isCoachDashboardPreferred() && (status === "waiting_players" || status === null)) {
+      router.replace("/coach");
+    }
+  }, [router, status, viewPlayer]);
 
   useQuestionBankRuntimeSync();
   useCompetitionContentSync();
@@ -96,6 +115,8 @@ function TeamShellAuthenticated() {
           : getTeamShellContentClassName(layoutStatus)
       }
     >
+      <TeamFullscreenPrompt />
+      <TeamCoachModeBanner />
       <CompetitionStage3Automation />
       <CompetitionFrozenBanner frozen={competitionFrozen} />
       <TeamFlowContent

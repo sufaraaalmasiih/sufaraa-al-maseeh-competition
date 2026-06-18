@@ -5,13 +5,13 @@ import {
   type UserCredential,
 } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
-import { serverTimestamp, setDoc } from "firebase/firestore";
+import { serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import {
   getClientFirebaseAuth,
   getSecondaryFirebaseAuth,
   ensureAuthPersistence,
 } from "@/firebase/firebaseClient";
-import { createInitialTeamState, teamRef, userRef } from "@/firebase/firestore";
+import { createInitialTeamState, teamRef, teamStateRef, userRef } from "@/firebase/firestore";
 import type { RegisterTeamInput } from "@/features/auth/schemas";
 import type { AppRole, TeamDocument } from "@/types";
 
@@ -203,6 +203,12 @@ export async function registerTeam(input: RegisterTeamInput): Promise<RegisterTe
       teamName: input.teamName,
       governorate: input.governorate,
     });
+    if (logoUrl) {
+      await updateDoc(teamStateRef(MAIN_COMPETITION_ID, uid), {
+        logoUrl,
+        updatedAt: serverTimestamp(),
+      });
+    }
     console.info("[team-register] write competitions/main/teamStates/{uid} success", {
       path: `competitions/${MAIN_COMPETITION_ID}/teamStates/${uid}`,
     });

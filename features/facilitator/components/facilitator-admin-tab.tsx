@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { CreateFacilitatorForm } from "@/features/auth/components/create-facilitator-form";
 import { CompetitionResetPanel } from "@/features/gameflow/components/competition-reset-panel";
+import { FacilitatorStaffPanel } from "@/features/facilitator/components/facilitator-staff-panel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -18,6 +19,7 @@ export function FacilitatorAdminTab() {
         </CardHeader>
         <CardContent className="space-y-4">
           <CreateFacilitatorForm />
+          <FacilitatorStaffPanel />
           {process.env.NODE_ENV === "development" ? (
             <Button asChild variant="secondary" className="w-full sm:w-auto">
               <Link href="/dev/create-admin-user">إنشاء حساب إدارة (تطوير فقط)</Link>

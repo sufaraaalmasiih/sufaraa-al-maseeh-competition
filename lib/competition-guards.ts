@@ -63,10 +63,11 @@ export function assertAnsweringTimerOpen(
   expectedPurpose: string,
   expiredMessage: string,
   now = Date.now(),
+  graceMs = 1500,
 ): void {
   assertTimerNotPaused(timer);
 
-  if (isAnsweringTimerExpired(timer, expectedStage, expectedPurpose, now)) {
+  if (isAnsweringTimerExpired(timer, expectedStage, expectedPurpose, now - graceMs)) {
     throw new Error(expiredMessage);
   }
 }

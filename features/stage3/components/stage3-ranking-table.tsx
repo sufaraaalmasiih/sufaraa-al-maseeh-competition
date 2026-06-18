@@ -28,8 +28,9 @@ export function Stage3RankingTable({
   animate = false,
 }: Stage3RankingTableProps) {
   const compact = variant === "audience" || variant === "team";
-  const revealedTeams = useGradualReveal(teams, animate ? 520 : 0, {
-    maxDurationMs: 7_500,
+  const revealedTeams = useGradualReveal(teams, animate ? 720 : 0, {
+    maxDurationMs: 6_000,
+    minIntervalMs: 140,
   });
   const visibleTeams = animate ? revealedTeams : teams;
   const isRevealing = animate && visibleTeams.length < teams.length;

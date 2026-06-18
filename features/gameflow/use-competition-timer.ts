@@ -24,7 +24,7 @@ export function useCompetitionTimer() {
     }
 
     setNow(Date.now());
-    const intervalId = window.setInterval(() => setNow(Date.now()), 1000);
+    const intervalId = window.setInterval(() => setNow(Date.now()), 250);
 
     return () => window.clearInterval(intervalId);
   }, [timer?.active, timer?.paused, timer?.endsAtMs]);

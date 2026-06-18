@@ -907,6 +907,16 @@
     padding-inline: clamp(0.75rem, 2vw, 1.25rem);
   }
 
+  .auth-screen__wrap--form-wide {
+    height: auto;
+    min-height: 100dvh;
+    max-height: none;
+    justify-content: flex-start;
+    padding-top: 1rem;
+    padding-bottom: 2rem;
+    width: min(clamp(20rem, 96vw, 52rem), calc(100vw - 1rem));
+  }
+
   .auth-screen__card {
     @apply w-full rounded-2xl border;
     border-color: rgba(255, 255, 255, 0.88);
@@ -1245,7 +1255,8 @@
   body:has(.audience-flow-shell__wrap),
   body:has(.competition-centered-screen__wrap),
   body:has(.audience-centered-screen__wrap) {
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .competition-intro-screen__wrap {
@@ -1253,13 +1264,25 @@
   }
 
   .audience-intro-screen__wrap {
-    @apply mx-auto flex h-[100dvh] max-h-[100dvh] w-full flex-col items-center justify-center overflow-hidden px-6 py-6 text-center sm:px-10 sm:py-12;
+    @apply mx-auto flex w-full flex-col items-center px-6 py-6 text-center sm:px-10 sm:py-8;
+    height: auto;
+    min-height: 100dvh;
+    max-height: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+    justify-content: flex-start;
     max-width: min(96vw, 96rem);
     width: min(96vw, 96rem);
   }
 
   .audience-flow-shell__wrap {
-    @apply mx-auto flex h-[100dvh] max-h-[100dvh] w-full flex-col justify-center overflow-hidden px-4 py-4 sm:px-8 sm:py-6;
+    @apply mx-auto flex w-full flex-col px-4 py-4 sm:px-8 sm:py-6;
+    height: auto;
+    min-height: 100dvh;
+    max-height: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+    justify-content: flex-start;
     max-width: min(96vw, 96rem);
     width: min(96vw, 96rem);
   }
@@ -5133,14 +5156,15 @@
   }
 
   .reveal-results-card .competition-ranking-table--reveal tbody tr.reveal-results-row--latest {
-    animation: reveal-results-row-enter 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: reveal-results-row-enter 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
   @keyframes reveal-results-row-enter {
     0% {
       background: rgba(255, 255, 255, 0.9);
       box-shadow: inset 0 0 0 0 rgba(79, 138, 16, 0);
-      transform: translateX(12px);
+      transform: translateX(4px);
+      opacity: 0.72;
     }
 
     55% {
@@ -5148,12 +5172,14 @@
       box-shadow:
         inset 0 0 0 2px rgba(79, 138, 16, 0.34),
         0 4px 20px rgba(79, 138, 16, 0.12);
+      opacity: 1;
     }
 
     100% {
       background: rgba(241, 249, 232, 0.95);
       box-shadow: inset 0 0 0 2px rgba(79, 138, 16, 0.22);
       transform: translateX(0);
+      opacity: 1;
     }
   }
 
@@ -10462,5 +10488,185 @@
     .loading-state--page .loading-state__card {
       @apply px-6 py-8;
     }
+  }
+
+  /* ===== Critical UX fixes (coach, audience, register, matching) ===== */
+
+  .team-fullscreen-prompt {
+    position: fixed;
+    top: 0.65rem;
+    left: 0.65rem;
+    z-index: 60;
+  }
+
+  .team-fullscreen-prompt__button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    background: rgba(255, 255, 255, 0.92);
+    color: #143a5a;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.78rem;
+    font-weight: 800;
+    box-shadow: 0 8px 20px rgba(8, 24, 40, 0.12);
+  }
+
+  .team-coach-mode-banner {
+    position: sticky;
+    top: 0;
+    z-index: 55;
+    margin-bottom: 0.35rem;
+  }
+
+  .team-coach-mode-banner__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #143a5a;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-decoration: none;
+    box-shadow: 0 6px 16px rgba(8, 24, 40, 0.1);
+  }
+
+  .facilitator-staff-panel__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .facilitator-staff-panel__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(35, 136, 196, 0.14);
+    background: rgba(255, 255, 255, 0.92);
+    padding: 0.85rem 1rem;
+  }
+
+  .facilitator-staff-panel__name {
+    margin: 0;
+    font-weight: 800;
+    color: #143a5a;
+  }
+
+  .facilitator-staff-panel__email {
+    margin: 0.15rem 0 0;
+    font-size: 0.82rem;
+    color: rgba(20, 58, 90, 0.72);
+  }
+
+  .facilitator-staff-panel__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.65rem;
+  }
+
+  .facilitator-staff-panel__select {
+    min-width: 9rem;
+    min-height: 2.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(35, 136, 196, 0.22);
+    background: #fff;
+    padding: 0.35rem 0.65rem;
+    font-weight: 700;
+    color: #143a5a;
+  }
+
+  .audience-display .competition-ranking-panel--embedded {
+    width: 100%;
+    max-width: none;
+  }
+
+  .audience-display .competition-ranking-scroll--cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    max-height: min(42vh, 24rem);
+    overflow-y: auto;
+    padding-inline: 0.15rem;
+  }
+
+  .audience-display .competition-ranking-row--card {
+    min-height: 3.35rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 8px 18px rgba(8, 24, 40, 0.08);
+  }
+
+  .audience-display .competition-ranking-row__rank {
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.95rem;
+  }
+
+  .audience-display .competition-ranking-row__name {
+    font-size: clamp(0.95rem, 1.6vw, 1.15rem);
+    font-weight: 800;
+  }
+
+  .audience-display .reveal-results-card--audience {
+    width: 100%;
+    max-width: min(96vw, 88rem);
+    margin-inline: auto;
+  }
+
+  .audience-display .reveal-results-card--with-ranking .reveal-results-card__scroll {
+    max-height: min(38vh, 20rem);
+  }
+
+  .team-player-shell .content-shell-arena--stage2:has(.gameplay-matching-zone),
+  .team-player-shell.app-flow-shell:has(.gameplay-matching-zone) {
+    height: auto;
+    min-height: 100dvh;
+    max-height: none;
+    overflow-y: auto;
+  }
+
+  .team-player-shell .gameplay-matching-zone {
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .team-player-shell .matching-card {
+    min-height: 2.85rem;
+    font-size: clamp(0.82rem, 2.2vw, 0.95rem);
+  }
+
+  .team-player-shell .stage1-intro-screen__wrap,
+  .team-player-shell .competition-flow-shell__wrap {
+    height: auto;
+    min-height: 100dvh;
+    max-height: none;
+    overflow-y: auto;
+    justify-content: flex-start;
+  }
+
+  .coach-shell {
+    padding-bottom: 5rem;
+  }
+
+  .coach-shell__footer {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 40;
+    max-width: 28rem;
+    margin-inline: auto;
+    padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, rgba(8, 24, 40, 0) 0%, rgba(8, 24, 40, 0.55) 42%, rgba(8, 24, 40, 0.72) 100%);
   }
 }

@@ -1,16 +1,23 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { CompetitionBrandHeaderCard } from "@/components/competition/competition-brand-header-card";
 import { CompetitionFrozenBanner } from "@/components/layout/competition-frozen-banner";
 import { CompetitionGradientShell } from "@/components/layout/competition-gradient-shell";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
 import { useCoachDashboard } from "@/features/coach/use-coach-dashboard";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
+import { setCoachViewMode } from "@/lib/coach-view-mode";
 
 export function CoachShell() {
+  const router = useRouter();
   const { competitionFrozen } = useGameFlow();
   const { stageName, teamSummary, history, loading, error } = useCoachDashboard();
+
+  useEffect(() => {
+    setCoachViewMode("coach");
+  }, []);
 
   if (loading) {
     return (
@@ -86,9 +93,16 @@ export function CoachShell() {
       </section>
 
       <div className="coach-shell__footer">
-        <Link href="/team" prefetch className="coach-shell__cta">
+        <button
+          type="button"
+          className="coach-shell__cta"
+          onClick={() => {
+            setCoachViewMode("player");
+            router.push("/team?view=player");
+          }}
+        >
           الانتقال لشاشة المتسابق
-        </Link>
+        </button>
       </div>
     </CompetitionGradientShell>
   );
