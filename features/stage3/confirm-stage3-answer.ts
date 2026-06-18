@@ -73,8 +73,10 @@ export async function confirmStage3Answer({
     const ownerTeamId =
       typeof gameFlow.stage3OwnerTeamId === "string" ? gameFlow.stage3OwnerTeamId : "";
     const isOwner = ownerTeamId.length > 0 && ownerTeamId === teamId;
+    // سؤال جماعي (زائد): يُسمح للجميع بالتخطّي والنقاط مسطّحة بلا أفضلية للمالك.
+    const collective = gameFlow.stage3ActiveQuestionCollective === true;
 
-    if (passed && isOwner) {
+    if (passed && isOwner && !collective) {
       throw new Error("Owner team cannot pass.");
     }
 
@@ -149,6 +151,7 @@ export async function confirmStage3Answer({
       isOwner,
       activeQuestion.difficulty,
       outcome,
+      collective,
     );
 
     const now = serverTimestamp();

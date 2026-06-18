@@ -24,7 +24,14 @@ export function computeStage3PointsDelta(
   isOwner: boolean,
   difficulty: Stage3Difficulty,
   outcome: Stage3AnswerOutcome,
+  collective = false,
 ): number {
+  // سؤال جماعي (زائد): لا أفضلية لصاحب الدور — نقاط مسطّحة للجميع،
+  // وكل الفرق تجيب أو تتخطّى بلا خصم (النقطة 15).
+  if (collective) {
+    return OTHER_POINTS[difficulty][outcome];
+  }
+
   if (isOwner) {
     if (outcome === "pass") {
       throw new Error("Owner team cannot pass.");
@@ -34,6 +41,34 @@ export function computeStage3PointsDelta(
   }
 
   return OTHER_POINTS[difficulty][outcome];
+}
+
+/** عدد الأسئلة الزائدة التي لا تنقسم على عدد الفرق (تصبح جماعية). */
+export function getStage3LeftoverCount(
+  totalQuestions: number,
+  teamCount: number,
+): number {
+  if (teamCount <= 0 || totalQuestions <= 0) {
+    return 0;
+  }
+  return totalQuestions % teamCount;
+}
+
+/**
+ * هل السؤال المختار الآن (حسب عدد الأسئلة المُستخدمة قبله، 0-based) من الأسئلة
+ * الزائدة الجماعية؟ الأسئلة الزائدة هي الأخيرة في المسابقة.
+ * مثال: 25 سؤال / 4 فرق ⇐ البواقي 1 ⇐ السؤال رقم 25 (الأخير) جماعي.
+ */
+export function isStage3CollectiveSelection(
+  usedBeforeThis: number,
+  totalQuestions: number,
+  teamCount: number,
+): boolean {
+  const leftover = getStage3LeftoverCount(totalQuestions, teamCount);
+  if (leftover <= 0) {
+    return false;
+  }
+  return usedBeforeThis >= totalQuestions - leftover;
 }
 
 export function resolveStage3AnswerOutcome(

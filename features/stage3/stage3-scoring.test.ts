@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   computeStage3PointsDelta,
+  getStage3LeftoverCount,
+  isStage3CollectiveSelection,
   resolveStage3AnswerOutcome,
 } from "@/features/stage3/stage3-scoring";
 
@@ -27,6 +29,33 @@ describe("stage3-scoring", () => {
       expect(computeStage3PointsDelta(false, "hard", "correct")).toBe(15);
       expect(computeStage3PointsDelta(false, "hard", "pass")).toBe(0);
       expect(computeStage3PointsDelta(false, "medium", "wrong")).toBe(-10);
+    });
+  });
+
+  describe("collective (leftover) questions — point 15", () => {
+    it("flat scoring for everyone, no owner advantage", () => {
+      // owner on a collective question scores like any other team
+      expect(computeStage3PointsDelta(true, "hard", "correct", true)).toBe(15);
+      expect(computeStage3PointsDelta(false, "hard", "correct", true)).toBe(15);
+    });
+
+    it("allows owner to pass on a collective question without throwing", () => {
+      expect(computeStage3PointsDelta(true, "easy", "pass", true)).toBe(0);
+    });
+
+    it("computes leftover count (questions not divisible by teams)", () => {
+      expect(getStage3LeftoverCount(25, 4)).toBe(1);
+      expect(getStage3LeftoverCount(24, 4)).toBe(0);
+      expect(getStage3LeftoverCount(30, 4)).toBe(2);
+      expect(getStage3LeftoverCount(10, 0)).toBe(0);
+    });
+
+    it("marks the final leftover questions as collective", () => {
+      // 25 questions / 4 teams -> leftover 1 -> only the 25th (index 24) is collective
+      expect(isStage3CollectiveSelection(24, 25, 4)).toBe(true);
+      expect(isStage3CollectiveSelection(23, 25, 4)).toBe(false);
+      // perfectly divisible -> none collective
+      expect(isStage3CollectiveSelection(23, 24, 4)).toBe(false);
     });
   });
 

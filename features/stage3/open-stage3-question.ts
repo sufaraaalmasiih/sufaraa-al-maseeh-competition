@@ -8,7 +8,10 @@ import {
 } from "@/features/stage3/stage3-question-metadata";
 import type { Stage3QuestionMetadata } from "@/features/stage3/stage3-question-types";
 import { buildStage3AnsweringTimerPayload } from "@/features/stage3/stage3-timer-payload";
+import { parseStage3TurnOrder } from "@/features/stage3/stage3-turn-order";
+import { isStage3CollectiveSelection } from "@/features/stage3/stage3-scoring";
 import { parseTimerDurations } from "@/features/facilitator/facilitator-timer-settings";
+import { parseQuestionDisplaySettings } from "@/features/facilitator/question-display-settings";
 import { resolveSyncedNowMs } from "@/lib/server-clock-sync";
 
 const MAIN_COMPETITION_ID = "main";
@@ -67,10 +70,20 @@ export async function selectStage3QuestionByOwner({
     const nextUsedIds = [...usedQuestionIds, question.id];
     const answerSeconds = parseTimerDurations(gameFlow.durations).stage3Answer;
 
+    // النقطة 15: الأسئلة الزائدة التي لا تنقسم على عدد الفرق تصبح جماعية (نقاط مسطّحة).
+    const teamCount = parseStage3TurnOrder(gameFlow.stage3TurnOrder).length;
+    const totalQuestions = parseQuestionDisplaySettings(gameFlow).stage3.displayCount;
+    const collective = isStage3CollectiveSelection(
+      usedQuestionIds.length,
+      totalQuestions,
+      teamCount,
+    );
+
     transaction.update(gameFlowRef, {
       status: "stage3_question_open",
       currentStage: "stage3",
       stage3ActiveQuestion: question,
+      stage3ActiveQuestionCollective: collective,
       stage3OpenedQuestionIds: nextOpenedIds,
       stage3UsedQuestionIds: nextUsedIds,
       stage3OwnerTeamId: ownerTeamId,
