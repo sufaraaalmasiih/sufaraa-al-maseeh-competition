@@ -81,7 +81,7 @@ export function FacilitatorObjectionsPanel() {
         </button>
       ) : null}
 
-      <div className="space-y-3">
+      <div className="max-h-[55vh] space-y-3 overflow-y-auto pr-1">
         {visible.length === 0 ? (
           <p className="text-sm font-semibold text-[#64748B]">لا توجد اعتراضات جديدة.</p>
         ) : null}

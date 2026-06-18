@@ -102,7 +102,7 @@ export function Stage2TrueFalseGradingPanel() {
         اعتماد التصحيح). المجموع الكامل 15 نقطة.
       </p>
 
-      <div className="space-y-3">
+      <div className="max-h-[55vh] space-y-3 overflow-y-auto pr-1">
         {rows.map((row) => (
           <div key={row.id} className="rounded-xl border border-[#FDE68A] bg-white/80 p-3">
             <div className="flex flex-wrap items-center justify-between gap-2">

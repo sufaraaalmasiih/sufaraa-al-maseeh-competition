@@ -250,3 +250,87 @@ describe("محاكاة 3 — مرونة Excel: زيادة/نقصان/أنواع/
     log(`\n  [Excel] م3: ${Object.keys(small.stage3).length}→${Object.keys(big.stage3).length}`);
   });
 });
+
+describe("محاكاة 4 — أعداد فرق كبيرة: سلامة المنطق + ثبات التوزيع", () => {
+  const STAGE3_TOTAL = 30; // لوحة المرحلة 3 الثابتة
+  const bigCounts = [8, 12, 16, 20, 24, 40];
+
+  for (const teams of bigCounts) {
+    it(`${teams} فريقاً — توزيع م3 ثابت وصحيح`, () => {
+      const { turnOrder, ownerTurns, collectiveCount } = simulateStage3(teams, STAGE3_TOTAL);
+      const leftover = getStage3LeftoverCount(STAGE3_TOTAL, teams);
+      const ownerPerTeam = Math.floor(STAGE3_TOTAL / teams);
+
+      // ترتيب الأدوار يحوي كل الفرق بلا تكرار، ويبدأ بالأعلى
+      expect(turnOrder).toHaveLength(teams);
+      expect(new Set(turnOrder.map((t) => t.teamId)).size).toBe(teams);
+      expect(turnOrder[0].teamId).toBe("team-1");
+
+      // الجماعية = الباقي، وغير الجماعية موزّعة بالتساوي
+      expect(collectiveCount).toBe(leftover);
+      const distinctOwners = ownerTurns.size;
+      if (ownerPerTeam > 0) {
+        // كل فريق يأخذ عدد أدوار متساوياً (floor)
+        Array.from(ownerTurns.values()).forEach((c) => expect(c).toBe(ownerPerTeam));
+        expect(distinctOwners).toBe(teams);
+      } else {
+        // فرق أكثر من الأسئلة ⇒ لا أدوار فردية، كل الأسئلة جماعية
+        expect(collectiveCount).toBe(STAGE3_TOTAL);
+      }
+
+      const collectivePct = Math.round((collectiveCount / STAGE3_TOTAL) * 100);
+      log(
+        `\n  [م3 كبير] ${teams}ف/30س → أدوار/فريق=${ownerPerTeam} · جماعية=${collectiveCount} (${collectivePct}%)`,
+      );
+    });
+  }
+
+  it("ملاحظة سلاسة: نسبة الأسئلة الجماعية ترتفع كلما زادت الفرق نسبةً للأسئلة", () => {
+    // توثيق سلوكي: 16ف/30س ⇒ 14 جماعية (سؤال فردي واحد لكل فريق)
+    expect(getStage3LeftoverCount(30, 16)).toBe(14);
+    expect(getStage3LeftoverCount(30, 20)).toBe(10);
+    // 40 فريقاً > 30 سؤال ⇒ الكل جماعي
+    expect(isStage3CollectiveSelection(0, 30, 40)).toBe(true);
+    expect(isStage3CollectiveSelection(29, 30, 40)).toBe(true);
+  });
+});
+
+describe("محاكاة 5 — الترتيب يتوسّع مع أعداد فرق كبيرة (مراكز مشتركة)", () => {
+  for (const teams of [12, 20, 30]) {
+    it(`${teams} فريقاً — مراكز صحيحة مع تعادلات`, () => {
+      const base = {
+        governorate: "—", ready: true,
+        competitionIntroReady: true, stage1IntroReady: true,
+        stage2IntroReady: true, stage3IntroReady: true, stage4IntroReady: true,
+        stage1QuestionIndex: 0,
+      };
+      // نصف الفرق بنقاط متساوية (تعادل) والنصف بنقاط متفاوتة
+      const input = Array.from({ length: teams }, (_, i) => {
+        const tied = i < Math.floor(teams / 2);
+        const score = tied ? 100 : 100 - (i - Math.floor(teams / 2) + 1) * 5;
+        return {
+          teamId: `t${i}`, teamName: `ف${i}`,
+          stage1Score: score, totalScore: score,
+          finishedAtMs: 1000 + i, // الأسرع أقدم
+          ...base,
+        };
+      });
+
+      const ranked = rankStage1Teams(input);
+      const tiedCount = Math.floor(teams / 2);
+
+      // كل المتعادلين (نفس العلامة) لهم نفس المركز = 1
+      const topRanks = ranked.slice(0, tiedCount).map((t) => t.rank);
+      expect(new Set(topRanks).size).toBe(1);
+      expect(topRanks[0]).toBe(1);
+      // المركز التالي يقفز بعد المتعادلين (ترتيب رياضي 1..1, ثم tiedCount+1)
+      expect(ranked[tiedCount].rank).toBe(tiedCount + 1);
+      // لا مركز يتجاوز عدد الفرق
+      ranked.forEach((t) => expect(t.rank).toBeLessThanOrEqual(teams));
+
+      log(
+        `\n  [ترتيب كبير] ${teams}ف → ${tiedCount} متعادلون بمركز 1، التالي مركز ${ranked[tiedCount].rank}`,
+      );
+    });
+  }
+});
