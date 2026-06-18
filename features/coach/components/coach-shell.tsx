@@ -10,13 +10,14 @@ import { exportAnswersExcel } from "@/features/facilitator/export-answers-excel"
 import { exportElementAsPng } from "@/features/facilitator/export-results-image";
 import { useCoachDashboard } from "@/features/coach/use-coach-dashboard";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
+import { CoachObjectionForm } from "@/features/coach/components/coach-objection-form";
 import { TeamArchivePanel } from "@/features/facilitator/components/team-archive-panel";
 import { firebaseAuth } from "@/firebase/firebaseClient";
 import { setCoachViewMode } from "@/lib/coach-view-mode";
 
 export function CoachShell() {
   const { competitionFrozen } = useGameFlow();
-  const { stageName, teamSummary, history, allHistory, loading, error } = useCoachDashboard();
+  const { teamId, stageName, teamSummary, history, allHistory, loading, error } = useCoachDashboard();
   const historyListRef = useRef<HTMLUListElement | null>(null);
   const [exporting, setExporting] = useState(false);
 
@@ -180,6 +181,14 @@ export function CoachShell() {
             ))}
           </ul>
         )}
+      </section>
+
+      <section className="coach-history">
+        <CoachObjectionForm
+          teamId={teamId}
+          teamName={teamSummary?.teamName ?? "فريق"}
+          questions={allHistory}
+        />
       </section>
 
       <section className="coach-history">

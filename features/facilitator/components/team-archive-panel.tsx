@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { Archive, ChevronDown, ChevronUp } from "lucide-react";
 import { useTeamArchive } from "@/features/facilitator/use-team-archive";
+import {
+  objectionReasonLabel,
+  useTeamObjections,
+} from "@/features/facilitator/objections";
 
 interface TeamArchivePanelProps {
   teamId: string | null;
@@ -32,6 +36,7 @@ export function TeamArchivePanel({
 }: TeamArchivePanelProps) {
   const [open, setOpen] = useState(defaultOpen);
   const { participations, count, loading, error } = useTeamArchive(teamId);
+  const { objections } = useTeamObjections(teamId);
 
   return (
     <div className="rounded-2xl border border-[#E2E8F0] bg-white/80 p-4">
@@ -110,6 +115,39 @@ export function TeamArchivePanel({
               </table>
             </div>
           )}
+
+          {objections.length > 0 ? (
+            <div className="mt-4">
+              <h5 className="mb-2 text-sm font-black text-[#143A5A]">
+                اعتراضات الفريق ({objections.length})
+              </h5>
+              <div className="space-y-2">
+                {objections.map((objection) => (
+                  <div
+                    key={objection.id}
+                    className="rounded-lg border border-[#FDE68A] bg-[#FFFBEB] px-3 py-2"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-sm font-bold text-[#143A5A]">
+                        {objection.questionLabel}
+                      </span>
+                      <span className="text-xs font-bold text-[#92400E]">
+                        {objection.status === "reviewed" ? "تمت المراجعة" : "جديد"}
+                      </span>
+                    </div>
+                    {objection.reasons.length > 0 ? (
+                      <p className="mt-1 text-xs font-semibold text-[#B91C1C]">
+                        {objection.reasons.map(objectionReasonLabel).join(" · ")}
+                      </p>
+                    ) : null}
+                    {objection.note ? (
+                      <p className="mt-1 text-xs text-[#143A5A]">{objection.note}</p>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>

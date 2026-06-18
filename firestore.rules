@@ -175,6 +175,17 @@ service cloud.firestore {
         allow write: if isFacilitator();
       }
 
+      // Coach/team objections on questions.
+      // Create: a signed-in team for itself. Read: facilitators (all) + the owning team.
+      // Update/delete: facilitators only (mark reviewed / cleanup).
+      match /objections/{objectionId} {
+        allow read: if isFacilitator()
+          || (isSignedIn() && resource.data.teamId == request.auth.uid);
+        allow create: if isSignedIn()
+          && request.resource.data.teamId == request.auth.uid;
+        allow update, delete: if isFacilitator();
+      }
+
       // Audit trail (facilitator only)
       match /auditLog/{logId} {
         allow read, create: if isFacilitator();

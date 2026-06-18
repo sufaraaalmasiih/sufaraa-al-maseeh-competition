@@ -28,6 +28,11 @@ import {
 } from "@/features/facilitator/competition-session";
 import { SessionEditLogPanel } from "@/features/facilitator/components/session-edit-log-panel";
 import { ArchiveResultsTable } from "@/features/facilitator/components/archive-results-table";
+import {
+  objectionReasonLabel,
+  useObjections,
+  type CompetitionObjection,
+} from "@/features/facilitator/objections";
 import { cn } from "@/lib/utils";
 
 function formatDate(ms: number): string {
@@ -46,6 +51,7 @@ function formatDate(ms: number): string {
 
 export function FacilitatorHistoryTab() {
   const { archives, loading, error } = useCompetitionHistory();
+  const { objections } = useObjections();
 
   if (loading) {
     return <LoadingState variant="page" />;
@@ -62,13 +68,23 @@ export function FacilitatorHistoryTab() {
   return (
     <div className="space-y-6">
       {archives.map((archive) => (
-        <SessionCard key={archive.id} archive={archive} />
+        <SessionCard
+          key={archive.id}
+          archive={archive}
+          objections={objections.filter((objection) => objection.sessionId === archive.id)}
+        />
       ))}
     </div>
   );
 }
 
-function SessionCard({ archive }: { archive: CompetitionSession }) {
+function SessionCard({
+  archive,
+  objections,
+}: {
+  archive: CompetitionSession;
+  objections: CompetitionObjection[];
+}) {
   const [editingMeta, setEditingMeta] = useState(false);
   const [title, setTitle] = useState(archive.title);
   const [version, setVersion] = useState(archive.version);
@@ -282,6 +298,39 @@ function SessionCard({ archive }: { archive: CompetitionSession }) {
         ) : (
           <EmptyState title="لم تُحفظ النتائج النهائية بعد." />
         )}
+
+        {objections.length > 0 ? (
+          <div className="mt-4 rounded-xl border border-[#FDE68A] bg-[#FFFBEB] p-3">
+            <h5 className="mb-2 text-sm font-black text-[#143A5A]">
+              اعتراضات هذه المسابقة ({objections.length})
+            </h5>
+            <div className="space-y-2">
+              {objections.map((objection) => (
+                <div
+                  key={objection.id}
+                  className="rounded-lg border border-[#FDE68A] bg-white/80 px-3 py-2"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-sm font-bold text-[#143A5A]">
+                      {objection.teamName} — {objection.questionLabel}
+                    </span>
+                    <span className="text-xs font-bold text-[#92400E]">
+                      {objection.status === "reviewed" ? "تمت المراجعة" : "جديد"}
+                    </span>
+                  </div>
+                  {objection.reasons.length > 0 ? (
+                    <p className="mt-1 text-xs font-semibold text-[#B91C1C]">
+                      {objection.reasons.map(objectionReasonLabel).join(" · ")}
+                    </p>
+                  ) : null}
+                  {objection.note ? (
+                    <p className="mt-1 text-xs text-[#143A5A]">{objection.note}</p>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         <div className="facilitator-timer__buttons">
           {editingTeams ? (

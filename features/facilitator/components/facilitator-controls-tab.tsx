@@ -8,6 +8,7 @@ import { FacilitatorControlsSessionLogPanel } from "@/features/facilitator/compo
 import { FacilitatorControlsTeamActionsPanel } from "@/features/facilitator/components/facilitator-controls-team-actions-panel";
 import { FacilitatorControlsTeamPicker } from "@/features/facilitator/components/facilitator-controls-team-picker";
 import { FacilitatorControlsTeamProfilePanel } from "@/features/facilitator/components/facilitator-controls-team-profile-panel";
+import { FacilitatorObjectionsPanel } from "@/features/facilitator/components/facilitator-objections-panel";
 import { TeamArchivePanel } from "@/features/facilitator/components/team-archive-panel";
 import { useFacilitatorControlsTab } from "@/features/facilitator/components/use-facilitator-controls-tab";
 
@@ -31,6 +32,8 @@ export function FacilitatorControlsTab() {
       {controls.toast ? (
         <p className="facilitator-controls-toast facilitator-inline-success">{controls.toast}</p>
       ) : null}
+
+      <FacilitatorObjectionsPanel />
 
       <FacilitatorControlsTeamPicker
         teams={controls.teams}
