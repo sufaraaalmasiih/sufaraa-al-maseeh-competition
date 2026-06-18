@@ -49,8 +49,27 @@ export function Stage3RankingTable({
     return <EmptyState title="بانتظار تسجيل الفرق" />;
   }
 
+  const board = (
+    <CompetitionRankingBoard
+      animate={boardAnimate}
+      bare={embedded}
+      scoreLabel="نقاط المرحلة الثالثة"
+      showGovernorate={!compact}
+      teams={teams.map((team) => ({
+        teamId: team.teamId,
+        teamName: team.teamName,
+        rank: team.rank,
+        stageScore: team.stage3Score,
+        governorate: team.governorate,
+        logoUrl: team.logoUrl,
+        totalScore: team.totalScore,
+      }))}
+      variant={compact ? (variant === "audience" ? "audience" : "team") : "facilitator"}
+    />
+  );
+
   if (compact) {
-    const panel = (
+    return (
       <div
         className={cn(
           "competition-ranking-panel",
@@ -71,32 +90,14 @@ export function Stage3RankingTable({
               </p>
             </>
           ) : (
-            <>
-              <h3 className="competition-ranking-panel__embedded-title">
-                {title ?? "ترتيب مرحلة على المحك"}
-              </h3>
-            </>
+            <h3 className="competition-ranking-panel__embedded-title">
+              {title ?? "ترتيب مرحلة على المحك"}
+            </h3>
           )}
         </div>
-        <CompetitionRankingBoard
-          animate={boardAnimate}
-          bare={embedded}
-          scoreLabel="نقاط المرحلة"
-          teams={teams.map((team) => ({
-            teamId: team.teamId,
-            teamName: team.teamName,
-            rank: team.rank,
-            stageScore: team.stage3Score,
-            governorate: team.governorate,
-            logoUrl: team.logoUrl,
-            totalScore: team.totalScore,
-          }))}
-          variant={variant === "audience" ? "audience" : "team"}
-        />
+        {board}
       </div>
     );
-
-    return panel;
   }
 
   return (
@@ -109,37 +110,7 @@ export function Stage3RankingTable({
           {description ?? "الترتيب حسب نقاط المرحلة الثالثة ثم المجموع ثم اسم الفريق."}
         </p>
       </div>
-      <div className="overflow-x-auto competition-ranking-scroll">
-        <table className="competition-ranking-table w-full min-w-[640px] text-right text-sm">
-          <thead className="bg-[#F3FAFF] text-[#143A5A]">
-            <tr>
-              <th className="px-4 py-3 font-bold">المركز</th>
-              <th className="px-4 py-3 font-bold">الفريق</th>
-              <th className="px-4 py-3 font-bold">نقاط المرحلة الثالثة</th>
-              <th className="px-4 py-3 font-bold">المجموع</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y bg-white" style={{ borderColor: "rgba(35,136,196,0.1)" }}>
-            {teams.map((team) => (
-              <tr
-                key={team.teamId}
-                className={cn(
-                  team.rank === 1 && "bg-[#FFF7DF]",
-                  team.rank === 2 && "bg-[#F3FAFF]",
-                  team.rank === 3 && "bg-[#F1F9E8]",
-                )}
-              >
-                <td className="px-4 py-3 text-lg font-extrabold text-[#143A5A]">{team.rank}</td>
-                <td className="px-4 py-3 font-bold text-[#143A5A]">{team.teamName}</td>
-                <td className="px-4 py-3 text-xl font-extrabold text-[#2388C4]">
-                  {team.stage3Score}
-                </td>
-                <td className="px-4 py-3 font-bold">{team.totalScore}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <div className="px-4 py-4 sm:px-5">{board}</div>
     </div>
   );
 }

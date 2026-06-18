@@ -36,6 +36,9 @@ export interface GameFlow {
   currentStage: GameFlowStage;
   currentQuestion: number;
   competitionFrozen?: boolean;
+  competitionMode?: "official" | "training";
+  trainingEndsAtMs?: number | null;
+  stage4QuestionOpenedAtMs?: number | null;
 }
 
 export type TimerPurpose = "answering" | "reading" | "selection" | "reveal" | "none";

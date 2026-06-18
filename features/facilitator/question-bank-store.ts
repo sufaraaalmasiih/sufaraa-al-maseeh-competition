@@ -22,6 +22,7 @@ import {
   buildArchiveCounts,
   countStage2Questions,
 } from "@/features/facilitator/question-bank-workbook-parser";
+import { stripUndefinedForFirestore } from "@/lib/strip-undefined-for-firestore";
 
 const BANK_ROOT = ["competitions", MAIN_COMPETITION_ID, "questionBanks"] as const;
 const ARCHIVES_PARENT_DOC = "meta";
@@ -40,26 +41,27 @@ function archiveDoc(id: string) {
 
 export async function saveFullQuestionBank(payload: FullQuestionBankPayload): Promise<void> {
   const now = serverTimestamp();
+  const sanitized = stripUndefinedForFirestore(payload);
 
   await Promise.all([
     setDoc(stageDoc("stage1"), {
-      questions: payload.stage1,
-      count: payload.stage1.length,
+      questions: sanitized.stage1,
+      count: sanitized.stage1.length,
       updatedAt: now,
     }),
     setDoc(stageDoc("stage2"), {
-      ...payload.stage2,
-      count: countStage2Questions(payload.stage2),
+      ...sanitized.stage2,
+      count: countStage2Questions(sanitized.stage2),
       updatedAt: now,
     }),
     setDoc(stageDoc("stage3"), {
-      questions: payload.stage3,
-      count: Object.keys(payload.stage3).length,
+      questions: sanitized.stage3,
+      count: Object.keys(sanitized.stage3).length,
       updatedAt: now,
     }),
     setDoc(stageDoc("stage4"), {
-      questions: payload.stage4,
-      count: payload.stage4.length,
+      questions: sanitized.stage4,
+      count: sanitized.stage4.length,
       updatedAt: now,
     }),
     saveQuestionBankMeta({
@@ -93,7 +95,7 @@ export async function createQuestionBankArchive(input: {
     governorate: input.governorate.trim(),
     sourceFileName: input.sourceFileName,
     counts,
-    payload: input.payload,
+    payload: stripUndefinedForFirestore(input.payload),
     createdAt: now,
     updatedAt: now,
   });

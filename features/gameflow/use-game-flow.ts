@@ -17,6 +17,7 @@ import {
 } from "@/features/stage3/stage3-selection-timeout-notice";
 import { parseStage4QuestionMetadata } from "@/features/stage4/stage4-question-metadata";
 import type { Stage4QuestionMetadata } from "@/features/stage4/stage4-question-types";
+import { parseCompetitionMode, parseTrainingEndsAtMs } from "@/features/facilitator/competition-mode";
 import { syncStage1ActiveSession } from "@/features/stage1/stage1-active-session";
 import { syncStage4ActiveSession } from "@/features/stage4/stage4-active-session";
 import { subscribeFirestoreDoc } from "@/lib/firestore-listener";
@@ -39,8 +40,11 @@ interface GameFlowStoreState {
   stage4ActiveQuestion: Stage4QuestionMetadata | null;
   stage4QuestionIndex: number;
   stage4QuestionCount: number;
+  stage4QuestionOpenedAtMs: number | null;
   stage2ReadingReference: string;
   stage2ReadingPassage: string;
+  competitionMode: "official" | "training";
+  trainingEndsAtMs: number | null;
   loading: boolean;
   error: string | null;
 }
@@ -56,8 +60,11 @@ interface GameFlowSnapshotResult {
   stage4ActiveQuestion: Stage4QuestionMetadata | null;
   stage4QuestionIndex: number;
   stage4QuestionCount: number;
+  stage4QuestionOpenedAtMs: number | null;
   stage2ReadingReference: string;
   stage2ReadingPassage: string;
+  competitionMode: "official" | "training";
+  trainingEndsAtMs: number | null;
   error: string | null;
 }
 
@@ -72,8 +79,11 @@ const SERVER_SNAPSHOT: GameFlowStoreState = {
   stage4ActiveQuestion: null,
   stage4QuestionIndex: 0,
   stage4QuestionCount: 15,
+  stage4QuestionOpenedAtMs: null,
   stage2ReadingReference: "يوحنا 15: 1-17",
   stage2ReadingPassage: "",
+  competitionMode: "official",
+  trainingEndsAtMs: null,
   loading: true,
   error: null,
 };
@@ -162,8 +172,11 @@ function parseGameFlowSnapshot(snapshot: DocumentSnapshot): GameFlowSnapshotResu
       stage4ActiveQuestion: null,
       stage4QuestionIndex: 0,
       stage4QuestionCount: 15,
+      stage4QuestionOpenedAtMs: null,
       stage2ReadingReference: "يوحنا 15: 1-17",
       stage2ReadingPassage: "",
+      competitionMode: "official" as const,
+      trainingEndsAtMs: null,
       error: null,
     };
   }
@@ -177,6 +190,10 @@ function parseGameFlowSnapshot(snapshot: DocumentSnapshot): GameFlowSnapshotResu
       currentStage: typeof data.currentStage === "string" ? data.currentStage : "none",
       currentQuestion: typeof data.currentQuestion === "number" ? data.currentQuestion : 0,
       competitionFrozen: data.competitionFrozen === true,
+      competitionMode: parseCompetitionMode(data.competitionMode),
+      trainingEndsAtMs: parseTrainingEndsAtMs(data.trainingEndsAtMs),
+      stage4QuestionOpenedAtMs:
+        typeof data.stage4QuestionOpenedAtMs === "number" ? data.stage4QuestionOpenedAtMs : null,
     },
     stage3ActiveQuestion: parseStage3QuestionMetadata(data.stage3ActiveQuestion),
     stage3OpenedQuestionIds: parseStage3OpenedQuestionIds(data.stage3OpenedQuestionIds),
@@ -189,12 +206,16 @@ function parseGameFlowSnapshot(snapshot: DocumentSnapshot): GameFlowSnapshotResu
     stage4ActiveQuestion: parseStage4QuestionMetadata(data.stage4ActiveQuestion),
     stage4QuestionIndex: typeof data.stage4QuestionIndex === "number" ? data.stage4QuestionIndex : 0,
     stage4QuestionCount: typeof data.stage4QuestionCount === "number" ? data.stage4QuestionCount : 15,
+    stage4QuestionOpenedAtMs:
+      typeof data.stage4QuestionOpenedAtMs === "number" ? data.stage4QuestionOpenedAtMs : null,
     stage2ReadingReference:
       typeof data.stage2ReadingReference === "string" && data.stage2ReadingReference.trim()
         ? data.stage2ReadingReference.trim()
         : "يوحنا 15: 1-17",
     stage2ReadingPassage:
       typeof data.stage2ReadingPassage === "string" ? data.stage2ReadingPassage.trim() : "",
+    competitionMode: parseCompetitionMode(data.competitionMode),
+    trainingEndsAtMs: parseTrainingEndsAtMs(data.trainingEndsAtMs),
     error: null,
   };
 }
@@ -229,8 +250,11 @@ function applyGameFlowSnapshot(
     stage4ActiveQuestion: parsed.stage4ActiveQuestion,
     stage4QuestionIndex: parsed.stage4QuestionIndex,
     stage4QuestionCount: parsed.stage4QuestionCount,
+    stage4QuestionOpenedAtMs: parsed.stage4QuestionOpenedAtMs,
     stage2ReadingReference: parsed.stage2ReadingReference,
     stage2ReadingPassage: parsed.stage2ReadingPassage,
+    competitionMode: parsed.competitionMode,
+    trainingEndsAtMs: parsed.trainingEndsAtMs,
     loading: false,
     error: parsed.error,
   });
@@ -350,6 +374,9 @@ interface UseGameFlowResult {
   stage2ReadingReference: string;
   stage2ReadingPassage: string;
   competitionFrozen: boolean;
+  competitionMode: "official" | "training";
+  trainingEndsAtMs: number | null;
+  stage4QuestionOpenedAtMs: number | null;
   loading: boolean;
   error: string | null;
 }
@@ -382,6 +409,9 @@ export function useGameFlow(): UseGameFlowResult {
     stage2ReadingReference: state.stage2ReadingReference,
     stage2ReadingPassage: state.stage2ReadingPassage,
     competitionFrozen: state.gameFlow?.competitionFrozen === true,
+    competitionMode: state.competitionMode,
+    trainingEndsAtMs: state.trainingEndsAtMs,
+    stage4QuestionOpenedAtMs: state.stage4QuestionOpenedAtMs,
     loading: state.loading,
     error: state.error,
   };

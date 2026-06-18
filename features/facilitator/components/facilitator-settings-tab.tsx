@@ -27,6 +27,12 @@ import {
   type StageQuestionDisplaySettings,
 } from "@/features/facilitator/question-display-settings";
 import type { AdminStageKey } from "@/features/facilitator/facilitator-team-admin";
+import {
+  parseCompetitionMode,
+  parseTrainingEndsAtMs,
+  writeCompetitionMode,
+  type CompetitionMode,
+} from "@/features/facilitator/competition-mode";
 import { CompetitionBootstrapPanel } from "@/features/gameflow/components/competition-bootstrap-panel";
 
 const FIELDS: { key: keyof FacilitatorTimerDurations; label: string }[] = [
@@ -43,6 +49,20 @@ const ORDER_OPTIONS: { value: QuestionOrderMode; label: string }[] = [
   { value: "order", label: "ترتيب الميسر (كما في ملف Excel)" },
   { value: "random", label: "ترتيب عشوائي (ثابت لكل مسابقة)" },
 ];
+
+function msToDatetimeLocal(ms: number): string {
+  const date = new Date(ms);
+  const pad = (value: number) => value.toString().padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function parseDatetimeLocal(value: string): number | null {
+  if (!value) {
+    return null;
+  }
+  const parsed = new Date(value).getTime();
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
 
 export function FacilitatorSettingsTab() {
   const [durations, setDurations] = useState<FacilitatorTimerDurations>(
@@ -66,6 +86,12 @@ export function FacilitatorSettingsTab() {
   const [readingSaved, setReadingSaved] = useState(false);
   const [readingSaving, setReadingSaving] = useState(false);
   const [readingError, setReadingError] = useState<string | null>(null);
+  const [competitionMode, setCompetitionMode] = useState<CompetitionMode>("official");
+  const [trainingEndsAtInput, setTrainingEndsAtInput] = useState("");
+  const [modeDirty, setModeDirty] = useState(false);
+  const [modeSaved, setModeSaved] = useState(false);
+  const [modeSaving, setModeSaving] = useState(false);
+  const [modeError, setModeError] = useState<string | null>(null);
 
   useEffect(() => {
     void fetchQuestionBankMeta().then((meta) => {
@@ -86,8 +112,14 @@ export function FacilitatorSettingsTab() {
           parseQuestionDisplaySettings(data, bankMeta?.bankSizes),
         );
       }
+      if (!modeDirty) {
+        const mode = parseCompetitionMode(data?.competitionMode);
+        setCompetitionMode(mode);
+        const endsAt = parseTrainingEndsAtMs(data?.trainingEndsAtMs);
+        setTrainingEndsAtInput(endsAt ? msToDatetimeLocal(endsAt) : "");
+      }
     });
-  }, [dirty, questionDirty, bankMeta]);
+  }, [dirty, questionDirty, bankMeta, modeDirty]);
 
   function updateField(key: keyof FacilitatorTimerDurations, value: string) {
     setSaved(false);
@@ -151,6 +183,33 @@ export function FacilitatorSettingsTab() {
     }
   }
 
+  async function persistCompetitionMode() {
+    setModeSaving(true);
+    setModeError(null);
+    try {
+      const trainingEndsAtMs =
+        competitionMode === "training" ? parseDatetimeLocal(trainingEndsAtInput) : null;
+
+      if (competitionMode === "training" && !trainingEndsAtMs) {
+        throw new Error("حدّد وقت انتهاء التدريب.");
+      }
+
+      if (competitionMode === "training" && trainingEndsAtMs! <= Date.now()) {
+        throw new Error("وقت انتهاء التدريب يجب أن يكون في المستقبل.");
+      }
+
+      await writeCompetitionMode({ mode: competitionMode, trainingEndsAtMs });
+      setModeDirty(false);
+      setModeSaved(true);
+    } catch (error) {
+      setModeError(
+        error instanceof Error ? error.message : "تعذر حفظ وضع المسابقة.",
+      );
+    } finally {
+      setModeSaving(false);
+    }
+  }
+
   async function persistStage2Reading() {
     setReadingSaving(true);
     setReadingError(null);
@@ -173,6 +232,69 @@ export function FacilitatorSettingsTab() {
   return (
     <div className="space-y-6">
       <CompetitionBootstrapPanel showWhenReady />
+
+      <div className="facilitator-card">
+        <div className="facilitator-card__head">
+          <div>
+            <h3 className="facilitator-card__title">وضع التدريب</h3>
+            <p className="facilitator-card__desc">
+              في وضع التدريب لا يُنشأ سجل نهائي ولا تُؤرشف الأسئلة عند الاستيراد.
+              عند انتهاء الوقت المحدّد تُمسح بيانات المسابقة تلقائياً مع الإبقاء على
+              الفرق وبنك الأسئلة.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="facilitator-field">
+            <span className="facilitator-field__label">نوع المسابقة</span>
+            <select
+              className="facilitator-input"
+              value={competitionMode}
+              onChange={(event) => {
+                setModeSaved(false);
+                setModeDirty(true);
+                setCompetitionMode(event.target.value as CompetitionMode);
+              }}
+            >
+              <option value="official">مسابقة رسمية</option>
+              <option value="training">تدريب</option>
+            </select>
+          </label>
+
+          {competitionMode === "training" ? (
+            <label className="facilitator-field">
+              <span className="facilitator-field__label">وقت انتهاء التدريب</span>
+              <input
+                type="datetime-local"
+                className="facilitator-input"
+                value={trainingEndsAtInput}
+                onChange={(event) => {
+                  setModeSaved(false);
+                  setModeDirty(true);
+                  setTrainingEndsAtInput(event.target.value);
+                }}
+              />
+            </label>
+          ) : null}
+        </div>
+
+        <div className="facilitator-timer__buttons mt-4">
+          <button
+            type="button"
+            className="facilitator-btn facilitator-btn--primary"
+            onClick={() => void persistCompetitionMode()}
+            disabled={modeSaving}
+          >
+            <Save className="h-4 w-4" aria-hidden />
+            {modeSaving ? "جارٍ الحفظ..." : "حفظ وضع المسابقة"}
+          </button>
+        </div>
+        {modeSaved && !modeDirty ? (
+          <p className="facilitator-inline-success">تم حفظ وضع المسابقة.</p>
+        ) : null}
+        {modeError ? <p className="facilitator-inline-error">{modeError}</p> : null}
+      </div>
 
       <div className="facilitator-card">
         <div className="facilitator-card__head">

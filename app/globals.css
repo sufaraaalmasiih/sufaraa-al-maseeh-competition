@@ -2358,7 +2358,297 @@
     width: 100%;
   }
 
-  .stage3-selection-pill {
+  .competition-ranking-panel--table {
+    @apply border-0 bg-transparent p-0 shadow-none;
+  }
+
+  .competition-ranking-panel--table .competition-ranking-scroll--cards {
+    @apply gap-2 p-0;
+  }
+
+  .competition-ranking-table {
+    @apply w-full text-right;
+  }
+
+  .competition-ranking-table__header {
+    @apply mb-4 flex flex-col gap-1 px-1;
+  }
+
+  .competition-ranking-table__header-main {
+    @apply flex items-center gap-2;
+  }
+
+  .competition-ranking-table__live-dot {
+    @apply h-2 w-2 shrink-0 rounded-full bg-[#4F8A10];
+    animation: competition-ranking-pulse 1.8s ease-in-out infinite;
+  }
+
+  @keyframes competition-ranking-pulse {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.55;
+      transform: scale(0.92);
+    }
+  }
+
+  .competition-ranking-table__title {
+    @apply text-lg font-black text-[#143A5A] sm:text-xl;
+  }
+
+  .competition-ranking-table__stats {
+    @apply text-sm font-semibold;
+    color: rgba(20, 58, 90, 0.55);
+  }
+
+  .competition-ranking-table__subtitle {
+    @apply text-sm font-semibold;
+    color: rgba(20, 58, 90, 0.48);
+  }
+
+  .competition-ranking-table__grid-head,
+  .competition-ranking-table__row {
+    @apply grid items-center gap-3 px-4;
+  }
+
+  .competition-ranking-table__grid-head {
+    @apply py-2 text-[11px] font-bold uppercase tracking-wide;
+    color: rgba(20, 58, 90, 0.48);
+    grid-template-columns: 3.5rem minmax(0, 1.6fr) minmax(0, 1fr) 8.5rem 4.5rem 4.5rem;
+  }
+
+  .competition-ranking-table__grid-head--full {
+    grid-template-columns: 3.5rem minmax(0, 1.5fr) minmax(0, 1fr) 8.5rem 4.5rem 5rem;
+  }
+
+  .competition-ranking-table__grid-head--full-extra {
+    grid-template-columns: 3.5rem minmax(0, 1.35fr) minmax(0, 0.95fr) 8.5rem 4.5rem 4.5rem 5rem;
+  }
+
+  .competition-ranking-table__grid-head--compact {
+    grid-template-columns: 3.5rem minmax(0, 1fr) 9rem 5rem;
+  }
+
+  .competition-ranking-table__grid-head--compact-extra {
+    grid-template-columns: 3.5rem minmax(0, 1fr) 8.5rem 4.5rem 5rem;
+  }
+
+  .competition-ranking-table__rows {
+    @apply flex flex-col gap-2;
+  }
+
+  .competition-ranking-table__row-wrap {
+    @apply min-w-0;
+  }
+
+  .competition-ranking-table__row {
+    @apply relative overflow-hidden rounded-2xl border px-4 py-3.5;
+    border-color: rgba(35, 136, 196, 0.14);
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 8px 22px rgba(20, 58, 90, 0.05);
+    grid-template-columns: 3.5rem minmax(0, 1.6fr) minmax(0, 1fr) 8.5rem 4.5rem 4.5rem;
+  }
+
+  .competition-ranking-table__row--full {
+    grid-template-columns: 3.5rem minmax(0, 1.5fr) minmax(0, 1fr) 8.5rem 4.5rem 5rem;
+  }
+
+  .competition-ranking-table__row--full-extra {
+    grid-template-columns: 3.5rem minmax(0, 1.35fr) minmax(0, 0.95fr) 8.5rem 4.5rem 4.5rem 5rem;
+  }
+
+  .competition-ranking-table__row--compact {
+    grid-template-columns: 3.5rem minmax(0, 1fr) 9rem 5rem;
+  }
+
+  .competition-ranking-table__row--compact-extra {
+    grid-template-columns: 3.5rem minmax(0, 1fr) 8.5rem 4.5rem 5rem;
+  }
+
+  .competition-ranking-table__row-glow {
+    @apply pointer-events-none absolute inset-y-0 left-0 w-[28%];
+    background: linear-gradient(90deg, rgba(35, 136, 196, 0.08) 0%, transparent 100%);
+  }
+
+  .competition-ranking-table__row-glow--gold {
+    background: linear-gradient(90deg, rgba(212, 160, 23, 0.14) 0%, transparent 100%);
+  }
+
+  .competition-ranking-table__row-glow--silver {
+    background: linear-gradient(90deg, rgba(158, 179, 194, 0.16) 0%, transparent 100%);
+  }
+
+  .competition-ranking-table__row-glow--bronze {
+    background: linear-gradient(90deg, rgba(184, 115, 51, 0.14) 0%, transparent 100%);
+  }
+
+  .competition-ranking-table__rank {
+    @apply text-2xl font-black leading-none;
+    color: rgba(20, 58, 90, 0.34);
+  }
+
+  .competition-ranking-table__row--gold .competition-ranking-table__rank {
+    color: #9a7209;
+  }
+
+  .competition-ranking-table__row--silver .competition-ranking-table__rank {
+    color: #60788a;
+  }
+
+  .competition-ranking-table__row--bronze .competition-ranking-table__rank {
+    color: #9a5b24;
+  }
+
+  .competition-ranking-table__team {
+    @apply relative z-[1] flex min-w-0 items-center gap-3;
+  }
+
+  .competition-ranking-table__team-copy {
+    @apply min-w-0 flex-1;
+  }
+
+  .competition-ranking-table__team-name {
+    @apply truncate text-base font-black text-[#143A5A] sm:text-lg;
+  }
+
+  .competition-ranking-table__team-meta {
+    @apply mt-0.5 truncate text-xs font-semibold sm:text-sm;
+    color: rgba(20, 58, 90, 0.55);
+  }
+
+  .competition-ranking-table__location {
+    @apply relative z-[1] flex min-w-0 items-center gap-2 text-sm font-semibold text-[#143A5A];
+  }
+
+  .competition-ranking-table__location-icon {
+    @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-full border;
+    border-color: rgba(35, 136, 196, 0.16);
+    background: rgba(243, 250, 255, 0.95);
+    color: #2388c4;
+  }
+
+  .competition-ranking-table__score-bars,
+  .competition-ranking-table__total,
+  .competition-ranking-table__extra {
+    @apply relative z-[1];
+  }
+
+  .competition-ranking-table__bars {
+    @apply flex items-center gap-2;
+  }
+
+  .competition-ranking-table__bars-track {
+    @apply flex gap-1;
+  }
+
+  .competition-ranking-table__bar {
+    @apply h-5 w-1.5 rounded-full border;
+    border-color: rgba(35, 136, 196, 0.12);
+    background: rgba(35, 136, 196, 0.08);
+  }
+
+  .competition-ranking-table__bar--active {
+    background: rgba(35, 136, 196, 0.58);
+    border-color: rgba(35, 136, 196, 0.22);
+  }
+
+  .competition-ranking-table__bar--gold {
+    background: linear-gradient(180deg, #f5d76e 0%, #d4a017 100%);
+    border-color: rgba(212, 160, 23, 0.28);
+  }
+
+  .competition-ranking-table__bar--silver {
+    background: linear-gradient(180deg, #d8e2ea 0%, #9eb3c2 100%);
+    border-color: rgba(158, 179, 194, 0.28);
+  }
+
+  .competition-ranking-table__bar--bronze {
+    background: linear-gradient(180deg, #e2b48a 0%, #b87333 100%);
+    border-color: rgba(184, 115, 51, 0.28);
+  }
+
+  .competition-ranking-table__bars-value {
+    @apply min-w-[2rem] text-sm font-black text-[#2388C4];
+  }
+
+  .competition-ranking-table__total,
+  .competition-ranking-table__extra {
+    @apply text-base font-black text-[#143A5A];
+  }
+
+  .competition-ranking-table__tier {
+    @apply relative z-[1] inline-flex min-w-[4.75rem] items-center justify-center rounded-xl border px-2.5 py-1.5 text-xs font-bold;
+  }
+
+  .competition-ranking-table__tier--gold {
+    color: #9a7209;
+    border-color: rgba(212, 160, 23, 0.28);
+    background: rgba(255, 247, 223, 0.92);
+  }
+
+  .competition-ranking-table__tier--silver {
+    color: #60788a;
+    border-color: rgba(158, 179, 194, 0.28);
+    background: rgba(243, 250, 255, 0.92);
+  }
+
+  .competition-ranking-table__tier--bronze {
+    color: #9a5b24;
+    border-color: rgba(184, 115, 51, 0.28);
+    background: rgba(255, 244, 232, 0.92);
+  }
+
+  .competition-ranking-table__tier--active {
+    color: #1f7eb5;
+    border-color: rgba(35, 136, 196, 0.22);
+    background: rgba(233, 246, 252, 0.92);
+  }
+
+  @media (max-width: 900px) {
+    .competition-ranking-table__grid-head {
+      @apply hidden;
+    }
+
+    .competition-ranking-table__row,
+    .competition-ranking-table__row--full,
+    .competition-ranking-table__row--full-extra,
+    .competition-ranking-table__row--compact,
+    .competition-ranking-table__row--compact-extra {
+      grid-template-columns: 3rem minmax(0, 1fr) auto;
+      grid-template-areas:
+        "rank team tier"
+        "rank score tier";
+      row-gap: 0.65rem;
+    }
+
+    .competition-ranking-table__rank {
+      grid-area: rank;
+      @apply self-center text-xl;
+    }
+
+    .competition-ranking-table__team {
+      grid-area: team;
+    }
+
+    .competition-ranking-table__location,
+    .competition-ranking-table__total,
+    .competition-ranking-table__extra {
+      @apply hidden;
+    }
+
+    .competition-ranking-table__score-bars {
+      grid-area: score;
+    }
+
+    .competition-ranking-table__tier {
+      grid-area: tier;
+      @apply self-center;
+    }
+  }
+
     @apply mx-auto mt-2 w-fit rounded-full px-4 py-2 text-center text-sm font-black;
     color: #0f5f8f;
     background: rgba(243, 250, 255, 0.95);

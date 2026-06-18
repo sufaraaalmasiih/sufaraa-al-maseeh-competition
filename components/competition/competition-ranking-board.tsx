@@ -2,8 +2,10 @@
 
 import { EmptyState } from "@/components/layout/empty-state";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
-import { AnimatedRankingRow } from "@/components/motion/animated-ranking-row";
-import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
+import {
+  CompetitionRankingTable,
+  type CompetitionRankingTableEntry,
+} from "@/components/competition/competition-ranking-table";
 import { cn } from "@/lib/utils";
 
 export interface CompetitionRankingEntry {
@@ -15,6 +17,7 @@ export interface CompetitionRankingEntry {
   logoUrl?: string | null;
   totalScore?: number;
   meta?: string;
+  extraValue?: string | number | null;
 }
 
 interface CompetitionRankingBoardProps {
@@ -23,44 +26,46 @@ interface CompetitionRankingBoardProps {
   error?: string | null;
   scoreLabel?: string;
   animate?: boolean;
-  variant?: "audience" | "team" | "embedded";
+  variant?: "audience" | "team" | "embedded" | "facilitator";
   emptyTitle?: string;
   className?: string;
+  title?: string;
+  subtitle?: string;
+  extraColumnLabel?: string;
+  showGovernorate?: boolean;
+  showExtraColumn?: boolean;
   /** Skip outer panel wrapper when parent already provides layout chrome. */
   bare?: boolean;
 }
 
-function rankAccentClass(rank: number): string | undefined {
-  if (rank === 1) return "competition-ranking-row--gold";
-  if (rank === 2) return "competition-ranking-row--silver";
-  if (rank === 3) return "competition-ranking-row--bronze";
-  return undefined;
-}
-
-function buildMeta(team: CompetitionRankingEntry): string {
-  if (team.meta) {
-    return team.meta;
-  }
-
-  const parts: string[] = [];
-  if (team.governorate) {
-    parts.push(team.governorate);
-  }
-  if (typeof team.totalScore === "number") {
-    parts.push(`المجموع: ${team.totalScore}`);
-  }
-  return parts.join(" · ") || "—";
+function toTableEntries(teams: CompetitionRankingEntry[]): CompetitionRankingTableEntry[] {
+  return teams.map((team) => ({
+    teamId: team.teamId,
+    teamName: team.teamName,
+    rank: team.rank,
+    stageScore: team.stageScore,
+    governorate: team.governorate,
+    logoUrl: team.logoUrl,
+    totalScore: team.totalScore,
+    meta: team.meta,
+    extraValue: team.extraValue,
+  }));
 }
 
 export function CompetitionRankingBoard({
   teams,
   loading = false,
   error = null,
-  scoreLabel = "نقطة",
+  scoreLabel = "نقاط المرحلة",
   animate = false,
   variant = "audience",
   emptyTitle = "بانتظار تسجيل الفرق",
   className,
+  title,
+  subtitle,
+  extraColumnLabel,
+  showGovernorate = true,
+  showExtraColumn = false,
   bare = false,
 }: CompetitionRankingBoardProps) {
   if (loading) {
@@ -75,86 +80,63 @@ export function CompetitionRankingBoard({
     return <EmptyState title={emptyTitle} />;
   }
 
+  const compact = variant === "audience" || variant === "team" || variant === "embedded";
   const densityClass =
     teams.length > 12
       ? "competition-ranking-scroll--dense"
       : teams.length > 6
         ? "competition-ranking-scroll--medium"
         : "competition-ranking-scroll--comfortable";
-  const maxStageScore = teams.reduce(
-    (max, team) => (team.stageScore > max ? team.stageScore : max),
-    0,
-  );
 
-  const list = (
-    <div
-      className={cn(
-        "competition-ranking-scroll competition-ranking-scroll--cards competition-ranking-scroll--live",
-        densityClass,
-        bare && className,
-      )}
-      role="list"
-      aria-label="ترتيب الفرق"
-    >
-      {teams.map((team, index) => (
-        <AnimatedRankingRow
-          key={team.teamId}
-          index={index}
-          animate={animate}
-          variant={variant === "audience" ? "audience" : "default"}
-          className={cn(
-            "competition-ranking-row competition-ranking-row--card competition-ranking-row--with-logo",
-            rankAccentClass(team.rank),
-          )}
-        >
-          <span className="competition-ranking-row__rank">{team.rank}</span>
-          <TeamLogoBadge
-            className="competition-ranking-row__logo"
-            logoUrl={team.logoUrl}
-            teamName={team.teamName}
-            variant="hud"
-          />
-          <div className="competition-ranking-row__team">
-            <p className="competition-ranking-row__name">{team.teamName}</p>
-            <p className="competition-ranking-row__meta">{buildMeta(team)}</p>
-            <div className="competition-ranking-row__bar-track" aria-hidden>
-              <span
-                className="competition-ranking-row__bar-fill"
-                style={{
-                  width:
-                    maxStageScore <= 0
-                      ? "0%"
-                      : `${Math.max(
-                          6,
-                          Math.round((team.stageScore / maxStageScore) * 100),
-                        )}%`,
-                }}
-              />
-            </div>
-          </div>
-          <div className="competition-ranking-row__score">
-            <span className="competition-ranking-row__score-label">{scoreLabel}</span>
-            <span className="competition-ranking-row__score-value">{team.stageScore}</span>
-          </div>
-        </AnimatedRankingRow>
-      ))}
-    </div>
+  const table = (
+    <CompetitionRankingTable
+      animate={animate || variant === "team"}
+      className={cn(bare && className)}
+      compact={compact}
+      extraColumnLabel={extraColumnLabel}
+      scoreLabel={scoreLabel}
+      showExtraColumn={showExtraColumn}
+      showGovernorate={showGovernorate}
+      subtitle={subtitle}
+      teams={toTableEntries(teams)}
+      title={title}
+    />
   );
 
   if (bare) {
-    return list;
+    return (
+      <div
+        className={cn(
+          "competition-ranking-scroll competition-ranking-scroll--cards competition-ranking-scroll--live",
+          densityClass,
+        )}
+        role="list"
+        aria-label="ترتيب الفرق"
+      >
+        {table}
+      </div>
+    );
   }
 
   return (
     <div
       className={cn(
-        "competition-ranking-panel competition-ranking-panel--live",
+        "competition-ranking-panel competition-ranking-panel--live competition-ranking-panel--table",
         variant === "embedded" && "competition-ranking-panel--embedded",
         variant === "audience" && "competition-ranking-panel--audience",
         className,
       )}
     >
-      {list}
+      <div
+        className={cn(
+          "competition-ranking-scroll competition-ranking-scroll--cards competition-ranking-scroll--live",
+          densityClass,
+        )}
+        role="list"
+        aria-label="ترتيب الفرق"
+      >
+        {table}
+      </div>
     </div>
   );
 }

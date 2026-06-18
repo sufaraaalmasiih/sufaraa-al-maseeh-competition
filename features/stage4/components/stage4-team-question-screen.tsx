@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { EmptyState } from "@/components/layout/empty-state";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
 import { Stage1QuestionCard } from "@/features/stage1/components/stage1-question-card";
@@ -28,8 +29,12 @@ function formatSaveError(error: unknown): string {
 }
 
 export function Stage4TeamQuestionScreen() {
-  const { stage4ActiveQuestion, stage4QuestionIndex, stage4QuestionCount, status } =
-    useGameFlow();
+  const {
+    stage4ActiveQuestion,
+    stage4QuestionIndex,
+    stage4QuestionCount,
+    status,
+  } = useGameFlow();
   const { answerState, loading: answerLoading } = useStage4MyAnswer(
     stage4ActiveQuestion?.id ?? null,
   );
@@ -38,6 +43,19 @@ export function Stage4TeamQuestionScreen() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const sawQuestionRef = useRef(false);
+
+  const questionOpen = status === "stage4_question_open";
+
+  useEffect(() => {
+    sawQuestionRef.current = false;
+  }, [stage4QuestionIndex]);
+
+  useEffect(() => {
+    if (stage4ActiveQuestion) {
+      sawQuestionRef.current = true;
+    }
+  }, [stage4ActiveQuestion]);
 
   const flexibleQuestion = useMemo((): Stage1MockQuestion | null => {
     if (!stage4ActiveQuestion || !isStage4FlexibleType(stage4ActiveQuestion.type)) {
@@ -70,7 +88,15 @@ export function Stage4TeamQuestionScreen() {
     return <LoadingState variant="page" />;
   }
 
-  const closed = status !== "stage4_question_open";
+  if (questionOpen && !stage4ActiveQuestion) {
+    return <LoadingState variant="page" waitingComponent="Stage4TeamQuestionScreen:question" />;
+  }
+
+  if (!questionOpen && !sawQuestionRef.current && !submitted && !answerState?.confirmed) {
+    return <EmptyState title="لم يظهر السؤال" description="بانتظار توجيه الميسر" />;
+  }
+
+  const closed = !questionOpen;
 
   async function submitAnswer(answer: string) {
     if (!stage4ActiveQuestion || saving || submitted || closed) {

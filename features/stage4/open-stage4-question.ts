@@ -52,6 +52,7 @@ export async function openStage4Question() {
       status: "stage4_question_open",
       currentStage: "stage4",
       stage4ActiveQuestion: question,
+      stage4QuestionOpenedAtMs: now,
       stage4RevealStartedAt: 0,
       updatedAt: serverTimestamp(),
     });

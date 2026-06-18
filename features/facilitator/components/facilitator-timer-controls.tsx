@@ -108,20 +108,21 @@ export function FacilitatorTimerControls({
       </>
     ) : null;
 
-  const transportButtons =
-    timer?.active && !timer.paused ? (
-      <button
-        type="button"
-        className="facilitator-btn facilitator-btn--outline flow-timer__btn flow-timer__btn--transport"
-        disabled={pending !== null}
-        onClick={() => void run("pause", pauseTimer)}
-        title="إيقاف المؤقت مؤقتاً"
-      >
-        <Pause className="flow-timer__btn-icon" aria-hidden />
-        <span>{pending === "pause" ? "..." : "توقف"}</span>
-      </button>
-    ) : timer?.active && timer.paused ? (
-      <>
+  const transportButtons = timer?.active ? (
+    <>
+      {!timer.paused && !isExpired ? (
+        <button
+          type="button"
+          className="facilitator-btn facilitator-btn--outline flow-timer__btn flow-timer__btn--transport"
+          disabled={pending !== null}
+          onClick={() => void run("pause", pauseTimer)}
+          title="إيقاف المؤقت مؤقتاً"
+        >
+          <Pause className="flow-timer__btn-icon" aria-hidden />
+          <span>{pending === "pause" ? "..." : "توقف"}</span>
+        </button>
+      ) : null}
+      {timer.paused ? (
         <button
           type="button"
           className="facilitator-btn facilitator-btn--primary flow-timer__btn flow-timer__btn--transport"
@@ -132,6 +133,8 @@ export function FacilitatorTimerControls({
           <Play className="flow-timer__btn-icon" aria-hidden />
           <span>{pending === "resume" ? "..." : "إكمال"}</span>
         </button>
+      ) : null}
+      {timer.paused || isExpired ? (
         <button
           type="button"
           className="facilitator-btn facilitator-btn--outline flow-timer__btn flow-timer__btn--transport"
@@ -142,8 +145,9 @@ export function FacilitatorTimerControls({
           <RotateCcw className="flow-timer__btn-icon" aria-hidden />
           <span>{pending === "reset" ? "..." : "ضبط"}</span>
         </button>
-      </>
-    ) : null;
+      ) : null}
+    </>
+  ) : null;
 
   if (inline) {
     const isLive = Boolean(timer?.active && !timer.paused);

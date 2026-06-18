@@ -33,6 +33,7 @@ import type { FullQuestionBankPayload, QuestionBankArchiveRecord } from "@/featu
 import { useStage1BankEditor } from "@/features/facilitator/stage1-question-bank-store";
 import type { WorkbookValidationReport } from "@/features/facilitator/question-bank-workbook-validation";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
+import { isTrainingMode } from "@/features/facilitator/competition-mode";
 
 const EMPTY_BANK_PAYLOAD: FullQuestionBankPayload = {
   stage1: [],
@@ -279,7 +280,8 @@ function ArchiveRow({
 
 export function FacilitatorQuestionBankTab() {
   useQuestionBankRuntimeSync();
-  const { status } = useGameFlow();
+  const { status, competitionMode } = useGameFlow();
+  const trainingMode = isTrainingMode(competitionMode);
   const { questions, loading } = useStage1BankEditor();
   const [feedback, setFeedback] = useState<
     { kind: "success" | "error"; text: string } | null
@@ -329,19 +331,23 @@ export function FacilitatorQuestionBankTab() {
         return;
       }
 
-      await backupCurrentQuestionBank("نسخة احتياطية قبل الاستيراد");
+      if (!trainingMode) {
+        await backupCurrentQuestionBank("نسخة احتياطية قبل الاستيراد");
+      }
 
       await saveFullQuestionBank(payload);
 
-      const resolvedName =
-        archiveName.trim() ||
-        (governorate.trim() ? `أسئلة ${governorate.trim()}` : file.name.replace(/\.[^.]+$/, ""));
-      await createQuestionBankArchive({
-        name: resolvedName,
-        governorate: governorate.trim(),
-        sourceFileName: file.name,
-        payload,
-      });
+      if (!trainingMode) {
+        const resolvedName =
+          archiveName.trim() ||
+          (governorate.trim() ? `أسئلة ${governorate.trim()}` : file.name.replace(/\.[^.]+$/, ""));
+        await createQuestionBankArchive({
+          name: resolvedName,
+          governorate: governorate.trim(),
+          sourceFileName: file.name,
+          payload,
+        });
+      }
 
       setFeedback({
         kind: "success",

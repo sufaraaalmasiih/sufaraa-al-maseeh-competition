@@ -1,10 +1,11 @@
 import { getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
-import { MAIN_COMPETITION_ID, teamStateRef } from "@/firebase/firestore";
+import { gameFlowRef, MAIN_COMPETITION_ID, teamStateRef } from "@/firebase/firestore";
 import { appendTeamAdminAuditLog } from "@/features/facilitator/facilitator-team-admin-audit";
 import {
   parseTeamFacilitatorOverride,
   type TeamFacilitatorOverride,
 } from "@/features/facilitator/team-control-types";
+import { setStage3OwnerTeam } from "@/features/stage3/set-stage3-owner";
 import { getStage4MockQuestionByIndex } from "@/features/stage4/stage4-mock-questions";
 import { STAGE3_BOARD_FIELDS } from "@/features/stage3/stage3-board-data";
 import { boardQuestionToMetadata } from "@/features/stage3/stage3-question-metadata";
@@ -79,11 +80,24 @@ export async function setTeamFacilitatorOverride(
     }
   }
 
+  if (input.status === "stage3_board") {
+    override.stage3OwnerTeamId = input.teamId;
+    override.stage3OwnerTeamName = input.teamName;
+  }
+
   await updateDoc(ref, {
     facilitatorOverride: override,
     ...progressPatch,
     updatedAt: serverTimestamp(),
   });
+
+  if (input.status === "stage3_board") {
+    const gameFlowSnapshot = await getDoc(gameFlowRef);
+    const globalStatus = gameFlowSnapshot.data()?.status;
+    if (globalStatus === "stage3_board" || globalStatus === "stage3_intro") {
+      await setStage3OwnerTeam(input.teamId, input.teamName);
+    }
+  }
 
   await appendTeamAdminAuditLog({
     type: "team_override",

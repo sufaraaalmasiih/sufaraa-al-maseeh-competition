@@ -13,6 +13,7 @@ import { startStage3OfficialFlow } from "@/features/stage3/start-stage3-official
 import { Stage3SelectionTimeoutBanner } from "@/features/stage3/components/stage3-selection-timeout-banner";
 import { STAGE3_NAME } from "@/features/stage3/stage3-constants";
 import type { Stage3SelectionTimeoutNotice } from "@/features/stage3/stage3-selection-timeout-notice";
+import { createAsyncQueue } from "@/lib/queue-async";
 
 interface FacilitatorTeamOption {
   teamId: string;
@@ -39,10 +40,11 @@ export function Stage3FacilitatorBoardPanel({
   const { timer, remainingSeconds, isExpired } = useCompetitionTimer();
   const [selectedOwnerTeamId, setSelectedOwnerTeamId] = useState(ownerTeamId ?? "");
   const [starting, setStarting] = useState(false);
-  const [rotating, setRotating] = useState(false);
-  const [savingOwner, setSavingOwner] = useState(false);
+  const [pendingRotateCount, setPendingRotateCount] = useState(0);
+  const [pendingOwnerSaveCount, setPendingOwnerSaveCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const selectionTimeoutAttemptedRef = useRef(false);
+  const actionQueueRef = useRef(createAsyncQueue());
 
   useEffect(() => {
     setSelectedOwnerTeamId(ownerTeamId ?? "");
@@ -87,35 +89,35 @@ export function Stage3FacilitatorBoardPanel({
     }
   }
 
-  async function handleRotateTurn() {
-    setRotating(true);
+  function handleRotateTurn() {
     setError(null);
-
-    try {
-      await advanceStage3Turn({ rotateOwner: true });
-    } catch {
-      setError("تعذر تغيير الدور.");
-    } finally {
-      setRotating(false);
-    }
+    setPendingRotateCount((count) => count + 1);
+    void actionQueueRef
+      .current(() => advanceStage3Turn({ rotateOwner: true }))
+      .catch(() => {
+        setError("تعذر تغيير الدور.");
+      })
+      .finally(() => {
+        setPendingRotateCount((count) => Math.max(0, count - 1));
+      });
   }
 
-  async function handleSaveOwnerOverride() {
+  function handleSaveOwnerOverride() {
     if (!selectedOwnerTeam) {
       setError("اختر فريقاً للتدخل اليدوي.");
       return;
     }
 
-    setSavingOwner(true);
     setError(null);
-
-    try {
-      await setStage3OwnerTeam(selectedOwnerTeam.teamId, selectedOwnerTeam.teamName);
-    } catch {
-      setError("تعذر حفظ تدخل الميسّر.");
-    } finally {
-      setSavingOwner(false);
-    }
+    setPendingOwnerSaveCount((count) => count + 1);
+    void actionQueueRef
+      .current(() => setStage3OwnerTeam(selectedOwnerTeam.teamId, selectedOwnerTeam.teamName))
+      .catch(() => {
+        setError("تعذر حفظ تدخل الميسّر.");
+      })
+      .finally(() => {
+        setPendingOwnerSaveCount((count) => Math.max(0, count - 1));
+      });
   }
 
   return (
@@ -147,10 +149,9 @@ export function Stage3FacilitatorBoardPanel({
           <Button
             type="button"
             variant="outline"
-            disabled={rotating}
             onClick={() => void handleRotateTurn()}
           >
-            {rotating ? "جاري التغيير..." : "تغيير الدور (يدوي)"}
+            {pendingRotateCount > 0 ? "جاري التغيير..." : "تغيير الدور (يدوي)"}
           </Button>
         </div>
 
@@ -180,10 +181,10 @@ export function Stage3FacilitatorBoardPanel({
             <Button
               type="button"
               variant="outline"
-              disabled={!selectedOwnerTeamId || savingOwner}
+              disabled={!selectedOwnerTeamId}
               onClick={() => void handleSaveOwnerOverride()}
             >
-              {savingOwner ? "جاري الحفظ..." : "حفظ التدخل"}
+              {pendingOwnerSaveCount > 0 ? "جاري الحفظ..." : "حفظ التدخل"}
             </Button>
           </div>
         </details>

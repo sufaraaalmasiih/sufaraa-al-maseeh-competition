@@ -27,6 +27,7 @@ import type { Stage3QuestionMetadata } from "@/features/stage3/stage3-question-t
 import type { Stage3SelectionTimeoutNotice } from "@/features/stage3/stage3-selection-timeout-notice";
 import { useStage3ActiveAnswers } from "@/features/stage3/use-stage3-active-answers";
 import type { GameFlowStatus } from "@/types";
+import { createAsyncQueue } from "@/lib/queue-async";
 
 interface Stage3FacilitatorUnifiedPanelProps {
   status: GameFlowStatus;
@@ -134,8 +135,8 @@ function Stage3FacilitatorToolbar({
   const { timer, isExpired } = useCompetitionTimer();
   const [selectedOwnerTeamId, setSelectedOwnerTeamId] = useState(ownerTeamId ?? "");
   const [starting, setStarting] = useState(false);
-  const [rotating, setRotating] = useState(false);
-  const [savingOwner, setSavingOwner] = useState(false);
+  const [pendingRotateCount, setPendingRotateCount] = useState(0);
+  const [pendingOwnerSaveCount, setPendingOwnerSaveCount] = useState(0);
   const [closing, setClosing] = useState(false);
   const [revealing, setRevealing] = useState(false);
   const [returning, setReturning] = useState(false);
@@ -144,6 +145,7 @@ function Stage3FacilitatorToolbar({
   const selectionTimeoutAttemptedRef = useRef(false);
   const autoRevealAttemptedRef = useRef(false);
   const autoReturnAttemptedRef = useRef(false);
+  const actionQueueRef = useRef(createAsyncQueue());
 
   const officialStarted = Boolean(ownerTeamId);
   const isBoard = status === "stage3_board";
@@ -244,34 +246,36 @@ function Stage3FacilitatorToolbar({
     }
   }
 
-  async function handleRotateTurn() {
-    setRotating(true);
+  function handleRotateTurn() {
     setError(null);
-    try {
-      await advanceStage3Turn({ rotateOwner: true });
-    } catch {
-      setError("تعذر تغيير الدور.");
-    } finally {
-      setRotating(false);
-    }
+    setPendingRotateCount((count) => count + 1);
+    void actionQueueRef
+      .current(() => advanceStage3Turn({ rotateOwner: true }))
+      .catch(() => {
+        setError("تعذر تغيير الدور.");
+      })
+      .finally(() => {
+        setPendingRotateCount((count) => Math.max(0, count - 1));
+      });
   }
 
-  async function handleSaveOwnerOverride() {
+  function handleSaveOwnerOverride() {
     const selected = teams.find((team) => team.teamId === selectedOwnerTeamId);
     if (!selected) {
       setError("اختر فريقاً للتدخل اليدوي.");
       return;
     }
 
-    setSavingOwner(true);
     setError(null);
-    try {
-      await setStage3OwnerTeam(selected.teamId, selected.teamName);
-    } catch {
-      setError("تعذر حفظ تدخل الميسّر.");
-    } finally {
-      setSavingOwner(false);
-    }
+    setPendingOwnerSaveCount((count) => count + 1);
+    void actionQueueRef
+      .current(() => setStage3OwnerTeam(selected.teamId, selected.teamName))
+      .catch(() => {
+        setError("تعذر حفظ تدخل الميسّر.");
+      })
+      .finally(() => {
+        setPendingOwnerSaveCount((count) => Math.max(0, count - 1));
+      });
   }
 
   async function handleCloseAnswers() {
@@ -347,10 +351,9 @@ function Stage3FacilitatorToolbar({
             <button
               type="button"
               className="facilitator-btn facilitator-btn--outline"
-              disabled={rotating}
               onClick={() => void handleRotateTurn()}
             >
-              {rotating ? "جاري التغيير..." : "تغيير الدور"}
+              {pendingRotateCount > 0 ? "جاري التغيير..." : "تغيير الدور"}
             </button>
             <button
               type="button"
@@ -413,10 +416,10 @@ function Stage3FacilitatorToolbar({
           <button
             type="button"
             className="facilitator-btn facilitator-btn--outline"
-            disabled={!selectedOwnerTeamId || savingOwner}
+            disabled={!selectedOwnerTeamId}
             onClick={() => void handleSaveOwnerOverride()}
           >
-            {savingOwner ? "جاري الحفظ..." : "حفظ التدخل"}
+            {pendingOwnerSaveCount > 0 ? "جاري الحفظ..." : "حفظ التدخل"}
           </button>
         </div>
       ) : null}

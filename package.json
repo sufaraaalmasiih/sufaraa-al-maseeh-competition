@@ -7,7 +7,7 @@
     "dev:clean": "node -e \"const fs=require('fs');['.next','.next-swc-cache'].forEach((d)=>fs.rmSync(d,{recursive:true,force:true}));\" && npm run dev",
     "build": "set NEXT_TEST_WASM=1&& set NEXT_TEST_WASM_DIR=node_modules\\@next\\swc-wasm-nodejs&& set NEXT_SWC_CACHE_DIR=.next-swc-cache&& next build",
     "build:netlify": "next build",
-    "start": "next start",
+    "start": "set NEXT_TEST_WASM=1&& set NEXT_TEST_WASM_DIR=node_modules\\@next\\swc-wasm-nodejs&& set NEXT_SWC_CACHE_DIR=.next-swc-cache&& next start",
     "lint": "set NEXT_TEST_WASM=1&& set NEXT_TEST_WASM_DIR=node_modules\\@next\\swc-wasm-nodejs&& set NEXT_SWC_CACHE_DIR=.next-swc-cache&& next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -19,7 +19,7 @@
     "firebase:deploy:rules": "npx firebase-tools deploy --only firestore:rules --project sufaraaalmasiih-53478",
     "firebase:deploy:apphosting": "npx firebase-tools deploy --only apphosting:sufaraa-web --project sufaraaalmasiih-53478",
     "firebase:setup:apphosting": "powershell -ExecutionPolicy Bypass -File scripts/setup-firebase-apphosting.ps1",
-    "serve:private": "npm run build && next start -p 3000 -H 0.0.0.0",
+    "serve:private": "npm run build && set NEXT_TEST_WASM=1&& set NEXT_TEST_WASM_DIR=node_modules\\@next\\swc-wasm-nodejs&& set NEXT_SWC_CACHE_DIR=.next-swc-cache&& next start -p 3000 -H 0.0.0.0",
     "firebase:seed": "node scripts/seed-firestore-bootstrap.mjs"
   },
   "dependencies": {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ErrorState } from "@/components/layout/state-view";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
 import { useStage1Ranking } from "@/features/stage1/use-stage1-ranking";
@@ -10,11 +10,17 @@ import { Stage4WaitingScreen } from "@/features/stage4/components/stage4-waiting
 import { advanceStage4Question } from "@/features/stage4/advance-stage4-question";
 import { closeStage4Answers } from "@/features/stage4/close-stage4-answers";
 import { openStage4Question } from "@/features/stage4/open-stage4-question";
+import { reopenStage4Answers } from "@/features/stage4/reopen-stage4-answers";
 import { startStage4 } from "@/features/stage4/start-stage4";
 import { startStage4Reveal } from "@/features/stage4/start-stage4-reveal";
 import { getStage4MockQuestion } from "@/features/stage4/stage4-mock-questions";
 import { STAGE4_NAME } from "@/features/stage4/stage4-constants";
+import {
+  canCloseStage4AnswersNow,
+  stage4AnswerWindowRemainingMs,
+} from "@/features/stage4/stage4-answer-window";
 import { useStage4ActiveAnswers } from "@/features/stage4/use-stage4-active-answers";
+import { getSyncedNowMs } from "@/lib/server-clock-sync";
 
 export function Stage4FacilitatorPanel() {
   const {
@@ -22,6 +28,7 @@ export function Stage4FacilitatorPanel() {
     stage4ActiveQuestion,
     stage4QuestionIndex,
     stage4QuestionCount,
+    stage4QuestionOpenedAtMs,
   } = useGameFlow();
   const { teams: registeredTeams } = useStage1Ranking();
   const { answers, loading: answersLoading } = useStage4ActiveAnswers(
@@ -29,6 +36,26 @@ export function Stage4FacilitatorPanel() {
   );
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [nowMs, setNowMs] = useState(() => getSyncedNowMs());
+
+  useEffect(() => {
+    if (status !== "stage4_question_open") {
+      return undefined;
+    }
+
+    setNowMs(getSyncedNowMs());
+    const intervalId = window.setInterval(() => setNowMs(getSyncedNowMs()), 250);
+    return () => window.clearInterval(intervalId);
+  }, [status, stage4QuestionOpenedAtMs]);
+
+  const canCloseAnswers = useMemo(
+    () => canCloseStage4AnswersNow(stage4QuestionOpenedAtMs, nowMs),
+    [stage4QuestionOpenedAtMs, nowMs],
+  );
+  const answerWindowRemainingMs = useMemo(
+    () => stage4AnswerWindowRemainingMs(stage4QuestionOpenedAtMs, nowMs),
+    [stage4QuestionOpenedAtMs, nowMs],
+  );
 
   const teamCount = registeredTeams.length;
   const answeredCount = new Set(
@@ -156,23 +183,40 @@ export function Stage4FacilitatorPanel() {
 
           <div className="facilitator-action-bar">
             {status === "stage4_question_open" ? (
-              <button
-                type="button"
-                className="facilitator-btn facilitator-btn--amber"
-                disabled={pendingAction !== null}
-                onClick={() => void runAction("close", () => closeStage4Answers())}
-              >
-                {pendingAction === "close" ? "جاري الإغلاق..." : "إغلاق الإجابات"}
-              </button>
+              <>
+                {!canCloseAnswers ? (
+                  <p className="text-sm font-bold text-[#64748B]">
+                    انتظر {Math.ceil(answerWindowRemainingMs / 1000)} ثانية قبل إغلاق الإجابات
+                  </p>
+                ) : null}
+                <button
+                  type="button"
+                  className="facilitator-btn facilitator-btn--amber"
+                  disabled={pendingAction !== null || !canCloseAnswers}
+                  onClick={() => void runAction("close", () => closeStage4Answers())}
+                >
+                  {pendingAction === "close" ? "جاري الإغلاق..." : "إغلاق الإجابات"}
+                </button>
+              </>
             ) : (
-              <button
-                type="button"
-                className="facilitator-btn facilitator-btn--success"
-                disabled={pendingAction !== null}
-                onClick={() => void runAction("reveal", () => startStage4Reveal())}
-              >
-                {pendingAction === "reveal" ? "جاري الإعلان..." : "بدء الإعلان"}
-              </button>
+              <>
+                <button
+                  type="button"
+                  className="facilitator-btn facilitator-btn--outline"
+                  disabled={pendingAction !== null}
+                  onClick={() => void runAction("reopen", () => reopenStage4Answers())}
+                >
+                  {pendingAction === "reopen" ? "جاري الفتح..." : "إعادة فتح الإجابات"}
+                </button>
+                <button
+                  type="button"
+                  className="facilitator-btn facilitator-btn--success"
+                  disabled={pendingAction !== null}
+                  onClick={() => void runAction("reveal", () => startStage4Reveal())}
+                >
+                  {pendingAction === "reveal" ? "جاري الإعلان..." : "بدء الإعلان"}
+                </button>
+              </>
             )}
           </div>
           {actionError ? <ErrorState title="تعذر المتابعة" description={actionError} /> : null}

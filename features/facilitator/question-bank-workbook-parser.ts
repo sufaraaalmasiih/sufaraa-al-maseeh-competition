@@ -24,20 +24,10 @@ import type { Stage2MatchingQuestion } from "@/features/stage2/stage2-matching-t
 import type { Stage2TrueFalseCorrectQuestion } from "@/features/stage2/stage2-true-false-correct-types";
 import type { Stage3Difficulty } from "@/features/stage3/stage3-question-types";
 import type { Stage4QuestionMetadata } from "@/features/stage4/stage4-question-types";
+import { parseExcelCorrectOrderList, splitPipeList } from "@/lib/excel-pipe-list";
 
 function trim(value: unknown): string {
   return typeof value === "string" ? value.trim() : value == null ? "" : String(value).trim();
-}
-
-function splitPipeList(value: unknown): string[] {
-  const text = trim(value);
-  if (!text) {
-    return [];
-  }
-  return text
-    .split(/[|,;،\n]+/)
-    .map((part) => part.trim())
-    .filter(Boolean);
 }
 
 function collectOptions(row: Record<string, unknown>): string[] {
@@ -85,13 +75,17 @@ function unifiedRowToLegacyStage1Row(row: Record<string, unknown>): Record<strin
   const type = normalizeStage1ExcelType(row.type ?? row.typename);
   const options = collectOptions(row);
   const dataParts = splitPipeList(row.data);
+  const correctOrderParts = parseExcelCorrectOrderList(row.correct ?? row.correctanswer ?? row.answer);
 
   return {
     id: row.id,
     type: type ?? row.type,
     prompt: row.question ?? row.prompt,
     reference: row.reference ?? "",
-    correctAnswer: row.correct ?? row.correctanswer ?? row.answer,
+    correctAnswer:
+      correctOrderParts.length > 0
+        ? correctOrderParts.join("|")
+        : row.correct ?? row.correctanswer ?? row.answer,
     options: options.length > 0 ? options.join("|") : row.options,
     parts:
       dataParts.length > 0
@@ -99,7 +93,10 @@ function unifiedRowToLegacyStage1Row(row: Record<string, unknown>): Record<strin
         : type === "arrange" && options.length > 0
           ? options.join("|")
           : row.parts,
-    correctOrder: row.correctorder ?? row.data,
+    correctOrder:
+      correctOrderParts.length > 0
+        ? correctOrderParts.join("|")
+        : row.correctorder ?? row.data,
     imageUrl: row.imageurl ?? row.image,
   };
 }
@@ -213,17 +210,22 @@ function buildFlexibleQuestion(
     const parts = splitPipeList(row.data);
     const options = collectOptions(row);
     const resolvedParts = parts.length >= 2 ? parts : options;
+    const correctOrder = parseExcelCorrectOrderList(row.correct ?? row.correctanswer);
+    const resolvedCorrect =
+      correctOrder.length >= 2 ? correctOrder : correctAnswer ? parseExcelCorrectOrderList(correctAnswer) : [];
     if (resolvedParts.length < 2) {
       return null;
     }
+    const orderForAnswer = resolvedCorrect.length >= 2 ? resolvedCorrect : resolvedParts;
     return {
       id,
       type: "arrange",
       prompt,
       reference,
       imageUrl,
-      correctAnswer: correctAnswer || resolvedParts.join(" | "),
+      correctAnswer: orderForAnswer.join(" | "),
       parts: resolvedParts,
+      correctOrder: orderForAnswer,
     };
   }
 
@@ -299,7 +301,7 @@ function buildStage2Bank(rows: Record<string, unknown>[]): Stage2QuestionBank {
 
     if (type === "arrangeVerse") {
       const fragments = splitPipeList(row.data);
-      const correctOrder = splitPipeList(row.correct) || fragments;
+      const correctOrder = parseExcelCorrectOrderList(row.correct) || fragments;
       if (fragments.length >= 2) {
         arrangeVerse.push({
           id,

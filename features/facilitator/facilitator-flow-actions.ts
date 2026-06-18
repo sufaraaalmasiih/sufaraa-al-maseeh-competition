@@ -3,6 +3,10 @@
 import { getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { gameFlowRef, timerRef } from "@/firebase/firestore";
 import {
+  fetchCompetitionMode,
+  isTrainingMode,
+} from "@/features/facilitator/competition-mode";
+import {
   readActiveSessionId,
   saveActiveSessionResults,
 } from "@/features/facilitator/competition-session";
@@ -63,9 +67,12 @@ export async function setGameFlowStatus(
   }
 
   if (nextStatus === "competition_intro") {
-    const sessionId = await readActiveSessionId();
-    if (!sessionId) {
-      throw new Error("أنشئ سجل المسابقة أولاً عبر «بدء مقدمة المسابقة».");
+    const mode = await fetchCompetitionMode();
+    if (!isTrainingMode(mode)) {
+      const sessionId = await readActiveSessionId();
+      if (!sessionId) {
+        throw new Error("أنشئ سجل المسابقة أولاً عبر «بدء مقدمة المسابقة».");
+      }
     }
   }
 
@@ -90,15 +97,18 @@ export async function setGameFlowStatus(
   await Promise.all(writes);
 
   if (nextStatus === "podium") {
-    const sessionId = await readActiveSessionId();
-    if (sessionId) {
-      try {
-        const teams = await fetchFinalResultTeams();
-        if (teams.length > 0) {
-          await saveActiveSessionResults(teams, "auto");
+    const mode = await fetchCompetitionMode();
+    if (!isTrainingMode(mode)) {
+      const sessionId = await readActiveSessionId();
+      if (sessionId) {
+        try {
+          const teams = await fetchFinalResultTeams();
+          if (teams.length > 0) {
+            await saveActiveSessionResults(teams, "auto");
+          }
+        } catch {
+          // Auto-save must not block podium transition.
         }
-      } catch {
-        // Auto-save must not block podium transition.
       }
     }
   }
@@ -245,4 +255,25 @@ export async function resetTimer(): Promise<void> {
     },
     { merge: true },
   );
+
+  const gameFlowSnapshot = await getDoc(gameFlowRef);
+  const status = gameFlowSnapshot.data()?.status;
+
+  if (timer.stage === "stage1" && status === "stage1_finished") {
+    await updateDoc(gameFlowRef, {
+      status: "stage1_running",
+      currentStage: "stage1",
+      updatedAt: serverTimestamp(),
+    });
+  } else if (
+    timer.stage === "stage2" &&
+    timer.purpose === "answering" &&
+    status === "stage2_finished"
+  ) {
+    await updateDoc(gameFlowRef, {
+      status: "stage2_player_turns",
+      currentStage: "stage2",
+      updatedAt: serverTimestamp(),
+    });
+  }
 }

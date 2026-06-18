@@ -10,6 +10,8 @@ import {
 import type { Stage2ArrangeVerseQuestion } from "@/features/stage2/stage2-arrange-verse-types";
 import type { Stage2MatchingQuestion } from "@/features/stage2/stage2-matching-types";
 import type { Stage2TrueFalseCorrectQuestion } from "@/features/stage2/stage2-true-false-correct-types";
+import { getStage1ArrangeExpectedAnswer } from "@/features/stage1/stage1-arrange";
+import type { Stage1ArrangeQuestion } from "@/features/stage1/stage1-types";
 import { getStage3MockQuestion } from "@/features/stage3/stage3-mock-questions";
 
 export interface ResolveAnswerCorrectLabelInput {
@@ -86,7 +88,13 @@ export function resolveAnswerCorrectLabel({
 
   if (stage === "stage1") {
     const question = getActiveStage1Bank().find((item) => item.id === questionId);
-    return question?.correctAnswer ?? null;
+    if (!question) {
+      return null;
+    }
+    if (question.type === "arrange") {
+      return getStage1ArrangeExpectedAnswer(question as Stage1ArrangeQuestion);
+    }
+    return question.correctAnswer ?? null;
   }
 
   if (stage === "stage2") {

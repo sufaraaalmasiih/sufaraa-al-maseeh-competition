@@ -31,9 +31,34 @@ export function Stage4RankingTable({
     return <ErrorState title="تعذر تحميل الترتيب" description={error} />;
   }
 
-  if (variant === "team" || variant === "audience") {
-    const boardAnimate = animate || variant === "team";
-    const panel = (
+  const compact = variant === "team" || variant === "audience";
+  const boardAnimate = animate || variant === "team";
+
+  const board = (
+    <CompetitionRankingBoard
+      animate={boardAnimate}
+      bare={embedded}
+      extraColumnLabel="التسلسل"
+      scoreLabel="نقاط المرحلة"
+      showExtraColumn={!compact}
+      showGovernorate={!compact}
+      teams={teams.map((team, index) => ({
+        teamId: team.teamId,
+        teamName: team.teamName,
+        rank: index + 1,
+        stageScore: team.stage4Score,
+        governorate: team.governorate,
+        logoUrl: team.logoUrl,
+        totalScore: team.totalScore,
+        extraValue: team.streak,
+        meta: compact ? `المجموع: ${team.totalScore} · التسلسل: ${team.streak}` : undefined,
+      }))}
+      variant={compact ? (variant === "audience" ? "audience" : "team") : "facilitator"}
+    />
+  );
+
+  if (compact) {
+    return (
       <div
         className={cn(
           "competition-ranking-panel",
@@ -54,26 +79,9 @@ export function Stage4RankingTable({
             </>
           ) : null}
         </div>
-        <CompetitionRankingBoard
-          animate={boardAnimate}
-          bare={embedded}
-          scoreLabel="نقاط المرحلة"
-          teams={teams.map((team, index) => ({
-            teamId: team.teamId,
-            teamName: team.teamName,
-            rank: index + 1,
-            stageScore: team.stage4Score,
-            governorate: team.governorate,
-            logoUrl: team.logoUrl,
-            totalScore: team.totalScore,
-            meta: `المجموع: ${team.totalScore} · التسلسل: ${team.streak}`,
-          }))}
-          variant={variant === "audience" ? "audience" : "team"}
-        />
+        {board}
       </div>
     );
-
-    return panel;
   }
 
   return (
@@ -81,30 +89,7 @@ export function Stage4RankingTable({
       <div className="border-b px-5 py-4" style={{ borderBottomColor: "rgba(20,58,90,0.08)" }}>
         <h3 className="text-lg font-black text-[#143A5A]">ترتيب {STAGE4_NAME}</h3>
       </div>
-      <div className="overflow-x-auto competition-ranking-scroll">
-        <table className="w-full min-w-[640px] text-right text-sm">
-          <thead className="bg-[#F3FAFF] text-[#143A5A]">
-            <tr>
-              <th className="px-4 py-3 font-bold">#</th>
-              <th className="px-4 py-3 font-bold">الفريق</th>
-              <th className="px-4 py-3 font-bold">نقاط المرحلة</th>
-              <th className="px-4 py-3 font-bold">المجموع</th>
-              <th className="px-4 py-3 font-bold">التسلسل</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y bg-white" style={{ borderColor: "rgba(35,136,196,0.1)" }}>
-            {teams.map((team, index) => (
-              <tr key={team.teamId}>
-                <td className="px-4 py-3">{index + 1}</td>
-                <td className="px-4 py-3 font-bold text-[#143A5A]">{team.teamName}</td>
-                <td className="px-4 py-3">{team.stage4Score}</td>
-                <td className="px-4 py-3">{team.totalScore}</td>
-                <td className="px-4 py-3">{team.streak}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <div className="px-4 py-4 sm:px-5">{board}</div>
     </div>
   );
 }

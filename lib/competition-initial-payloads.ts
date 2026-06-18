@@ -35,6 +35,9 @@ export function buildInitialGameFlowPayload() {
     stage4ActiveQuestion: null,
     stage4FinishedQuestionIds: [] as string[],
     stage4RevealStartedAt: 0,
+    stage4QuestionOpenedAtMs: null,
+    competitionMode: "official" as const,
+    trainingEndsAtMs: null,
     updatedAt: serverTimestamp(),
   };
 }

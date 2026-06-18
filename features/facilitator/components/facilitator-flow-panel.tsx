@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
 import { useCompetitionTimer } from "@/features/gameflow/use-competition-timer";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
+import { isTrainingMode } from "@/features/facilitator/competition-mode";
 import { useStage1Ranking } from "@/features/stage1/use-stage1-ranking";
 import { isTeamReadyForReadiness } from "@/features/facilitator/facilitator-readiness";
 import {
@@ -38,6 +39,7 @@ export function FacilitatorFlowPanel() {
     stage4QuestionIndex,
     stage4QuestionCount,
     competitionFrozen,
+    competitionMode,
     loading,
     error,
   } = useGameFlow();
@@ -130,7 +132,8 @@ export function FacilitatorFlowPanel() {
 
     if (
       status === "waiting_players" &&
-      hero.nextStatus === "competition_intro"
+      hero.nextStatus === "competition_intro" &&
+      !isTrainingMode(competitionMode)
     ) {
       setSessionDialogOpen(true);
       return;

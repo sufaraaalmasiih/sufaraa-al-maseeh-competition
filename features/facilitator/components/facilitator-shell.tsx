@@ -19,6 +19,7 @@ import { FacilitatorSettingsTab } from "@/features/facilitator/components/facili
 import { FacilitatorStage12Automation } from "@/features/facilitator/components/facilitator-stage12-automation";
 import { FacilitatorStage3Automation } from "@/features/facilitator/components/facilitator-stage3-automation";
 import { FacilitatorStage4Automation } from "@/features/facilitator/components/facilitator-stage4-automation";
+import { TrainingModeCleanup } from "@/features/facilitator/components/training-mode-cleanup";
 import {
   FACILITATOR_SUPER_ADMIN_TAB,
   FACILITATOR_TABS,
@@ -105,6 +106,7 @@ function FacilitatorShellAuthenticated() {
           <FacilitatorStage3Automation />
           <FacilitatorStage4Automation />
           <FacilitatorStage12Automation />
+          <TrainingModeCleanup />
 
           <Tabs value={activeTab} onValueChange={markTabVisited} dir="rtl" className="facilitator-shell-tabs">
             <TabsList

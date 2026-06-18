@@ -17,6 +17,10 @@ import {
 import { useEffect, useState } from "react";
 import { getClientFirestore, firebaseAuth } from "@/firebase/firebaseClient";
 import { gameFlowRef, MAIN_COMPETITION_ID } from "@/firebase/firestore";
+import {
+  fetchCompetitionMode,
+  isTrainingMode,
+} from "@/features/facilitator/competition-mode";
 import type { FinalResultTeam } from "@/features/facilitator/use-final-results";
 import { subscribeFirestoreDoc } from "@/lib/firestore-listener";
 
@@ -377,6 +381,11 @@ export async function saveActiveSessionResults(
   mode: "manual" | "auto",
   reason?: string,
 ): Promise<string | null> {
+  const competitionMode = await fetchCompetitionMode();
+  if (isTrainingMode(competitionMode)) {
+    return null;
+  }
+
   const sessionId = await readActiveSessionId();
   if (!sessionId) {
     return null;

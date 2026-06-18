@@ -26,6 +26,8 @@ export interface TeamFacilitatorOverride {
   stage2QuestionIndex?: number;
   stage4QuestionIndex?: number;
   stage3QuestionId?: string;
+  stage3OwnerTeamId?: string;
+  stage3OwnerTeamName?: string;
   stage3ActiveQuestion?: Stage3QuestionMetadata | null;
   stage4ActiveQuestion?: Stage4QuestionMetadata | null;
 }
@@ -62,6 +64,10 @@ export function parseTeamFacilitatorOverride(raw: unknown): TeamFacilitatorOverr
       typeof data.stage4QuestionIndex === "number" ? data.stage4QuestionIndex : undefined,
     stage3QuestionId:
       typeof data.stage3QuestionId === "string" ? data.stage3QuestionId : undefined,
+    stage3OwnerTeamId:
+      typeof data.stage3OwnerTeamId === "string" ? data.stage3OwnerTeamId : undefined,
+    stage3OwnerTeamName:
+      typeof data.stage3OwnerTeamName === "string" ? data.stage3OwnerTeamName : undefined,
     stage3ActiveQuestion:
       data.stage3ActiveQuestion && typeof data.stage3ActiveQuestion === "object"
         ? data.stage3ActiveQuestion

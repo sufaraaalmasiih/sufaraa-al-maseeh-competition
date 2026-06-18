@@ -55,6 +55,14 @@ export function useTeamGameFlow() {
       ...global,
       status: effectiveStatus,
       currentStage: override?.active ? override.currentStage : global.currentStage,
+      stage3OwnerTeamId:
+        override?.active && override.stage3OwnerTeamId
+          ? override.stage3OwnerTeamId
+          : global.stage3OwnerTeamId,
+      stage3OwnerTeamName:
+        override?.active && override.stage3OwnerTeamName
+          ? override.stage3OwnerTeamName
+          : global.stage3OwnerTeamName,
       stage3ActiveQuestion: override?.active
         ? parseStage3QuestionMetadata(override.stage3ActiveQuestion) ?? global.stage3ActiveQuestion
         : global.stage3ActiveQuestion,

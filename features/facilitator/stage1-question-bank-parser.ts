@@ -3,6 +3,7 @@ import {
   normalizeStage1ExcelType,
   stage1ExcelToInternal,
 } from "@/features/facilitator/question-type-registry";
+import { parseExcelCorrectOrderList } from "@/lib/excel-pipe-list";
 
 const VALID_TYPES: Stage1QuestionType[] = [
   "missing",
@@ -54,7 +55,15 @@ function normalizeQuestion(raw: unknown, fallbackIndex: number): Stage1MockQuest
     if (options.length < 2 || !correctAnswer) {
       return null;
     }
-    return { id, type, prompt, reference, imageUrl, correctAnswer, options };
+    return {
+      id,
+      type,
+      prompt,
+      ...(reference ? { reference } : {}),
+      ...(imageUrl ? { imageUrl } : {}),
+      correctAnswer,
+      options,
+    };
   }
 
   if (type === "arrange") {
@@ -62,14 +71,18 @@ function normalizeQuestion(raw: unknown, fallbackIndex: number): Stage1MockQuest
     if (parts.length < 2) {
       return null;
     }
-    const correctOrder = splitList(entry.correctOrder);
+    const correctOrderFromField = splitList(entry.correctOrder);
+    const correctOrderFromAnswer = parseExcelCorrectOrderList(entry.correctAnswer);
+    const correctOrder =
+      correctOrderFromField.length > 0 ? correctOrderFromField : correctOrderFromAnswer;
+    const orderForAnswer = correctOrder.length > 0 ? correctOrder : parts;
     return {
       id,
       type,
       prompt,
-      reference,
-      imageUrl,
-      correctAnswer: correctAnswer || parts.join(" "),
+      ...(reference ? { reference } : {}),
+      ...(imageUrl ? { imageUrl } : {}),
+      correctAnswer: orderForAnswer.join(" | "),
       parts,
       ...(correctOrder.length > 0 ? { correctOrder } : {}),
     };
@@ -78,7 +91,14 @@ function normalizeQuestion(raw: unknown, fallbackIndex: number): Stage1MockQuest
   if (!correctAnswer) {
     return null;
   }
-  return { id, type, prompt, reference, imageUrl, correctAnswer };
+  return {
+    id,
+    type,
+    prompt,
+    ...(reference ? { reference } : {}),
+    ...(imageUrl ? { imageUrl } : {}),
+    correctAnswer,
+  };
 }
 
 export function parseStage1Questions(raw: unknown): Stage1MockQuestion[] {
