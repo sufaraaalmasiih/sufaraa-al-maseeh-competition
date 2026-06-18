@@ -120,12 +120,18 @@ export function renderTeamGameplayScreens(props: TeamShellScreensProps): ReactNo
       ) : null}
 
       {view.showStage3ActiveGameplay && status === "stage3_reveal" ? (
-        <Stage3TeamRevealScreen question={stage3.activeQuestion} />
+        <Stage3TeamRevealScreen
+          question={stage3.activeQuestion}
+          ownerTeamName={stage3.ownerTeamName}
+        />
       ) : null}
 
       {view.showStage3ActiveGameplay && status === "stage3_results_done" ? (
         <>
-          <Stage3TeamRevealScreen question={stage3.activeQuestion} />
+          <Stage3TeamRevealScreen
+            question={stage3.activeQuestion}
+            ownerTeamName={stage3.ownerTeamName}
+          />
           <Stage3RankingTable
             teams={stage3.rankingTeams}
             loading={stage3.rankingLoading}

@@ -5536,6 +5536,30 @@
     @apply m-0 h-full overflow-hidden;
   }
 
+  html.audience-fullscreen-mode #__next,
+  html.audience-fullscreen-mode body > div {
+    height: 100%;
+  }
+
+  /* في وضع ملء الشاشة: اجعل كل حاويات محتوى الجمهور تملأ العرض بالكامل
+     بدل التوقف عند حدّ ~80rem الذي يترك هوامش فارغة على الشاشات الكبيرة. */
+  html.audience-fullscreen-mode .audience-waiting-screen__content,
+  html.audience-fullscreen-mode .audience-intro-screen__wrap,
+  html.audience-fullscreen-mode .audience-live-screen__wrap,
+  html.audience-fullscreen-mode .audience-flow-shell__wrap,
+  html.audience-fullscreen-mode .audience-centered-screen__wrap,
+  html.audience-fullscreen-mode .audience-arena-shell__wrap,
+  html.audience-fullscreen-mode .audience-reading-screen__wrap,
+  html.audience-fullscreen-mode .competition-centered-screen__wrap,
+  html.audience-fullscreen-mode .content-shell-arena {
+    max-width: min(99vw, 110rem);
+    width: 100%;
+  }
+
+  html.audience-fullscreen-mode .competition-stage-screen__card {
+    max-width: min(96vw, 92rem);
+  }
+
   html.audience-fullscreen-mode .competition-stage-screen--final-results .competition-stage-screen__card,
   html.audience-fullscreen-mode .competition-stage-screen--podium .competition-stage-screen__card,
   html.audience-fullscreen-mode .audience-stage-finished .competition-stage-screen__card {

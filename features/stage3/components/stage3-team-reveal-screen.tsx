@@ -10,22 +10,48 @@ import {
 } from "@/features/stage3/stage3-reveal-outcome";
 import { getStage3MockQuestion } from "@/features/stage3/stage3-mock-questions";
 import { isStage3SelectionTimeoutQuestion } from "@/features/stage3/stage3-selection-timeout-question";
+import { STAGE3_SELECTION_TIMEOUT_PENALTY } from "@/features/stage3/stage3-official-constants";
 import { useStage3MyAnswer } from "@/features/stage3/use-stage3-my-answer";
 import type { Stage3QuestionMetadata } from "@/features/stage3/stage3-question-types";
 
 interface Stage3TeamRevealScreenProps {
   question: Stage3QuestionMetadata | null;
+  ownerTeamName?: string | null;
 }
 
-export function Stage3TeamRevealScreen({ question }: Stage3TeamRevealScreenProps) {
+export function Stage3TeamRevealScreen({
+  question,
+  ownerTeamName = null,
+}: Stage3TeamRevealScreenProps) {
   const { answerState, loading } = useStage3MyAnswer(question?.id ?? null);
   const mockQuestion = question ? getStage3MockQuestion(question.id) : null;
   const isSelectionTimeout = isStage3SelectionTimeoutQuestion(question);
+  const penaltyPoints = Math.abs(STAGE3_SELECTION_TIMEOUT_PENALTY);
 
   return (
     <div className="gameplay-scene gameplay-scene--centered stage3-scene stage3-scene--reveal">
       <div className="gameplay-flow">
         <section className="gameplay-board-card stage3-unified-card stage3-unified-card--glass">
+          {isSelectionTimeout ? (
+            <div
+              className="glass-card-premium mb-4 border border-[#143A5A]/20 bg-[#FFF8E8]/90 px-5 py-4 text-center"
+              role="status"
+              aria-live="polite"
+            >
+              <p className="text-base font-black text-[#143A5A]">
+                انتهى وقت اختيار السؤال — لم يختر فريق{" "}
+                <span className="text-[#2388C4]">{ownerTeamName ?? "صاحب الدور"}</span>{" "}
+                سؤالاً في الوقت المحدد
+              </p>
+              <p className="mt-2 text-sm font-bold text-[#B45309]">
+                خصم {penaltyPoints} نقاط على صاحب الدور
+              </p>
+              <p className="mt-1 text-sm font-semibold text-[#143A5A]/80">
+                ينتقل الدور إلى الفريق التالي
+              </p>
+            </div>
+          ) : null}
+
           <Stage3RevealSummary question={question} embedded />
 
           <div className="stage3-answer-zone">
