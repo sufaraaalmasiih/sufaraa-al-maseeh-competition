@@ -58,6 +58,8 @@ export function AudienceStage2Finished() {
 
             animate={resultsReady}
 
+            revealAscending={resultsReady}
+
           />
 
         </AudienceStageScreenCard>

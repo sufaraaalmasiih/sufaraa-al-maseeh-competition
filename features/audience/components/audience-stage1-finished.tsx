@@ -28,6 +28,7 @@ export function AudienceStage1Finished() {
             variant="audience"
             hideHeader
             animate={resultsReady}
+            revealAscending={resultsReady}
           />
         </AudienceStageScreenCard>
       )}

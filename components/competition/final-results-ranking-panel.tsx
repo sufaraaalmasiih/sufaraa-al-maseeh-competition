@@ -6,6 +6,8 @@ import type { FinalResultTeam } from "@/features/facilitator/use-final-results";
 interface FinalResultsRankingPanelProps {
   teams: FinalResultTeam[];
   animate?: boolean;
+  revealAscending?: boolean;
+  variant?: "audience" | "embedded" | "facilitator";
   title?: string;
   description?: string;
 }
@@ -13,6 +15,8 @@ interface FinalResultsRankingPanelProps {
 export function FinalResultsRankingPanel({
   teams,
   animate = true,
+  revealAscending = false,
+  variant = "embedded",
   title = "الترتيب العام",
   description = "حسب المجموع الكلي",
 }: FinalResultsRankingPanelProps) {
@@ -23,7 +27,8 @@ export function FinalResultsRankingPanel({
         <p className="competition-ranking-panel__desc">{description}</p>
       </div>
       <CompetitionRankingBoard
-        animate={animate}
+        animate={animate && !revealAscending}
+        revealAscending={revealAscending}
         bare
         scoreLabel="المجموع"
         teams={teams.map((team) => ({
@@ -34,7 +39,7 @@ export function FinalResultsRankingPanel({
           governorate: team.governorate,
           meta: `المرحلة الأولى: ${team.stage1} · المرحلة الثانية: ${team.stage2} · المرحلة الثالثة: ${team.stage3} · المرحلة الرابعة: ${team.stage4}`,
         }))}
-        variant="embedded"
+        variant={variant}
       />
     </div>
   );

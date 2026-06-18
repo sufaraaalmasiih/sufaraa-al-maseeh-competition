@@ -374,12 +374,12 @@
   }
 
   .competition-ranking-table__bars-value {
-    @apply min-w-[2rem] text-sm font-black text-[#2388C4];
+    @apply min-w-[2.75rem] text-lg font-black text-[#2388C4] sm:text-xl;
   }
 
   .competition-ranking-table__total,
   .competition-ranking-table__extra {
-    @apply text-base font-black text-[#143A5A];
+    @apply text-lg font-black text-[#143A5A] sm:text-xl;
   }
 
   .competition-ranking-table__tier {
@@ -521,16 +521,16 @@
   }
 
   .competition-ranking-table__audience-score-label {
-    @apply mb-1 block text-xs font-bold sm:text-sm;
+    @apply mb-1 block text-sm font-bold sm:text-base;
     color: rgba(20, 58, 90, 0.52);
   }
 
   .competition-ranking-table__bars--audience .competition-ranking-table__bar {
-    @apply h-6 w-2;
+    @apply h-7 w-2.5 sm:h-8 sm:w-3;
   }
 
   .competition-ranking-table__bars--audience .competition-ranking-table__bars-value {
-    @apply text-xl font-black sm:text-2xl;
+    @apply min-w-[3rem] text-2xl font-black sm:text-3xl;
   }
 
   .competition-ranking-scroll--audience {
@@ -574,5 +574,46 @@
 
     .competition-ranking-table__audience-card .competition-ranking-table__tier {
       grid-area: tier;
+    }
+  }
+
+  .competition-ranking-table__rows--reorder {
+    position: relative;
+  }
+
+  .competition-ranking-table__row-wrap--climbing,
+  .competition-ranking-table__audience-card--climbing {
+    z-index: 2;
+  }
+
+  .competition-ranking-table__row--climbing,
+  .competition-ranking-table__audience-card--climbing {
+    animation: competition-ranking-climb 0.95s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow:
+      0 0 0 2px rgba(35, 136, 196, 0.28),
+      0 14px 34px rgba(35, 136, 196, 0.18);
+  }
+
+  .competition-ranking-table__audience-card--climbing.competition-ranking-table__audience-card--gold,
+  .competition-ranking-table__row--climbing.competition-ranking-table__row--gold {
+    box-shadow:
+      0 0 0 2px rgba(212, 160, 23, 0.34),
+      0 14px 34px rgba(212, 160, 23, 0.2);
+  }
+
+  @keyframes competition-ranking-climb {
+    0% {
+      transform: translateY(10px) scale(0.98);
+      filter: brightness(1);
+    }
+
+    35% {
+      transform: translateY(-4px) scale(1.03);
+      filter: brightness(1.06);
+    }
+
+    100% {
+      transform: translateY(0) scale(1);
+      filter: brightness(1);
     }
   }

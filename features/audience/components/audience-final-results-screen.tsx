@@ -74,7 +74,12 @@ export function AudienceFinalResultsScreen() {
 
           ) : (
 
-            <FinalResultsRankingPanel teams={teams} animate={resultsReady} />
+            <FinalResultsRankingPanel
+              teams={teams}
+              animate={resultsReady}
+              revealAscending={resultsReady}
+              variant="audience"
+            />
 
           )}
 

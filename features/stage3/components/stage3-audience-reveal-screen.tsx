@@ -87,6 +87,7 @@ export function Stage3AudienceRevealScreen({
                 variant="audience"
                 embedded
                 animate
+                revealAscending
               />
             </div>
           </div>
@@ -112,6 +113,7 @@ export function Stage3AudienceRevealScreen({
             variant="audience"
             embedded
             animate
+            revealAscending
           />
         }
       />

@@ -14,6 +14,8 @@ interface Stage3RankingTableProps {
   description?: string;
   embedded?: boolean;
   animate?: boolean;
+  revealAscending?: boolean;
+  layoutReorder?: boolean;
 }
 
 export function Stage3RankingTable({
@@ -25,9 +27,11 @@ export function Stage3RankingTable({
   description,
   embedded = false,
   animate = false,
+  revealAscending = false,
+  layoutReorder = false,
 }: Stage3RankingTableProps) {
   const compact = variant === "audience" || variant === "team";
-  const boardAnimate = animate || variant === "team";
+  const boardAnimate = (animate || variant === "team") && !revealAscending;
 
   if (loading) {
     return <LoadingState variant={embedded ? "inline" : "page"} />;
@@ -52,6 +56,8 @@ export function Stage3RankingTable({
   const board = (
     <CompetitionRankingBoard
       animate={boardAnimate}
+      revealAscending={revealAscending}
+      layoutReorder={layoutReorder || (boardAnimate && variant !== "facilitator")}
       bare={embedded}
       scoreLabel="نقاط المرحلة الثالثة"
       showGovernorate={!compact}

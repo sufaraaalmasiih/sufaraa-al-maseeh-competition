@@ -37,6 +37,7 @@ export function AudienceStage3FinishedAudience({
             variant="audience"
             embedded
             animate={resultsReady}
+            revealAscending={resultsReady}
           />
         </AudienceStageScreenCard>
       )}

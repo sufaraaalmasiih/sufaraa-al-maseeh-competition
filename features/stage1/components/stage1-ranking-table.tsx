@@ -18,6 +18,8 @@ interface Stage1RankingTableProps {
   description?: string;
   stageLabel?: string;
   animate?: boolean;
+  revealAscending?: boolean;
+  layoutReorder?: boolean;
   hideHeader?: boolean;
 }
 
@@ -43,6 +45,8 @@ export function Stage1RankingTable({
   description,
   stageLabel = "اجمعوا الكنوز",
   animate = false,
+  revealAscending = false,
+  layoutReorder = false,
   hideHeader = false,
 }: Stage1RankingTableProps) {
   const audience = variant === "audience";
@@ -57,7 +61,9 @@ export function Stage1RankingTable({
 
   const board = (
     <CompetitionRankingBoard
-      animate={animate || audience}
+      animate={(animate || audience) && !revealAscending}
+      revealAscending={revealAscending}
+      layoutReorder={layoutReorder || ((animate || audience) && !revealAscending)}
       bare={audience}
       emptyTitle="بانتظار تسجيل الفرق"
       error={error}

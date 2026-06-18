@@ -1,9 +1,11 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { LayoutGroup, motion } from "framer-motion";
 import { MapPin } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
 import { getRankingRowDelay } from "@/components/motion/animated-ranking-row";
+import { useRankingAscendingReveal } from "@/hooks/use-ranking-ascending-reveal";
 import { cn } from "@/lib/utils";
 
 export interface CompetitionRankingTableEntry {
@@ -28,6 +30,8 @@ interface CompetitionRankingTableProps {
   showExtraColumn?: boolean;
   showTotalScore?: boolean;
   animate?: boolean;
+  revealAscending?: boolean;
+  layoutReorder?: boolean;
   compact?: boolean;
   audience?: boolean;
   dualColumnMinTeams?: number;
@@ -129,7 +133,17 @@ interface RankRowProps {
   compact: boolean;
   audience: boolean;
   showGovColumn: boolean;
+  revealAscending: boolean;
+  layoutReorder: boolean;
+  isClimbing: boolean;
 }
+
+const LAYOUT_SPRING = {
+  type: "spring" as const,
+  stiffness: 420,
+  damping: 34,
+  mass: 0.85,
+};
 
 function RankRow({
   team,
@@ -145,34 +159,71 @@ function RankRow({
   compact,
   audience,
   showGovColumn,
+  revealAscending,
+  layoutReorder,
+  isClimbing,
 }: RankRowProps) {
   const tier = rankTier(team.rank);
+  const layoutTransition = layoutReorder
+    ? {
+        layout: LAYOUT_SPRING,
+      }
+    : undefined;
+
+  const entranceVariants = revealAscending
+    ? {
+        hidden: {
+          opacity: 0,
+          y: 28,
+          scale: 0.94,
+        },
+        visible: {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          transition: {
+            type: "spring" as const,
+            stiffness: 360,
+            damping: 28,
+          },
+        },
+      }
+    : {
+        hidden: {
+          opacity: 0,
+          y: audience ? 16 : 0,
+          x: audience ? 0 : 24,
+          scale: 0.98,
+          filter: audience ? undefined : "blur(3px)",
+        },
+        visible: {
+          opacity: 1,
+          y: 0,
+          x: 0,
+          scale: 1,
+          filter: "blur(0px)",
+          transition: {
+            type: "spring" as const,
+            stiffness: 420,
+            damping: 30,
+            delay: animate ? getRankingRowDelay(index) : 0,
+          },
+        },
+      };
 
   if (audience) {
     return (
       <motion.article
+        layout={layoutReorder ? "position" : false}
+        transition={layoutTransition}
         className={cn(
           "competition-ranking-table__audience-card",
           `competition-ranking-table__audience-card--${tier.tone}`,
+          isClimbing && "competition-ranking-table__audience-card--climbing",
         )}
-        variants={{
-          hidden: {
-            opacity: 0,
-            y: 16,
-            scale: 0.98,
-          },
-          visible: {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            transition: {
-              type: "spring",
-              stiffness: 420,
-              damping: 30,
-              delay: animate ? getRankingRowDelay(index) : 0,
-            },
-          },
-        }}
+        initial={animate || revealAscending ? "hidden" : false}
+        animate="visible"
+        variants={entranceVariants}
       >
         <span className="competition-ranking-table__rank competition-ranking-table__rank--audience">
           {formatRankNumber(team.rank)}
@@ -213,32 +264,21 @@ function RankRow({
 
   return (
     <motion.div
-      className="competition-ranking-table__row-wrap"
-      variants={{
-        hidden: {
-          opacity: 0,
-          x: 24,
-          scale: 0.98,
-          filter: "blur(3px)",
-        },
-        visible: {
-          opacity: 1,
-          x: 0,
-          scale: 1,
-          filter: "blur(0px)",
-          transition: {
-            type: "spring",
-            stiffness: 420,
-            damping: 30,
-            delay: animate ? getRankingRowDelay(index) : 0,
-          },
-        },
-      }}
+      layout={layoutReorder ? "position" : false}
+      transition={layoutTransition}
+      className={cn(
+        "competition-ranking-table__row-wrap",
+        isClimbing && "competition-ranking-table__row-wrap--climbing",
+      )}
+      initial={animate || revealAscending ? "hidden" : false}
+      animate="visible"
+      variants={entranceVariants}
     >
       <div
         className={cn(
           "competition-ranking-table__row",
           `competition-ranking-table__row--${tier.tone}`,
+          isClimbing && "competition-ranking-table__row--climbing",
           showGovColumn && showExtra && "competition-ranking-table__row--full-extra",
           showGovColumn && !showExtra && "competition-ranking-table__row--full",
           !showGovColumn && showExtra && "competition-ranking-table__row--compact-extra",
@@ -313,31 +353,74 @@ export function CompetitionRankingTable({
   showExtraColumn = false,
   showTotalScore = true,
   animate = false,
+  revealAscending = false,
+  layoutReorder = false,
   compact = false,
   audience = false,
   dualColumnMinTeams = 8,
   live = true,
   className,
 }: CompetitionRankingTableProps) {
-  const maxStageScore = teams.reduce(
+  const { visibleTeams, revealedCount, totalCount } = useRankingAscendingReveal(
+    teams,
+    revealAscending,
+  );
+  const displayTeams = revealAscending ? visibleTeams : teams;
+
+  const prevRanksRef = useRef<Map<string, number>>(new Map());
+  const [climbingTeamIds, setClimbingTeamIds] = useState<ReadonlySet<string>>(() => new Set());
+
+  useEffect(() => {
+    if (!layoutReorder) {
+      return;
+    }
+
+    const climbed = new Set<string>();
+    const previous = prevRanksRef.current;
+
+    for (const team of teams) {
+      const previousRank = previous.get(team.teamId);
+      if (typeof previousRank === "number" && team.rank < previousRank) {
+        climbed.add(team.teamId);
+      }
+    }
+
+    prevRanksRef.current = new Map(teams.map((team) => [team.teamId, team.rank]));
+
+    if (climbed.size === 0) {
+      return;
+    }
+
+    setClimbingTeamIds(climbed);
+    const timeoutId = window.setTimeout(() => {
+      setClimbingTeamIds(new Set());
+    }, 950);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [layoutReorder, teams]);
+
+  const maxStageScore = displayTeams.reduce(
     (max, team) => (team.stageScore > max ? team.stageScore : max),
     0,
   );
-  const leadersCount = teams.filter((team) => team.rank <= 3).length;
+  const leadersCount = displayTeams.filter((team) => team.rank <= 3).length;
 
   const showGovColumn = showGovernorate && !compact && !audience;
   const showExtra = showExtraColumn && !compact && !audience && Boolean(extraColumnLabel);
-  const useDualColumn = audience && dualColumnMinTeams > 0 && teams.length >= dualColumnMinTeams;
+  const useDualColumn =
+    audience && dualColumnMinTeams > 0 && displayTeams.length >= dualColumnMinTeams;
 
   const dualRows: CompetitionRankingTableEntry[][] = [];
   if (useDualColumn) {
-    for (let index = 0; index < teams.length; index += 2) {
-      dualRows.push(teams.slice(index, index + 2));
+    for (let index = 0; index < displayTeams.length; index += 2) {
+      dualRows.push(displayTeams.slice(index, index + 2));
     }
   }
 
   const rowPropsBase = {
-    animate,
+    animate: animate && !revealAscending && !layoutReorder,
+    revealAscending,
+    layoutReorder,
     maxStageScore,
     scoreLabel,
     showGovernorate,
@@ -349,6 +432,8 @@ export function CompetitionRankingTable({
     audience,
     showGovColumn,
   };
+
+  const useParentStagger = animate && !revealAscending && !layoutReorder;
 
   return (
     <div
@@ -367,8 +452,11 @@ export function CompetitionRankingTable({
             <h3 className="competition-ranking-table__title">{title}</h3>
           </div>
           <p className="competition-ranking-table__stats">
-            {teams.length} فريق
+            {displayTeams.length} فريق
             {leadersCount > 0 ? ` · ${leadersCount} في المقدمة` : ""}
+            {revealAscending && revealedCount < totalCount
+              ? ` · جاري الإعلان (${revealedCount}/${totalCount})`
+              : ""}
           </p>
           {subtitle ? (
             <p className="competition-ranking-table__subtitle">{subtitle}</p>
@@ -396,39 +484,49 @@ export function CompetitionRankingTable({
         </div>
       ) : null}
 
-      <motion.div
-        className={cn(
-          "competition-ranking-table__rows",
-          useDualColumn && "competition-ranking-table__rows--dual",
-        )}
-        initial={animate ? "hidden" : false}
-        animate="visible"
-        variants={{
-          visible: {
-            transition: {
-              staggerChildren: 0.06,
-              delayChildren: 0.04,
+      <LayoutGroup id="competition-ranking-rows">
+        <motion.div
+          className={cn(
+            "competition-ranking-table__rows",
+            useDualColumn && "competition-ranking-table__rows--dual",
+            layoutReorder && "competition-ranking-table__rows--reorder",
+          )}
+          initial={useParentStagger ? "hidden" : false}
+          animate="visible"
+          variants={{
+            visible: {
+              transition: {
+                staggerChildren: 0.06,
+                delayChildren: 0.04,
+              },
             },
-          },
-        }}
-      >
-        {useDualColumn
-          ? dualRows.map((pair, rowIndex) => (
-              <div key={`dual-row-${rowIndex}`} className="competition-ranking-table__dual-row">
-                {pair.map((team, columnIndex) => (
-                  <RankRow
-                    key={team.teamId}
-                    index={rowIndex * 2 + columnIndex}
-                    team={team}
-                    {...rowPropsBase}
-                  />
-                ))}
-              </div>
-            ))
-          : teams.map((team, index) => (
-              <RankRow key={team.teamId} index={index} team={team} {...rowPropsBase} />
-            ))}
-      </motion.div>
+          }}
+        >
+          {useDualColumn
+            ? dualRows.map((pair, rowIndex) => (
+                <div key={`dual-row-${rowIndex}`} className="competition-ranking-table__dual-row">
+                  {pair.map((team, columnIndex) => (
+                    <RankRow
+                      key={team.teamId}
+                      index={rowIndex * 2 + columnIndex}
+                      team={team}
+                      isClimbing={climbingTeamIds.has(team.teamId)}
+                      {...rowPropsBase}
+                    />
+                  ))}
+                </div>
+              ))
+            : displayTeams.map((team, index) => (
+                <RankRow
+                  key={team.teamId}
+                  index={index}
+                  team={team}
+                  isClimbing={climbingTeamIds.has(team.teamId)}
+                  {...rowPropsBase}
+                />
+              ))}
+        </motion.div>
+      </LayoutGroup>
     </div>
   );
 }

@@ -13,6 +13,8 @@ interface Stage4RankingTableProps {
   variant?: "team" | "facilitator" | "audience";
   embedded?: boolean;
   animate?: boolean;
+  revealAscending?: boolean;
+  layoutReorder?: boolean;
 }
 
 export function Stage4RankingTable({
@@ -22,6 +24,8 @@ export function Stage4RankingTable({
   variant = "facilitator",
   embedded = false,
   animate = false,
+  revealAscending = false,
+  layoutReorder = false,
 }: Stage4RankingTableProps) {
   if (loading) {
     return <LoadingState variant="page" />;
@@ -32,11 +36,13 @@ export function Stage4RankingTable({
   }
 
   const compact = variant === "team" || variant === "audience";
-  const boardAnimate = animate || variant === "team";
+  const boardAnimate = (animate || variant === "team") && !revealAscending;
 
   const board = (
     <CompetitionRankingBoard
       animate={boardAnimate}
+      revealAscending={revealAscending}
+      layoutReorder={layoutReorder || (boardAnimate && variant !== "facilitator")}
       bare={embedded}
       extraColumnLabel="التسلسل"
       scoreLabel="نقاط المرحلة"

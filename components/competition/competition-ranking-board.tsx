@@ -28,6 +28,8 @@ interface CompetitionRankingBoardProps {
   error?: string | null;
   scoreLabel?: string;
   animate?: boolean;
+  revealAscending?: boolean;
+  layoutReorder?: boolean;
   variant?: "audience" | "team" | "embedded" | "facilitator";
   emptyTitle?: string;
   className?: string;
@@ -65,6 +67,8 @@ export function CompetitionRankingBoard({
   error = null,
   scoreLabel = "نقاط المرحلة",
   animate = false,
+  revealAscending = false,
+  layoutReorder = false,
   variant = "audience",
   emptyTitle = "بانتظار تسجيل الفرق",
   className,
@@ -93,6 +97,9 @@ export function CompetitionRankingBoard({
 
   const isAudience = variant === "audience";
   const compact = isAudience || variant === "team" || variant === "embedded";
+  const isLiveBoard = animate && !revealAscending;
+  const shouldLayoutReorder =
+    layoutReorder || (isLiveBoard && (isAudience || variant === "team" || variant === "facilitator"));
   const densityClass =
     teams.length > 12
       ? "competition-ranking-scroll--dense"
@@ -102,7 +109,9 @@ export function CompetitionRankingBoard({
 
   const table = (
     <CompetitionRankingTable
-      animate={animate || variant === "team"}
+      animate={isLiveBoard || variant === "team"}
+      revealAscending={revealAscending}
+      layoutReorder={shouldLayoutReorder}
       audience={isAudience}
       className={cn(bare && className)}
       compact={compact}

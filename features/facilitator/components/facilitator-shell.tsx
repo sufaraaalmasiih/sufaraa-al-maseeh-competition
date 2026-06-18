@@ -9,6 +9,7 @@ import { LoadingState } from "@/components/layout/state-view";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AuthGate } from "@/features/auth/components/auth-gate";
 import { useCompetitionContentSync } from "@/features/competition-content/competition-content-runtime";
+import { useQuestionBankRuntimeSync } from "@/features/facilitator/question-bank-runtime";
 import { FacilitatorAboutTab } from "@/features/facilitator/components/facilitator-about-tab";
 import { FacilitatorAdminTab } from "@/features/facilitator/components/facilitator-admin-tab";
 import { FacilitatorAudienceTab } from "@/features/facilitator/components/facilitator-audience-tab";
@@ -83,6 +84,7 @@ export function FacilitatorShell() {
 
 function FacilitatorShellAuthenticated() {
   useCompetitionContentSync();
+  useQuestionBankRuntimeSync();
 
   const { role } = useAuthRole();
   const searchParams = useSearchParams();
