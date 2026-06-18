@@ -17,6 +17,7 @@ import {
   updateTeamFullProfile,
   type AdminStageKey,
 } from "@/features/facilitator/facilitator-team-admin";
+import { resetTimerForExceptionalReturn } from "@/features/facilitator/reset-timer-for-override";
 import {
   validateOverrideQuestionNumber,
   overrideQuestionNumberToIndex,
@@ -236,6 +237,10 @@ export function useFacilitatorControlsTab() {
             : undefined,
           reason,
         });
+        // عودة استثنائية: أعد تشغيل مؤقت الإجابة لتلك المرحلة إن كان منتهياً.
+        await resetTimerForExceptionalReturn(
+          selectedOverrideOption.status as GameFlowStatus,
+        );
         setToast("تم إرسال الفريق إلى الشاشة المختارة.");
       },
     });
