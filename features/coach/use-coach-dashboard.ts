@@ -3,6 +3,7 @@
 import { onSnapshot, query, where } from "firebase/firestore";
 import { useEffect, useMemo, useState } from "react";
 import { answersCollectionRef } from "@/firebase/firestore";
+import { resolveAnswerCorrectLabel } from "@/features/facilitator/resolve-answer-correct-label";
 import { getFacilitatorPhasePlan } from "@/features/facilitator/facilitator-flow-plan";
 import { useTeamStatesSnapshot } from "@/features/gameflow/team-states-store";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
@@ -12,6 +13,7 @@ export interface CoachHistoryItem {
   id: string;
   questionText: string;
   answer: string;
+  correctAnswer: string | null;
   isCorrect: boolean;
   pointsDelta: number;
   stage: string;
@@ -172,13 +174,19 @@ export function useCoachDashboard() {
             if (typeof data.isCorrect !== "boolean") {
               return null;
             }
+            const stage = typeof data.stage === "string" ? data.stage : "—";
+            const questionId =
+              typeof data.questionId === "string" ? data.questionId : null;
+            const field = typeof data.field === "string" ? data.field : null;
+
             return {
               id: item.id,
               questionText: formatQuestionLabel(data),
               answer: formatAnswerLabel(data),
+              correctAnswer: resolveAnswerCorrectLabel({ stage, questionId, field }),
               isCorrect: data.isCorrect,
               pointsDelta: typeof data.pointsDelta === "number" ? data.pointsDelta : 0,
-              stage: formatStageLabel(typeof data.stage === "string" ? data.stage : "—"),
+              stage: formatStageLabel(stage),
               createdAtMs: toMs(data.createdAt) || toMs(data.confirmedAt),
             };
           })

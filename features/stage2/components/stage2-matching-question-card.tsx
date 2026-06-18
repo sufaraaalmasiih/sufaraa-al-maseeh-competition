@@ -38,9 +38,6 @@ export function Stage2MatchingQuestionCard({
   const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
   const [pairings, setPairings] = useState<Stage2MatchingPairings>({});
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [statusHint, setStatusHint] = useState(
-    "اختر عبارة من العمود الأول ثم اختر الإجابة المطابقة من العمود الثاني.",
-  );
 
   const shuffledRightOptions = useMemo(
     () => getShuffledMatchingRightOptions(question),
@@ -67,9 +64,6 @@ export function Stage2MatchingQuestionCard({
     setSelectedLeft(null);
     setPairings({});
     setValidationError(null);
-    setStatusHint(
-      "اختر عبارة من العمود الأول ثم اختر الإجابة المطابقة من العمود الثاني.",
-    );
   }, [question.id]);
 
   function getLeftPairIndex(left: string): number | null {
@@ -81,12 +75,10 @@ export function Stage2MatchingQuestionCard({
     if (confirmed || disabled || saving) return;
     if (selectedLeft === left) {
       setSelectedLeft(null);
-      setStatusHint("اختر عبارة من العمود الأول ثم اختر الإجابة المطابقة من العمود الثاني.");
       return;
     }
     setSelectedLeft(left);
     setValidationError(null);
-    setStatusHint(`اختر الإجابة المناسبة لـ: ${left}`);
   }
 
   function handleRightClick(right: string) {
@@ -101,7 +93,6 @@ export function Stage2MatchingQuestionCard({
       });
       setSelectedLeft(existingLeft);
       setValidationError(null);
-      setStatusHint(`اختر الإجابة المناسبة لـ: ${existingLeft}`);
       return;
     }
 
@@ -120,7 +111,6 @@ export function Stage2MatchingQuestionCard({
     });
     setSelectedLeft(null);
     setValidationError(null);
-    setStatusHint("اختر عبارة من العمود الأول ثم اختر الإجابة المطابقة من العمود الثاني.");
   }
 
   function handleUnpair(left: string) {
@@ -131,7 +121,6 @@ export function Stage2MatchingQuestionCard({
       return next;
     });
     setSelectedLeft(left);
-    setStatusHint(`اختر الإجابة المناسبة لـ: ${left}`);
   }
 
   function handleConfirm() {
@@ -154,8 +143,6 @@ export function Stage2MatchingQuestionCard({
           {question.prompt}
         </QuestionPrompt>
       )}
-
-      <p className="matching-board-help">{statusHint}</p>
 
       <div
         className="challenge-board matching-board-grid"
@@ -226,7 +213,6 @@ export function Stage2MatchingQuestionCard({
       ) : null}
       <CompetitionConfirmButton
         className="mx-auto"
-        confirmMessage="هل أنتم متأكدون من توصيلاتكم؟ لن تتمكنوا من تعديلها بعد التأكيد."
         confirmed={confirmed}
         disabled={disabled || saving || !allPaired}
         onClick={handleConfirm}

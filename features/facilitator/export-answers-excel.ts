@@ -5,6 +5,7 @@ export interface ExportAnswersRow {
   stage: string;
   question: string;
   answer: string;
+  correctAnswer?: string;
   result: string;
   pointsDelta?: number | null;
 }
@@ -26,6 +27,7 @@ export async function exportAnswersExcel({
     المرحلة: row.stage,
     السؤال: row.question,
     الإجابة: row.answer,
+    "الإجابة الصحيحة": row.correctAnswer ?? "",
     النتيجة: row.result,
     النقاط: typeof row.pointsDelta === "number" ? row.pointsDelta : "",
   }));

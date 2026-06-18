@@ -22,6 +22,7 @@ import { Stage3QuestionOpenScreen } from "@/features/stage3/components/stage3-qu
 import { Stage3RevealResultsTable } from "@/features/stage3/components/stage3-reveal-results-table";
 import { Stage3RevealSummary } from "@/features/stage3/components/stage3-reveal-summary";
 import { Stage3SelectionTimeoutBanner } from "@/features/stage3/components/stage3-selection-timeout-banner";
+import { getStage3MockQuestion } from "@/features/stage3/stage3-mock-questions";
 import type { Stage3QuestionMetadata } from "@/features/stage3/stage3-question-types";
 import type { Stage3SelectionTimeoutNotice } from "@/features/stage3/stage3-selection-timeout-notice";
 import { useStage3ActiveAnswers } from "@/features/stage3/use-stage3-active-answers";
@@ -430,14 +431,22 @@ function Stage3FacilitatorQuestionBody({
   question: Stage3QuestionMetadata | null;
   ownerTeamName: string | null;
 }) {
+  const mockQuestion = question ? getStage3MockQuestion(question.id) : null;
+  const correctAnswer = mockQuestion?.correctAnswer ?? null;
+
   return (
     <div className="stage3-facilitator-context">
-      <Stage3QuestionOpenScreen
-        question={question}
-        ownerTeamName={ownerTeamName}
-        variant="facilitator"
+      <div className="stage3-facilitator-question-card">
+        <Stage3QuestionOpenScreen
+          question={question}
+          ownerTeamName={ownerTeamName}
+          variant="facilitator"
+        />
+      </div>
+      <Stage3FacilitatorAnswersPanel
+        questionId={question?.id ?? null}
+        correctAnswer={correctAnswer}
       />
-      <Stage3FacilitatorAnswersPanel questionId={question?.id ?? null} />
     </div>
   );
 }

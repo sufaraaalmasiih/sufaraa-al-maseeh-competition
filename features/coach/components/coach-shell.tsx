@@ -35,6 +35,7 @@ export function CoachShell() {
           stage: item.stage,
           question: item.questionText,
           answer: item.answer || "—",
+          correctAnswer: item.correctAnswer || "—",
           result: item.isCorrect ? "صحيح" : "خطأ",
           pointsDelta: item.pointsDelta,
         })),
@@ -161,6 +162,9 @@ export function CoachShell() {
                 </div>
                 <p className="coach-history__question">{item.questionText}</p>
                 <p className="coach-history__answer">إجابتكم: {item.answer || "—"}</p>
+                {item.correctAnswer ? (
+                  <p className="coach-history__correct">الإجابة الصحيحة: {item.correctAnswer}</p>
+                ) : null}
                 <p
                   className={
                     item.isCorrect

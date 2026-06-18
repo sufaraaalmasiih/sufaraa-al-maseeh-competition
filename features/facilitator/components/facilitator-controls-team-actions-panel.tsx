@@ -106,6 +106,7 @@ export function FacilitatorControlsTeamActionsPanel({
           stage: STAGE_OPTIONS_LABELS[row.stage as AdminStageKey] ?? row.stage,
           question: row.questionText || "—",
           answer: row.answer || "—",
+          correctAnswer: row.correctAnswer || "—",
           result:
             row.isCorrect === true
               ? "صحيح"
@@ -330,6 +331,7 @@ export function FacilitatorControlsTeamActionsPanel({
                     <th>المرحلة</th>
                     <th>السؤال</th>
                     <th>الإجابة</th>
+                    <th>الإجابة الصحيحة</th>
                     <th>النتيجة</th>
                   </tr>
                 </thead>
@@ -340,6 +342,7 @@ export function FacilitatorControlsTeamActionsPanel({
                       <td>{STAGE_OPTIONS_LABELS[row.stage as AdminStageKey] ?? row.stage}</td>
                       <td>{row.questionText}</td>
                       <td>{row.answer || "—"}</td>
+                      <td>{row.correctAnswer || "—"}</td>
                       <td>
                         {row.isCorrect === true
                           ? "صحيح"

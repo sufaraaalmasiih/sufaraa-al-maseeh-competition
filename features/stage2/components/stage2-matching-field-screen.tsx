@@ -80,12 +80,6 @@ export function Stage2MatchingFieldScreen({
           {currentQuestion.prompt}
         </QuestionPrompt>
       }
-      progress={
-        <p className="matching-board-progress" aria-live="polite">
-          {currentQuestion.pairs.length} توصيلات · عمودان {currentQuestion.pairs.length}×
-          {currentQuestion.pairs.length}
-        </p>
-      }
       board={
         <Stage2MatchingQuestionCard
           confirmed={confirmed}

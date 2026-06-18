@@ -3,6 +3,7 @@
 import { onSnapshot, query } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { answersCollectionRef } from "@/firebase/firestore";
+import { resolveAnswerCorrectLabel } from "@/features/facilitator/resolve-answer-correct-label";
 
 export interface AnswerLogRow {
   id: string;
@@ -10,8 +11,10 @@ export interface AnswerLogRow {
   teamName: string;
   stage: string;
   field: string | null;
+  questionId: string | null;
   questionText: string;
   answer: string;
+  correctAnswer: string | null;
   isCorrect: boolean | null;
   pointsDelta: number | null;
   createdAtMs: number;
@@ -34,14 +37,20 @@ function asString(value: unknown): string {
 
 function normalize(id: string, data: Record<string, unknown>): AnswerLogRow {
   const answerText = asString(data.answer) || asString(data.answerText) || asString(data.selectedAnswer);
+  const stage = asString(data.stage) || "—";
+  const questionId = asString(data.questionId) || null;
+  const field = asString(data.field) || null;
+
   return {
     id,
     teamId: asString(data.teamId),
     teamName: asString(data.teamName) || "فريق",
-    stage: asString(data.stage) || "—",
-    field: asString(data.field) || null,
-    questionText: asString(data.questionText) || asString(data.questionId) || "—",
+    stage,
+    field,
+    questionId,
+    questionText: asString(data.questionText) || questionId || "—",
     answer: answerText,
+    correctAnswer: resolveAnswerCorrectLabel({ stage, questionId, field }),
     isCorrect: typeof data.isCorrect === "boolean" ? data.isCorrect : null,
     pointsDelta: typeof data.pointsDelta === "number" ? data.pointsDelta : null,
     createdAtMs: toMs(data.createdAt) || toMs(data.confirmedAt),
