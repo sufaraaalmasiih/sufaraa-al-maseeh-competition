@@ -1,12 +1,17 @@
-﻿import { runTransaction, serverTimestamp } from "firebase/firestore";
+import { runTransaction, serverTimestamp } from "firebase/firestore";
 import { getClientFirestore } from "@/firebase/firebaseClient";
-import { gameFlowRef } from "@/firebase/firestore";
+import { gameFlowRef, timerRef } from "@/firebase/firestore";
 import {
   parseStage4FinishedQuestionIds,
   parseStage4QuestionMetadata,
 } from "@/features/stage4/stage4-question-metadata";
+import { parseTimerDurations } from "@/features/facilitator/facilitator-timer-settings";
+import { buildStage4PhaseTimerPayload } from "@/features/gameflow/stage4-phase-timer";
+import { resolveSyncedNowMs } from "@/lib/server-clock-sync";
 
 export async function advanceStage4Question() {
+  const now = await resolveSyncedNowMs(true);
+
   await runTransaction(getClientFirestore(), async (transaction) => {
     const gameFlowSnapshot = await transaction.get(gameFlowRef);
 
@@ -42,5 +47,21 @@ export async function advanceStage4Question() {
       stage4RevealStartedAt: 0,
       updatedAt: serverTimestamp(),
     });
+
+    if (isLastQuestion) {
+      transaction.set(
+        timerRef,
+        { active: false, paused: false, pausedRemainingMs: 0, updatedAt: serverTimestamp() },
+        { merge: true },
+      );
+    } else {
+      // مؤقت اختيار/فتح السؤال التالي — تفتحه الأتمتة تلقائياً عند انتهائه.
+      const selectionSeconds = parseTimerDurations(gameFlow.durations).stage4Selection;
+      transaction.set(
+        timerRef,
+        buildStage4PhaseTimerPayload(now, serverTimestamp(), "selection", selectionSeconds),
+        { merge: true },
+      );
+    }
   });
 }

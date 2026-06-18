@@ -42,7 +42,9 @@ const FIELDS: { key: keyof FacilitatorTimerDurations; label: string }[] = [
   { key: "stage3Selection", label: "اختيار السؤال — على المحك (ثانية)" },
   { key: "stage3Answer", label: "الإجابة — على المحك (ثانية)" },
   { key: "stage3Reveal", label: "الإعلان — على المحك (ثانية)" },
+  { key: "stage4Selection", label: "اختيار السؤال — اثبتوا بالحق (ثانية)" },
   { key: "stage4Answer", label: "الإجابة — اثبتوا بالحق (ثانية)" },
+  { key: "stage4Reveal", label: "الإعلان — اثبتوا بالحق (ثانية)" },
 ];
 
 const ORDER_OPTIONS: { value: QuestionOrderMode; label: string }[] = [

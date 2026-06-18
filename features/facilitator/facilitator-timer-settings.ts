@@ -10,7 +10,9 @@ export interface FacilitatorTimerDurations {
   stage3Selection: number;
   stage3Answer: number;
   stage3Reveal: number;
+  stage4Selection: number;
   stage4Answer: number;
+  stage4Reveal: number;
 }
 
 export const DEFAULT_TIMER_DURATIONS: FacilitatorTimerDurations = {
@@ -20,7 +22,9 @@ export const DEFAULT_TIMER_DURATIONS: FacilitatorTimerDurations = {
   stage3Selection: 15,
   stage3Answer: 20,
   stage3Reveal: 10,
+  stage4Selection: 15,
   stage4Answer: 60,
+  stage4Reveal: 10,
 };
 
 /**
@@ -37,7 +41,9 @@ export function parseTimerDurations(raw: unknown): FacilitatorTimerDurations {
     stage3Selection: numberOr(parsed.stage3Selection, DEFAULT_TIMER_DURATIONS.stage3Selection),
     stage3Answer: numberOr(parsed.stage3Answer, DEFAULT_TIMER_DURATIONS.stage3Answer),
     stage3Reveal: numberOr(parsed.stage3Reveal, DEFAULT_TIMER_DURATIONS.stage3Reveal),
+    stage4Selection: numberOr(parsed.stage4Selection, DEFAULT_TIMER_DURATIONS.stage4Selection),
     stage4Answer: numberOr(parsed.stage4Answer, DEFAULT_TIMER_DURATIONS.stage4Answer),
+    stage4Reveal: numberOr(parsed.stage4Reveal, DEFAULT_TIMER_DURATIONS.stage4Reveal),
   };
 }
 
