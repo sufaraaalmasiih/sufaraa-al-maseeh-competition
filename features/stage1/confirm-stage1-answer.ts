@@ -153,6 +153,7 @@ export async function confirmStage1Answer({
       "stageScores.stage1": currentStage1Score + pointsDelta,
       totalScore: currentTotalScore + pointsDelta,
       "progress.stage1QuestionIndex": questionIndex + 1,
+      "progress.stage1FinishedAtMs": Date.now(),
       updatedAt: serverTimestamp(),
     });
 

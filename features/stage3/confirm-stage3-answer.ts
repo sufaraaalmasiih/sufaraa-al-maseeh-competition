@@ -176,6 +176,7 @@ export async function confirmStage3Answer({
     transaction.update(currentTeamStateRef, {
       "stageScores.stage3": currentStage3Score + pointsDelta,
       totalScore: currentTotalScore + pointsDelta,
+      "progress.stage3FinishedAtMs": Date.now(),
       updatedAt: serverTimestamp(),
     });
 

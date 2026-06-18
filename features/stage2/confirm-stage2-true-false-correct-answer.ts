@@ -152,6 +152,7 @@ export async function confirmStage2TrueFalseCorrectAnswer({
       "stageScores.stage2": currentStage2Score + pointsDelta,
       totalScore: currentTotalScore + pointsDelta,
       "progress.stage2QuestionIndex": questionIndex + 1,
+      "progress.stage2FinishedAtMs": Date.now(),
       updatedAt: serverTimestamp(),
     });
 

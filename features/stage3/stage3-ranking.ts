@@ -1,3 +1,8 @@
+import {
+  assignCompetitionRanks,
+  compareFinishSpeed,
+} from "@/lib/competition-rank-assignment";
+
 export interface Stage3RankingTeam {
   teamId: string;
   teamName: string;
@@ -6,6 +11,8 @@ export interface Stage3RankingTeam {
   ready: boolean;
   stage3Score: number;
   totalScore: number;
+  /** طابع زمني لآخر نشاط مُسجِّل للنقاط في المرحلة — لكسر التعادل بالأسرع. */
+  finishedAtMs?: number | null;
 }
 
 export interface RankedStage3Team extends Stage3RankingTeam {
@@ -22,13 +29,18 @@ export function sortStage3Ranking(teams: Stage3RankingTeam[]): Stage3RankingTeam
       return second.totalScore - first.totalScore;
     }
 
+    const bySpeed = compareFinishSpeed(first.finishedAtMs, second.finishedAtMs);
+    if (bySpeed !== 0) {
+      return bySpeed;
+    }
+
     return first.teamName.localeCompare(second.teamName, "ar");
   });
 }
 
 export function getStage3Ranking(teams: Stage3RankingTeam[]): RankedStage3Team[] {
-  return sortStage3Ranking(teams).map((team, index) => ({
-    ...team,
-    rank: index + 1,
-  }));
+  return assignCompetitionRanks(
+    sortStage3Ranking(teams),
+    (team) => `${team.stage3Score}|${team.totalScore}`,
+  );
 }

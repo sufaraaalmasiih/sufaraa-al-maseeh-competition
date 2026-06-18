@@ -13,6 +13,7 @@ function normalizeTeamState(
   data: Record<string, unknown>,
 ): Stage2RankingTeam {
   const stageScores = data.stageScores as Record<string, unknown> | undefined;
+  const progress = data.progress as Record<string, unknown> | undefined;
 
   return {
     teamId: typeof data.teamId === "string" ? data.teamId : id,
@@ -23,6 +24,10 @@ function normalizeTeamState(
     ready: data.ready === true,
     stage2Score: typeof stageScores?.stage2 === "number" ? stageScores.stage2 : 0,
     totalScore: typeof data.totalScore === "number" ? data.totalScore : 0,
+    finishedAtMs:
+      typeof progress?.stage2FinishedAtMs === "number"
+        ? progress.stage2FinishedAtMs
+        : null,
   };
 }
 

@@ -34,6 +34,10 @@ function normalizeTeamState(
       typeof progress?.stage1QuestionIndex === "number"
         ? progress.stage1QuestionIndex
         : 0,
+    finishedAtMs:
+      typeof progress?.stage1FinishedAtMs === "number"
+        ? progress.stage1FinishedAtMs
+        : null,
   };
 }
 

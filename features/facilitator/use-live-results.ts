@@ -7,6 +7,10 @@ import {
 } from "@/features/facilitator/facilitator-flow-plan";
 import { getStage2FieldByIndex } from "@/features/stage2/stage2-field-sequence";
 import { normalizeStage2Progress } from "@/features/stage2/stage2-progress";
+import {
+  assignCompetitionRanks,
+  compareFinishSpeed,
+} from "@/lib/competition-rank-assignment";
 import { useTeamStatesSnapshot } from "@/features/gameflow/team-states-store";
 import type { GameFlowStatus } from "@/types";
 
@@ -16,6 +20,7 @@ export interface LiveResultRow {
   questionLabel: string;
   stageScore: number;
   totalScore: number;
+  finishedAtMs: number | null;
 }
 
 interface LiveResultsContext {
@@ -100,6 +105,36 @@ function buildQuestionLabel(
   return "—";
 }
 
+function finishedAtForStage(
+  stageKey: FacilitatorStageKey,
+  progress: Record<string, unknown> | undefined,
+): number | null {
+  if (!progress) {
+    return null;
+  }
+  const key =
+    stageKey === "stage1"
+      ? "stage1FinishedAtMs"
+      : stageKey === "stage2"
+        ? "stage2FinishedAtMs"
+        : stageKey === "stage3"
+          ? "stage3FinishedAtMs"
+          : stageKey === "stage4"
+            ? "stage4FinishedAtMs"
+            : null;
+  if (key === null) {
+    const stamps = [
+      progress.stage1FinishedAtMs,
+      progress.stage2FinishedAtMs,
+      progress.stage3FinishedAtMs,
+      progress.stage4FinishedAtMs,
+    ].filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+    return stamps.length > 0 ? Math.max(...stamps) : null;
+  }
+  const value = progress[key];
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
 function normalizeRow(
   id: string,
   data: Record<string, unknown>,
@@ -107,6 +142,7 @@ function normalizeRow(
   context: LiveResultsContext,
 ): LiveResultRow {
   const stageScores = data.stageScores as Record<string, unknown> | undefined;
+  const progress = data.progress as Record<string, unknown> | undefined;
   const storedTotal = num(data.totalScore);
   const summedTotal =
     num(stageScores?.stage1) +
@@ -120,6 +156,7 @@ function normalizeRow(
     questionLabel: buildQuestionLabel(stageKey, id, data, context),
     stageScore: stageScoreForKey(stageKey, stageScores),
     totalScore: storedTotal || summedTotal,
+    finishedAtMs: finishedAtForStage(stageKey, progress),
   };
 }
 
@@ -146,13 +183,19 @@ export function useLiveResults(
       if (second.totalScore !== first.totalScore) {
         return second.totalScore - first.totalScore;
       }
+
+      const bySpeed = compareFinishSpeed(first.finishedAtMs, second.finishedAtMs);
+      if (bySpeed !== 0) {
+        return bySpeed;
+      }
+
       return first.teamName.localeCompare(second.teamName, "ar");
     });
     return nextRows;
   }, [context, docs, enabled, stageKey]);
 
   const teams = useMemo(
-    () => rows.map((row, index) => ({ ...row, rank: index + 1 })),
+    () => assignCompetitionRanks(rows, (row) => row.totalScore),
     [rows],
   );
 

@@ -183,6 +183,7 @@ export async function confirmStage4Answer({
       "stage4.nextCorrectPoints": nextCorrectPoints,
       "progress.stage4Streak": streakAfter,
       "progress.stage4AnsweredQuestionIds": nextAnsweredIds,
+      "progress.stage4FinishedAtMs": Date.now(),
       updatedAt: serverTimestamp(),
     });
 

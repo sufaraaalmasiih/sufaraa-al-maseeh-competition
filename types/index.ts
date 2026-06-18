@@ -119,6 +119,11 @@ export interface TeamStateDocument {
       questionIndex: number;
     };
     stage4QuestionIndex: number;
+    /** طوابع زمنية لآخر نشاط مُسجِّل للنقاط في كل مرحلة — لكسر التعادل بالأسرع. */
+    stage1FinishedAtMs?: number;
+    stage2FinishedAtMs?: number;
+    stage3FinishedAtMs?: number;
+    stage4FinishedAtMs?: number;
   };
   stage2Roles: {
     matching: string;
