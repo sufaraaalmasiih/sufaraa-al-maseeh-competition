@@ -2,6 +2,7 @@ export interface Stage2RankingTeam {
   teamId: string;
   teamName: string;
   governorate: string;
+  logoUrl?: string | null;
   ready: boolean;
   stage2Score: number;
   totalScore: number;

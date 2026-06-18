@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { ArrowLeft } from "lucide-react";
 import { CompetitionConfirmButton } from "@/components/competition/competition-confirm-button";
 import { MatchingCard, type MatchingPairTone } from "@/components/competition/matching-card";
@@ -157,7 +157,10 @@ export function Stage2MatchingQuestionCard({
 
       <p className="matching-board-help">{statusHint}</p>
 
-      <div className="challenge-board">
+      <div
+        className="challenge-board matching-board-grid"
+        style={{ "--matching-rows": question.pairs.length } as CSSProperties}
+      >
         <div className="challenge-board-column">
           <h4 className="matching-board-column-title">العمود الأول</h4>
           {question.pairs.map((pair) => {

@@ -1,4 +1,5 @@
 import { ANSWER_SUBMIT_GRACE_MS } from "@/lib/competition-timer-display";
+import { getSyncedNowMs } from "@/lib/server-clock-sync";
 
 export const COMPETITION_FROZEN_MESSAGE =
   "المسابقة مجمّدة حالياً. انتظروا إشعار الميسّر.";
@@ -37,7 +38,7 @@ export function isAnsweringTimerExpired(
   timer: Record<string, unknown> | undefined | null,
   expectedStage: string,
   expectedPurpose: string,
-  now = Date.now(),
+  now = getSyncedNowMs(),
 ): boolean {
   if (!timer || timer.active !== true) {
     return false;
@@ -64,7 +65,7 @@ export function assertAnsweringTimerOpen(
   expectedStage: string,
   expectedPurpose: string,
   expiredMessage: string,
-  now = Date.now(),
+  now = getSyncedNowMs(),
   graceMs = ANSWER_SUBMIT_GRACE_MS,
 ): void {
   assertTimerNotPaused(timer);

@@ -5,6 +5,7 @@ import {
   isStage3SelectionTimeoutNoticeActive,
   type Stage3SelectionTimeoutNotice,
 } from "@/features/stage3/stage3-selection-timeout-notice";
+import { getSyncedNowMs } from "@/lib/server-clock-sync";
 
 interface Stage3SelectionTimeoutBannerProps {
   notice: Stage3SelectionTimeoutNotice | null;
@@ -13,7 +14,7 @@ interface Stage3SelectionTimeoutBannerProps {
 export function Stage3SelectionTimeoutBanner({
   notice,
 }: Stage3SelectionTimeoutBannerProps) {
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState(() => getSyncedNowMs());
 
   useEffect(() => {
     if (!notice) {
@@ -21,7 +22,7 @@ export function Stage3SelectionTimeoutBanner({
     }
 
     const interval = window.setInterval(() => {
-      setNow(Date.now());
+      setNow(getSyncedNowMs());
     }, 250);
 
     return () => window.clearInterval(interval);

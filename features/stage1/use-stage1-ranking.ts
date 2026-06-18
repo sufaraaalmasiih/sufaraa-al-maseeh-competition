@@ -21,6 +21,7 @@ function normalizeTeamState(
     teamName: typeof data.teamName === "string" ? data.teamName : "فريق بدون اسم",
     governorate:
       typeof data.governorate === "string" ? data.governorate : "غير محددة",
+    logoUrl: typeof data.logoUrl === "string" ? data.logoUrl : null,
     ready: data.ready === true,
     competitionIntroReady: readiness?.competitionIntro === true,
     stage1IntroReady: readiness?.stage1Intro === true,

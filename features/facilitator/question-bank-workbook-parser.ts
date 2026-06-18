@@ -344,28 +344,23 @@ function buildStage2Bank(rows: Record<string, unknown>[]): Stage2QuestionBank {
 
   matchingGroups.forEach((group, key) => {
     const pairs: Stage2MatchingPair[] = [];
-    const rightOptions = new Set<string>();
 
     group.rows.forEach((row) => {
       const left = trim(row.question) || trim(row.prompt);
       const correctRight = trim(row.correct) || trim(row.correctanswer);
-      const options = collectOptions(row);
-      options.forEach((option) => rightOptions.add(option));
-      if (correctRight) {
-        rightOptions.add(correctRight);
-      }
       if (left && correctRight) {
         pairs.push({ left, correctRight });
       }
     });
 
     if (pairs.length > 0) {
+      const uniqueRights = [...new Set(pairs.map((pair) => pair.correctRight.trim()).filter(Boolean))];
       matching.push({
         id: key,
         prompt: "وصّل كل عبارة بما يناسبها",
         reference: group.reference,
         pairs,
-        rightOptions: [...rightOptions],
+        rightOptions: uniqueRights,
       });
     }
   });

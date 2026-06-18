@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { ArenaLayout } from "@/components/competition/arena-layout";
-import { StepJourney } from "@/components/competition/step-journey";
 import { QuestionPrompt } from "@/components/competition/question-prompt";
 import { QuestionTransition } from "@/components/motion/question-transition";
 import { EmptyState } from "@/components/layout/empty-state";
@@ -82,7 +81,10 @@ export function Stage2MatchingFieldScreen({
         </QuestionPrompt>
       }
       progress={
-        <StepJourney current={questionIndex + 1} total={questionCount} />
+        <p className="matching-board-progress" aria-live="polite">
+          {currentQuestion.pairs.length} توصيلات · عمودان {currentQuestion.pairs.length}×
+          {currentQuestion.pairs.length}
+        </p>
       }
       board={
         <Stage2MatchingQuestionCard

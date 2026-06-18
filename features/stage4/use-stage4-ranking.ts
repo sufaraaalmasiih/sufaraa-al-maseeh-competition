@@ -7,6 +7,7 @@ export interface Stage4RankedTeam {
   teamId: string;
   teamName: string;
   governorate: string;
+  logoUrl?: string | null;
   stage4Score: number;
   totalScore: number;
   streak: number;
@@ -23,6 +24,7 @@ export function useStage4Ranking() {
         teamId: typeof data.teamId === "string" ? data.teamId : doc.id,
         teamName: typeof data.teamName === "string" ? data.teamName : "فريق بدون اسم",
         governorate: typeof data.governorate === "string" ? data.governorate : "غير محددة",
+        logoUrl: typeof data.logoUrl === "string" ? data.logoUrl : null,
         stage4Score:
           data.stageScores && typeof (data.stageScores as Record<string, unknown>).stage4 === "number"
             ? (data.stageScores as Record<string, number>).stage4

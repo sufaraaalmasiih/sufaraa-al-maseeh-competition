@@ -102,7 +102,7 @@ export function AuthGate({
 
   if (authStillPending) {
     return (
-      <CompetitionGradientShell centerContent className="app-viewport-fill" contentClassName="app-loading-screen__content">
+      <CompetitionGradientShell centerContent className="app-viewport-fill" contentClassName="app-auth-loading-screen">
         <LoadingState variant="page" title="جاري التحقق من الحساب..." waitingComponent="AuthGate" />
       </CompetitionGradientShell>
     );
@@ -110,7 +110,7 @@ export function AuthGate({
 
   if (loading && bootstrapReady) {
     return (
-      <CompetitionGradientShell centerContent className="app-viewport-fill" contentClassName="app-loading-screen__content">
+      <CompetitionGradientShell centerContent className="app-viewport-fill" contentClassName="app-auth-loading-screen">
         <ErrorState
           title="تعذر التحقق من الحساب"
           description="استغرق التحقق وقتاً أطول من المعتاد. أعد تحميل الصفحة أو سجّل الدخول من جديد."
@@ -123,7 +123,7 @@ export function AuthGate({
 
   if (error) {
     return (
-      <CompetitionGradientShell centerContent className="app-viewport-fill" contentClassName="app-loading-screen__content">
+      <CompetitionGradientShell centerContent className="app-viewport-fill" contentClassName="app-auth-loading-screen">
         <ErrorState
           title="تعذر التحقق من الحساب"
           description={error}
@@ -137,7 +137,7 @@ export function AuthGate({
   if (!user) {
     if (!bootstrapReady) {
       return (
-        <CompetitionGradientShell centerContent className="app-viewport-fill" contentClassName="app-loading-screen__content">
+        <CompetitionGradientShell centerContent className="app-viewport-fill" contentClassName="app-auth-loading-screen">
           <LoadingState variant="page" title="جاري التحقق من الحساب..." waitingComponent="AuthGate" />
         </CompetitionGradientShell>
       );

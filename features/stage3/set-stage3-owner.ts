@@ -3,6 +3,7 @@ import { gameFlowRef, timerRef } from "@/firebase/firestore";
 import { findTurnIndexInOrder, parseStage3TurnOrder } from "@/features/stage3/stage3-turn-order";
 import { buildStage3SelectionTimerPayload } from "@/features/stage3/stage3-timer-payload";
 import { parseTimerDurations } from "@/features/facilitator/facilitator-timer-settings";
+import { resolveSyncedNowMs } from "@/lib/server-clock-sync";
 
 /** Emergency override — facilitator manually sets owner team */
 export async function setStage3OwnerTeam(teamId: string, teamName: string) {
@@ -18,7 +19,7 @@ export async function setStage3OwnerTeam(teamId: string, teamName: string) {
   const turnIndex =
     turnOrder.length > 0 ? findTurnIndexInOrder(turnOrder, teamId) : 0;
 
-  const selectionNow = Date.now();
+  const selectionNow = await resolveSyncedNowMs(true);
   const updatedAt = serverTimestamp();
 
   await updateDoc(gameFlowRef, {

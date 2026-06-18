@@ -20,9 +20,6 @@ export const stage2MatchingMockQuestions: Stage2MatchingQuestion[] = [
       "كثيراً",
       "الغصن",
       "تصنعوا شيئاً",
-      "المحبة أعظم",
-      "الحجر",
-      "تعرفوا الحق",
     ],
   },
 ];

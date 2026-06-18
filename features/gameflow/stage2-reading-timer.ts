@@ -2,12 +2,13 @@
 
 import { serverTimestamp, setDoc } from "firebase/firestore";
 import { timerRef } from "@/firebase/firestore";
+import { getSyncedNowMs } from "@/lib/server-clock-sync";
 
 export const STAGE2_READING_DURATION_SECONDS = 180;
 
 export function buildStage2ReadingTimerPayload(
   seconds = STAGE2_READING_DURATION_SECONDS,
-  now = Date.now(),
+  now = getSyncedNowMs(),
 ) {
   return {
     active: true,
@@ -24,7 +25,7 @@ export function buildStage2ReadingTimerPayload(
 
 export async function startStage2ReadingTimerDoc(
   seconds = STAGE2_READING_DURATION_SECONDS,
-  now = Date.now(),
+  now = getSyncedNowMs(),
 ) {
   await setDoc(timerRef, buildStage2ReadingTimerPayload(seconds, now), {
     merge: true,

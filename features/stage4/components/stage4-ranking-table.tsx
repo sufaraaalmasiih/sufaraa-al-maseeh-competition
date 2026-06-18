@@ -1,7 +1,7 @@
 "use client";
 
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
-import { AnimatedRankingRow } from "@/components/motion/animated-ranking-row";
+import { CompetitionRankingBoard } from "@/components/competition/competition-ranking-board";
 import type { Stage4RankedTeam } from "@/features/stage4/use-stage4-ranking";
 import { STAGE4_NAME } from "@/features/stage4/stage4-constants";
 import { cn } from "@/lib/utils";
@@ -53,36 +53,22 @@ export function Stage4RankingTable({
             </>
           ) : null}
         </div>
-        <div className="competition-ranking-scroll competition-ranking-scroll--cards">
-          {teams.map((team, index) => {
-            const rank = index + 1;
-            return (
-              <AnimatedRankingRow
-                key={team.teamId}
-                index={index}
-                animate={animate}
-                className={cn(
-                  "competition-ranking-row competition-ranking-row--card",
-                  rank === 1 && "competition-ranking-row--gold",
-                  rank === 2 && "competition-ranking-row--silver",
-                  rank === 3 && "competition-ranking-row--bronze",
-                )}
-              >
-                <span className="competition-ranking-row__rank">{rank}</span>
-                <div className="competition-ranking-row__team">
-                  <p className="competition-ranking-row__name">{team.teamName}</p>
-                  <p className="competition-ranking-row__meta">
-                    المجموع: {team.totalScore} — التسلسل: {team.streak}
-                  </p>
-                </div>
-                <div className="competition-ranking-row__score">
-                  <span className="competition-ranking-row__score-label">نقاط المرحلة</span>
-                  <span className="competition-ranking-row__score-value">{team.stage4Score}</span>
-                </div>
-              </AnimatedRankingRow>
-            );
-          })}
-        </div>
+        <CompetitionRankingBoard
+          animate={animate}
+          bare={embedded}
+          scoreLabel="نقاط المرحلة"
+          teams={teams.map((team, index) => ({
+            teamId: team.teamId,
+            teamName: team.teamName,
+            rank: index + 1,
+            stageScore: team.stage4Score,
+            governorate: team.governorate,
+            logoUrl: team.logoUrl,
+            totalScore: team.totalScore,
+            meta: `المجموع: ${team.totalScore} · التسلسل: ${team.streak}`,
+          }))}
+          variant={variant === "audience" ? "audience" : "embedded"}
+        />
       </div>
     );
 

@@ -1,11 +1,12 @@
 import type { CompetitionTimer } from "@/types";
+import { getSyncedNowMs } from "@/lib/server-clock-sync";
 
 /** Shared grace window for UI + server answer submission. */
 export const ANSWER_SUBMIT_GRACE_MS = 3_000;
 
 export function computeRemainingSeconds(
   timer: CompetitionTimer | null | undefined,
-  now = Date.now(),
+  now = getSyncedNowMs(),
 ): number {
   if (!timer?.active) {
     return 0;
@@ -24,7 +25,7 @@ export function computeRemainingSeconds(
 
 export function isTimerExpiredForUi(
   timer: CompetitionTimer | null | undefined,
-  now = Date.now(),
+  now = getSyncedNowMs(),
 ): boolean {
   if (!timer?.active || timer.paused) {
     return false;
@@ -35,7 +36,7 @@ export function isTimerExpiredForUi(
 
 export function isTimerExpiredForSubmit(
   timer: CompetitionTimer | null | undefined,
-  now = Date.now(),
+  now = getSyncedNowMs(),
 ): boolean {
   if (!timer?.active || timer.paused) {
     return false;

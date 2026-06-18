@@ -10,6 +10,7 @@ import { buildStage3RevealTimerPayload } from "@/features/stage3/stage3-timer-pa
 import { parseStage3OwnerTurnIndex } from "@/features/stage3/stage3-question-metadata";
 import { parseStage3TurnOrder, resolveOwnerFromTurnOrder } from "@/features/stage3/stage3-turn-order";
 import { parseTimerDurations } from "@/features/facilitator/facilitator-timer-settings";
+import { getSyncedNowMs } from "@/lib/server-clock-sync";
 
 const MAIN_COMPETITION_ID = "main";
 
@@ -40,7 +41,7 @@ export async function handleStage3SelectionTimeout(): Promise<HandleStage3Select
     }
 
     const timer = timerSnapshot.exists() ? timerSnapshot.data() : null;
-    const now = Date.now();
+    const now = getSyncedNowMs();
 
     if (
       !timer ||

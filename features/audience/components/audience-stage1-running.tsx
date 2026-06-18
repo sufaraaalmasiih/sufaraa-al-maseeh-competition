@@ -15,7 +15,7 @@ export function AudienceStage1Running() {
       transition={{ duration: 0.32 }}
     >
       <div className="gameplay-flow">
-        <section className="gameplay-board-card">
+        <section className="gameplay-board-card audience-live-panel">
           <header className="audience-live-panel__section-head">
             <p className="audience-live-panel__eyebrow">الترتيب المباشر</p>
             <h2 className="audience-live-panel__title">اجمعوا الكنوز</h2>

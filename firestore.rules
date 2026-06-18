@@ -76,11 +76,19 @@ service cloud.firestore {
         && teamAnswerPayloadAllowed(competitionId);
     }
 
+    // Firestore && and || are NOT short-circuit — never use resource.data when resource may be null.
+    function answerVisibleToAudience() {
+      return resource != null ? resource.data.visibleToAudience == true : false;
+    }
+
+    function answerOwnedByAuthUser() {
+      return resource == null ? true : resource.data.teamId == request.auth.uid;
+    }
+
     function answerReadable(competitionId) {
       return isFacilitator()
-        || (resource != null && resource.data.visibleToAudience == true)
-        || (teamRegisteredInCompetition(competitionId)
-            && (resource == null || resource.data.teamId == request.auth.uid));
+        || answerVisibleToAudience()
+        || (teamRegisteredInCompetition(competitionId) && answerOwnedByAuthUser());
     }
 
     // Team profile (registration)
@@ -138,7 +146,8 @@ service cloud.firestore {
         allow read: if true;
         allow write: if isFacilitator()
           || (docId == 'gameFlow' && stage3OwnerSelectingQuestion())
-          || (docId == 'timer' && teamStage3AnsweringTimerAllowed(competitionId));
+          || (docId == 'timer' && teamStage3AnsweringTimerAllowed(competitionId))
+          || (docId == 'clockSync' && isSignedIn());
       }
 
       // Rankings visible to audience; teams update own doc with bounded score deltas

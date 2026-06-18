@@ -9,10 +9,23 @@ import {
 } from "@/lib/competition-timer-display";
 import { patchLoadingDebug } from "@/lib/loading-debug-store";
 import { realLoadingDebug } from "@/lib/real-loading-debug";
+import { getSyncedNowMs, syncServerClockOffset } from "@/lib/server-clock-sync";
 
 export function useCompetitionTimer() {
   const { timer, loading, error } = useTimerStoreSnapshot();
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState(() => getSyncedNowMs());
+
+  useEffect(() => {
+    void syncServerClockOffset();
+  }, []);
+
+  useEffect(() => {
+    if (!timer?.active) {
+      return;
+    }
+
+    void syncServerClockOffset(true);
+  }, [timer?.active, timer?.endsAtMs]);
 
   useEffect(() => {
     patchLoadingDebug({ timerLoading: loading });
@@ -28,8 +41,8 @@ export function useCompetitionTimer() {
       return undefined;
     }
 
-    setNow(Date.now());
-    const intervalId = window.setInterval(() => setNow(Date.now()), 250);
+    setNow(getSyncedNowMs());
+    const intervalId = window.setInterval(() => setNow(getSyncedNowMs()), 250);
 
     return () => window.clearInterval(intervalId);
   }, [timer?.active, timer?.paused, timer?.endsAtMs]);

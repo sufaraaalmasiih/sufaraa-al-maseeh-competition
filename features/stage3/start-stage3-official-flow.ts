@@ -3,6 +3,7 @@ import { gameFlowRef, teamStatesCollectionRef, timerRef } from "@/firebase/fires
 import { buildStage3SelectionTimerPayload } from "@/features/stage3/stage3-timer-payload";
 import { buildStage3TurnOrder } from "@/features/stage3/stage3-turn-order";
 import { fetchTimerDurations } from "@/features/facilitator/facilitator-timer-settings";
+import { resolveSyncedNowMs } from "@/lib/server-clock-sync";
 
 const MAIN_COMPETITION_ID = "main";
 
@@ -28,7 +29,7 @@ export async function startStage3OfficialFlow() {
     throw new Error("No teams registered for Stage 3.");
   }
 
-  const now = Date.now();
+  const now = await resolveSyncedNowMs(true);
   const updatedAt = serverTimestamp();
   const selectionSeconds = (await fetchTimerDurations()).stage3Selection;
 

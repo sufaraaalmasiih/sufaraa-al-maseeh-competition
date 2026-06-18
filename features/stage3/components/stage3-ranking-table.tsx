@@ -1,6 +1,6 @@
 import { EmptyState } from "@/components/layout/empty-state";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
-import { AnimatedRankingRow } from "@/components/motion/animated-ranking-row";
+import { CompetitionRankingBoard } from "@/components/competition/competition-ranking-board";
 import { STAGE3_NAME } from "@/features/stage3/stage3-constants";
 import type { RankedStage3Team } from "@/features/stage3/stage3-ranking";
 import { cn } from "@/lib/utils";
@@ -78,32 +78,21 @@ export function Stage3RankingTable({
             </>
           )}
         </div>
-        <div className="competition-ranking-scroll competition-ranking-scroll--cards">
-          {teams.map((team, index) => (
-            <AnimatedRankingRow
-              key={team.teamId}
-              index={index}
-              animate={audienceAnimate}
-              variant={variant === "audience" ? "audience" : "default"}
-              className={cn(
-                "competition-ranking-row competition-ranking-row--card",
-                team.rank === 1 && "competition-ranking-row--gold",
-                team.rank === 2 && "competition-ranking-row--silver",
-                team.rank === 3 && "competition-ranking-row--bronze",
-              )}
-            >
-              <span className="competition-ranking-row__rank">{team.rank}</span>
-              <div className="competition-ranking-row__team">
-                <p className="competition-ranking-row__name">{team.teamName}</p>
-                <p className="competition-ranking-row__meta">المجموع: {team.totalScore}</p>
-              </div>
-              <div className="competition-ranking-row__score">
-                <span className="competition-ranking-row__score-label">نقاط المرحلة</span>
-                <span className="competition-ranking-row__score-value">{team.stage3Score}</span>
-              </div>
-            </AnimatedRankingRow>
-          ))}
-        </div>
+        <CompetitionRankingBoard
+          animate={audienceAnimate}
+          bare={embedded}
+          scoreLabel="نقاط المرحلة"
+          teams={teams.map((team) => ({
+            teamId: team.teamId,
+            teamName: team.teamName,
+            rank: team.rank,
+            stageScore: team.stage3Score,
+            governorate: team.governorate,
+            logoUrl: team.logoUrl,
+            totalScore: team.totalScore,
+          }))}
+          variant={variant === "audience" ? "audience" : "embedded"}
+        />
       </div>
     );
 

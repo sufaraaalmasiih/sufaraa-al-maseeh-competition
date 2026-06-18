@@ -9,6 +9,7 @@ import {
 } from "@/features/stage3/stage3-turn-order";
 import { parseStage3OwnerTurnIndex } from "@/features/stage3/stage3-question-metadata";
 import { parseTimerDurations } from "@/features/facilitator/facilitator-timer-settings";
+import { getSyncedNowMs } from "@/lib/server-clock-sync";
 
 interface AdvanceStage3TurnInput {
   rotateOwner?: boolean;
@@ -42,7 +43,7 @@ export async function advanceStage3Turn({ rotateOwner = true }: AdvanceStage3Tur
       throw new Error("Could not resolve next turn team.");
     }
 
-    const now = Date.now();
+    const now = getSyncedNowMs();
     const updatedAt = serverTimestamp();
     const selectionSeconds = parseTimerDurations(gameFlow.durations).stage3Selection;
 

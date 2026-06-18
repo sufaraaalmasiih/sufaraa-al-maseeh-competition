@@ -12,6 +12,7 @@ import { Stage3FacilitatorAnswersPanel } from "@/features/stage3/components/stag
 import { Stage3QuestionOpenScreen } from "@/features/stage3/components/stage3-question-open-screen";
 import { Stage3StartRevealButton } from "@/features/stage3/components/stage3-start-reveal-button";
 import type { Stage3QuestionMetadata } from "@/features/stage3/stage3-question-types";
+import { getSyncedNowMs } from "@/lib/server-clock-sync";
 
 interface Stage3FacilitatorQuestionPanelProps {
   question: Stage3QuestionMetadata | null;
@@ -45,7 +46,7 @@ export function Stage3FacilitatorQuestionPanel({
 
     const timerEnded =
       isExpired ||
-      (typeof timer?.endsAtMs === "number" && timer.endsAtMs <= Date.now());
+      (typeof timer?.endsAtMs === "number" && timer.endsAtMs <= getSyncedNowMs());
 
     if (!timerEnded) {
       return;

@@ -1,22 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { sanitizeStage2BankForTeam } from "@/lib/sanitize-question-bank";
+import {
+  getMatchingRightAnswers,
+  getShuffledMatchingRightOptions,
+} from "@/features/stage2/stage2-matching";
 import { stage2MatchingMockQuestions } from "@/features/stage2/stage2-matching-mock-questions";
-import { getShuffledMatchingRightOptions } from "@/features/stage2/stage2-matching";
 
-describe("getShuffledMatchingRightOptions", () => {
-  it("uses rightOptions when correctRight is stripped for team playback", () => {
-    const [question] = sanitizeStage2BankForTeam({
-      matching: stage2MatchingMockQuestions,
-      arrangeVerse: [],
-      completeVerse: [],
-      trueFalseCorrect: [],
-    }).matching;
+describe("stage2-matching", () => {
+  it("uses exactly one right answer per left pair", () => {
+    const question = stage2MatchingMockQuestions[0];
+    const answers = getMatchingRightAnswers(question);
 
-    const options = getShuffledMatchingRightOptions(question);
+    expect(answers).toHaveLength(5);
+    expect(new Set(answers).size).toBe(5);
+  });
 
-    expect(options.length).toBeGreaterThan(0);
-    expect(options.every((option) => option.trim().length > 0)).toBe(true);
-    expect(options).toContain("أبي الكرام");
-    expect(options).toContain("الكرمة");
+  it("shuffles without adding distractors", () => {
+    const question = stage2MatchingMockQuestions[0];
+    const shuffled = getShuffledMatchingRightOptions(question);
+
+    expect(shuffled).toHaveLength(5);
+    expect(new Set(shuffled)).toEqual(new Set(getMatchingRightAnswers(question)));
   });
 });

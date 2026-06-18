@@ -9,6 +9,7 @@ import {
 import type { Stage3QuestionMetadata } from "@/features/stage3/stage3-question-types";
 import { buildStage3AnsweringTimerPayload } from "@/features/stage3/stage3-timer-payload";
 import { parseTimerDurations } from "@/features/facilitator/facilitator-timer-settings";
+import { resolveSyncedNowMs } from "@/lib/server-clock-sync";
 
 const MAIN_COMPETITION_ID = "main";
 
@@ -27,7 +28,7 @@ export async function selectStage3QuestionByOwner({
   callerTeamId,
   callerTeamName,
 }: SelectStage3QuestionByOwnerInput) {
-  const now = Date.now();
+  const now = await resolveSyncedNowMs(true);
 
   await runTransaction(getClientFirestore(), async (transaction) => {
     const gameFlowSnapshot = await transaction.get(gameFlowRef);

@@ -14,6 +14,7 @@ import { returnToStage3Board } from "@/features/stage3/return-to-stage3-board";
 import { setStage3OwnerTeam } from "@/features/stage3/set-stage3-owner";
 import { startStage3OfficialFlow } from "@/features/stage3/start-stage3-official-flow";
 import { startStage3Reveal } from "@/features/stage3/start-stage3-reveal";
+import { getSyncedNowMs } from "@/lib/server-clock-sync";
 import { Stage3Board } from "@/features/stage3/components/stage3-board";
 import { Stage3FacilitatorAnswersPanel } from "@/features/stage3/components/stage3-facilitator-answers-panel";
 import { Stage3FacilitatorResultsPanel } from "@/features/stage3/components/stage3-facilitator-results-panel";
@@ -191,7 +192,7 @@ function Stage3FacilitatorToolbar({
       timer?.stage === "stage3" && timer?.purpose === "answering";
     const timerEnded =
       isExpired ||
-      (typeof timer?.endsAtMs === "number" && timer.endsAtMs <= Date.now());
+      (typeof timer?.endsAtMs === "number" && timer.endsAtMs <= getSyncedNowMs());
 
     if (!timerEnded || !isStage3AnsweringTimer) {
       return;

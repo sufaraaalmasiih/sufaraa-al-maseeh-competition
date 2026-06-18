@@ -12,6 +12,7 @@ import {
   parseStage3QuestionMetadata,
 } from "@/features/stage3/stage3-question-metadata";
 import { parseTimerDurations } from "@/features/facilitator/facilitator-timer-settings";
+import { getSyncedNowMs } from "@/lib/server-clock-sync";
 
 export interface AutoFinishStage3RevealResult {
   skipped: boolean;
@@ -38,7 +39,7 @@ export async function autoFinishStage3RevealAndReturnBoard(): Promise<AutoFinish
     }
 
     const timer = timerSnapshot.exists() ? timerSnapshot.data() : null;
-    const now = Date.now();
+    const now = getSyncedNowMs();
 
     if (
       !timer ||
@@ -71,7 +72,7 @@ export async function autoFinishStage3RevealAndReturnBoard(): Promise<AutoFinish
       throw new Error("Could not resolve next owner team.");
     }
 
-    const selectionNow = Date.now();
+    const selectionNow = getSyncedNowMs();
     const updatedAt = serverTimestamp();
     const selectionSeconds = parseTimerDurations(gameFlow.durations).stage3Selection;
 

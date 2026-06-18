@@ -7,6 +7,7 @@ import { markStage3AnswersVisibleToAudience } from "@/features/stage3/mark-stage
 } from "@/features/stage3/stage3-question-metadata";
 import { buildStage3RevealTimerPayload } from "@/features/stage3/stage3-timer-payload";
 import { parseTimerDurations } from "@/features/facilitator/facilitator-timer-settings";
+import { getSyncedNowMs } from "@/lib/server-clock-sync";
 
 const SKIP_STATUSES = new Set([
   "stage3_reveal",
@@ -51,7 +52,7 @@ export async function autoCloseAndRevealStage3Question(): Promise<AutoCloseAndRe
     }
 
     const timer = timerSnapshot.exists() ? timerSnapshot.data() : null;
-    const now = Date.now();
+    const now = getSyncedNowMs();
     const answeringTimerEnded =
       timer?.stage === "stage3" &&
       timer?.purpose === "answering" &&

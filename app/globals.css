@@ -107,7 +107,11 @@
   }
 
   .app-loading-screen__content {
-    @apply flex h-full w-full flex-1 items-center justify-center overflow-hidden px-4;
+    @apply flex min-h-[100dvh] w-full flex-1 items-center justify-center overflow-hidden px-4;
+  }
+
+  .app-auth-loading-screen {
+    @apply flex min-h-[100dvh] w-full items-center justify-center px-4;
   }
 
   .page-shell {
@@ -2294,6 +2298,75 @@
     color: #9a7209;
   }
 
+  .competition-ranking-row--with-logo {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .competition-ranking-row__logo {
+    justify-self: center;
+  }
+
+  .competition-ranking-scroll--live {
+    max-height: min(62vh, 44rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-inline: 0.15rem;
+    scrollbar-gutter: stable;
+  }
+
+  .competition-ranking-scroll--comfortable {
+    gap: 0.65rem;
+  }
+
+  .competition-ranking-scroll--medium {
+    gap: 0.5rem;
+  }
+
+  .competition-ranking-scroll--dense {
+    gap: 0.35rem;
+  }
+
+  .competition-ranking-scroll--dense .competition-ranking-row--card {
+    min-height: 4.25rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: 0.95rem;
+  }
+
+  .competition-ranking-scroll--dense .competition-ranking-row__name {
+    font-size: 0.92rem;
+  }
+
+  .competition-ranking-scroll--dense .competition-ranking-row__score-value {
+    font-size: 1.15rem;
+  }
+
+  .competition-ranking-panel--live {
+    width: 100%;
+  }
+
+  .matching-board-grid {
+    --matching-rows: 5;
+  }
+
+  .matching-board-progress {
+    @apply rounded-xl border px-4 py-2 text-center text-sm font-bold text-[#143A5A];
+    border-color: rgba(35, 136, 196, 0.18);
+    background: rgba(243, 250, 255, 0.92);
+  }
+
+  .gameplay-matching-zone .matching-board-help {
+    @apply rounded-xl border px-4 py-3 text-center text-sm font-bold text-[#143A5A];
+    border-color: rgba(35, 136, 196, 0.16);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(243, 250, 255, 0.92) 100%);
+  }
+
+  .gameplay-matching-zone .matching-board-column-title {
+    @apply mb-1 text-center text-xs font-black uppercase tracking-wide text-[#2388C4];
+  }
+
   .competition-podium {
     @apply rounded-3xl border px-4 py-5 sm:px-6 sm:py-6;
     border-color: rgba(35, 136, 196, 0.14);
@@ -2992,7 +3065,7 @@
 
   .challenge-board-column {
     @apply grid gap-2.5;
-    grid-template-rows: repeat(5, minmax(4.75rem, 1fr));
+    grid-template-rows: repeat(var(--matching-rows, 5), minmax(3.75rem, 1fr));
   }
 
   .step-journey-dot {
@@ -3516,7 +3589,7 @@
   }
 
   .gameplay-board-card .challenge-board-column {
-    grid-template-rows: repeat(5, minmax(5.25rem, 1fr));
+    grid-template-rows: repeat(var(--matching-rows, 5), minmax(5.25rem, 1fr));
   }
 
   .gameplay-board-card .choice-card {
@@ -3581,7 +3654,7 @@
 
   .gameplay-board-card:has(.gameplay-matching-zone) .challenge-board-column {
     @apply gap-2;
-    grid-template-rows: repeat(5, minmax(3.5rem, auto));
+    grid-template-rows: repeat(var(--matching-rows, 5), minmax(3.5rem, auto));
   }
 
   .gameplay-board-card:has(.gameplay-matching-zone) .matching-card {
@@ -9597,7 +9670,7 @@
     }
 
     .team-player-shell.app-viewport-fill .gameplay-board-card:has(.gameplay-matching-zone) .challenge-board-column {
-      grid-template-rows: repeat(5, minmax(3rem, auto));
+      grid-template-rows: repeat(var(--matching-rows, 5), minmax(3rem, auto));
       gap: 0.35rem;
     }
 
@@ -10076,7 +10149,7 @@
     }
 
     .team-player-shell.app-viewport-fill .gameplay-board-card:has(.gameplay-matching-zone) .challenge-board-column {
-      grid-template-rows: repeat(5, minmax(2.85rem, auto));
+      grid-template-rows: repeat(var(--matching-rows, 5), minmax(2.85rem, auto));
     }
 
     .team-player-shell.app-viewport-fill .competition-stage-screen--reading .competition-stage-screen__reference-text {
@@ -10645,12 +10718,25 @@
   }
 
   .audience-display .competition-ranking-scroll--cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
-    gap: 0.75rem;
-    max-height: none;
-    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    max-height: min(68vh, 48rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
     padding-inline: 0;
+  }
+
+  .audience-display .competition-ranking-scroll--live {
+    max-height: min(68vh, 48rem);
+  }
+
+  .audience-display .competition-ranking-row--with-logo {
+    min-height: 4.75rem;
+    padding: 0.85rem 1rem;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.97);
+    box-shadow: 0 8px 20px rgba(8, 24, 40, 0.08);
   }
 
   .audience-display .competition-ranking-row--card {

@@ -15,6 +15,7 @@ import {
 } from "@/features/stage3/stage3-question-metadata";
 import { buildStage3RevealTimerPayload } from "@/features/stage3/stage3-timer-payload";
 import { parseTimerDurations } from "@/features/facilitator/facilitator-timer-settings";
+import { getSyncedNowMs } from "@/lib/server-clock-sync";
 
 const MAIN_COMPETITION_ID = "main";
 
@@ -73,7 +74,7 @@ export async function startStage3Reveal() {
       ? usedQuestionIds
       : [...usedQuestionIds, activeQuestion.id];
 
-    const now = Date.now();
+    const now = getSyncedNowMs();
     const revealSeconds = parseTimerDurations(gameFlow.durations).stage3Reveal;
 
     transaction.update(gameFlowRef, {

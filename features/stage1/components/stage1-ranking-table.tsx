@@ -7,8 +7,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { CompetitionRankingBoard } from "@/components/competition/competition-ranking-board";
 import { cn } from "@/lib/utils";
-import { AnimatedRankingRow } from "@/components/motion/animated-ranking-row";
 import type { RankedStage1Team } from "@/features/stage1/stage1-ranking";
 
 interface Stage1RankingTableProps {
@@ -29,6 +29,18 @@ const topRankStyles: Record<number, string> = {
   2: "bg-[#F3FAFF]",
   3: "bg-[#F1F9E8]",
 };
+
+function toRankingEntries(teams: RankedStage1Team[]) {
+  return teams.map((team) => ({
+    teamId: team.teamId,
+    teamName: team.teamName,
+    rank: team.rank,
+    stageScore: team.stage1Score,
+    governorate: team.governorate,
+    logoUrl: team.logoUrl,
+    totalScore: team.totalScore,
+  }));
+}
 
 export function Stage1RankingTable({
   teams,
@@ -65,46 +77,21 @@ export function Stage1RankingTable({
       </CardHeader>
       )}
       <CardContent className={hideHeader ? "p-0" : undefined}>
-        {loading ? <LoadingState variant="inline" /> : null}
-        {error ? <ErrorState title="تعذر تحميل الترتيب" description={error} /> : null}
-        {!loading && !error && teams.length === 0 ? (
-          <EmptyState title="بانتظار تسجيل الفرق" />
+        {audience ? (
+          <CompetitionRankingBoard
+            animate={animate}
+            bare
+            error={error}
+            loading={loading}
+            scoreLabel="نقطة"
+            teams={toRankingEntries(teams)}
+            variant="embedded"
+          />
         ) : null}
-        {!loading && !error && teams.length > 0 && audience ? (
-          <div className="competition-ranking-scroll competition-ranking-scroll--cards space-y-3">
-            {teams.map((team, index) => (
-              <AnimatedRankingRow
-                key={team.teamId}
-                index={index}
-                animate={animate}
-                variant={audience ? "audience" : "default"}
-                className={cn(
-                  "grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-md border border-primary/10 bg-white p-4",
-                  topRankStyles[team.rank],
-                )}
-              >
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-xl font-extrabold text-primary-foreground">
-                  {team.rank}
-                </div>
-                <div className="min-w-0">
-                  <p className="break-words text-lg font-extrabold leading-7 text-[#143A5A]">
-                    {team.teamName}
-                  </p>
-                  <p className="text-sm font-semibold text-muted-foreground">
-                    {team.governorate}
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-3xl font-extrabold text-primary">
-                    {team.stage1Score}
-                  </p>
-                  <p className="text-xs font-bold text-muted-foreground">
-                    نقطة
-                  </p>
-                </div>
-              </AnimatedRankingRow>
-            ))}
-          </div>
+        {!audience && loading ? <LoadingState variant="inline" /> : null}
+        {!audience && error ? <ErrorState title="تعذر تحميل الترتيب" description={error} /> : null}
+        {!audience && !loading && !error && teams.length === 0 ? (
+          <EmptyState title="بانتظار تسجيل الفرق" />
         ) : null}
         {!loading && !error && teams.length > 0 && !audience ? (
           <div className="overflow-x-auto competition-ranking-scroll">

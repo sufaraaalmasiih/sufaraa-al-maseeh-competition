@@ -65,6 +65,14 @@ git push -u origin main
 | `CLOUDINARY_API_KEY` | `767352672477887` |
 | `CLOUDINARY_API_SECRET` | *(من لوحة Cloudinary — لا تضعه في GitHub)* |
 
+### Firebase Admin (سري — لحذف الفرق/الموظفين من API)
+
+| Key | Value |
+|-----|-------|
+| `FIREBASE_SERVICE_ACCOUNT` | JSON كامل لحساب الخدمة (Service Account) — **Scopes: All scopes** |
+
+> بدون `FIREBASE_SERVICE_ACCOUNT`، حذف الفريق/الموظف نهائياً من لوحة المشرف العام يفشل (500).
+
 اضغط **Deploy** أو **Trigger deploy**.
 
 ---
@@ -94,7 +102,7 @@ git push -u origin main
 - [ ] تهيئة DB تمت  
 - [ ] `/audience` يفتح بدون login  
 - [ ] تسجيل فريق + شعار (Cloudinary)  
-- [ ] قواعد Firestore منشورة: `npm run firebase:deploy`
+- [ ] قواعد Firestore منشورة: `npm run firebase:deploy:rules`
 
 ---
 

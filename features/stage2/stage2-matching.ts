@@ -27,15 +27,27 @@ export function areAllMatchingPairsFilled(
   return question.pairs.every((pair) => Boolean(pairings[pair.left]));
 }
 
-/** Right-column pool for team UI — must not rely on stripped `correctRight`. */
+/** Right-column answers: exactly one shuffled card per left pair (5×5 official rules). */
+export function getMatchingRightAnswers(question: Stage2MatchingQuestion): string[] {
+  const seen = new Set<string>();
+  const answers: string[] = [];
+
+  for (const pair of question.pairs) {
+    const right = pair.correctRight.trim();
+    if (!right || seen.has(right)) {
+      continue;
+    }
+    seen.add(right);
+    answers.push(right);
+  }
+
+  return answers;
+}
+
+/** Right-column pool for team UI — shuffled correct answers only (no MC distractors). */
 export function getShuffledMatchingRightOptions(
   question: Stage2MatchingQuestion,
 ): string[] {
-  const fromBank = (question.rightOptions ?? []).map((option) => option.trim()).filter(Boolean);
-  const fromPairs = question.pairs
-    .map((pair) => pair.correctRight.trim())
-    .filter(Boolean);
-  const pool = fromBank.length > 0 ? fromBank : fromPairs;
-
-  return seededShuffleStage1Parts(pool, `${question.id}-right`);
+  const answers = getMatchingRightAnswers(question);
+  return seededShuffleStage1Parts(answers, `${question.id}-right`);
 }

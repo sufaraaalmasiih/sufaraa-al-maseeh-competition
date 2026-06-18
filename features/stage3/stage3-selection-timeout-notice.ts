@@ -1,3 +1,5 @@
+import { getSyncedNowMs } from "@/lib/server-clock-sync";
+
 export const STAGE3_SELECTION_TIMEOUT_NOTICE_MS = 5000;
 
 export interface Stage3SelectionTimeoutNotice {
@@ -41,7 +43,8 @@ export function parseStage3SelectionTimeoutNotice(
 
 export function isStage3SelectionTimeoutNoticeActive(
   notice: Stage3SelectionTimeoutNotice | null,
-  nowMs: number = Date.now(),
+  nowMs?: number,
 ): boolean {
-  return Boolean(notice && nowMs < notice.expiresAtMs);
+  const now = nowMs ?? getSyncedNowMs();
+  return Boolean(notice && now < notice.expiresAtMs);
 }

@@ -7,8 +7,10 @@ import { getStage4MockQuestionByIndex } from "@/features/stage4/stage4-mock-ques
 import { resolveStage4BankIndex } from "@/features/stage4/stage4-active-session";
 import { parseStage4FinishedQuestionIds } from "@/features/stage4/stage4-question-metadata";
 
+import { resolveSyncedNowMs } from "@/lib/server-clock-sync";
+
 export async function openStage4Question() {
-  const now = Date.now();
+  const now = await resolveSyncedNowMs(true);
 
   await runTransaction(getClientFirestore(), async (transaction) => {
     const gameFlowSnapshot = await transaction.get(gameFlowRef);

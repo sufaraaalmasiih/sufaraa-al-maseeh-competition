@@ -1,5 +1,6 @@
 import { getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { gameFlowRef, timerRef } from "@/firebase/firestore";
+import { getSyncedNowMs } from "@/lib/server-clock-sync";
 
 export interface AutoCloseStage4AnswersResult {
   skipped: boolean;
@@ -24,7 +25,7 @@ export async function autoCloseStage4Answers(): Promise<AutoCloseStage4AnswersRe
   }
 
   const timer = timerSnapshot.exists() ? timerSnapshot.data() : null;
-  const now = Date.now();
+  const now = getSyncedNowMs();
 
   if (
     !timer ||

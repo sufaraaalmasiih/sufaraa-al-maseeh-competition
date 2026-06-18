@@ -2,12 +2,13 @@
 
 import { serverTimestamp, setDoc } from "firebase/firestore";
 import { timerRef } from "@/firebase/firestore";
+import { getSyncedNowMs } from "@/lib/server-clock-sync";
 
 export const STAGE2_ANSWERING_DEFAULT_SECONDS = 150;
 
 export function buildStage2AnsweringTimerPayload(
   seconds = STAGE2_ANSWERING_DEFAULT_SECONDS,
-  now = Date.now(),
+  now = getSyncedNowMs(),
 ) {
   return {
     active: true,
@@ -24,7 +25,7 @@ export function buildStage2AnsweringTimerPayload(
 
 export async function startStage2AnsweringTimerDoc(
   seconds = STAGE2_ANSWERING_DEFAULT_SECONDS,
-  now = Date.now(),
+  now = getSyncedNowMs(),
 ) {
   await setDoc(timerRef, buildStage2AnsweringTimerPayload(seconds, now), {
     merge: true,

@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { CompetitionBrandHeaderCard } from "@/components/competition/competition-brand-header-card";
 import { CompetitionFrozenBanner } from "@/components/layout/competition-frozen-banner";
@@ -11,7 +10,6 @@ import { useGameFlow } from "@/features/gameflow/use-game-flow";
 import { setCoachViewMode } from "@/lib/coach-view-mode";
 
 export function CoachShell() {
-  const router = useRouter();
   const { competitionFrozen } = useGameFlow();
   const { stageName, teamSummary, history, loading, error } = useCoachDashboard();
 
@@ -24,7 +22,7 @@ export function CoachShell() {
       <CompetitionGradientShell
         centerContent
         className="coach-shell coach-shell--loading app-viewport-fill"
-        contentClassName="coach-shell__loading"
+        contentClassName="app-auth-loading-screen"
       >
         <LoadingState variant="page" title="جاري تحميل لوحة المدرب..." />
       </CompetitionGradientShell>
@@ -36,7 +34,7 @@ export function CoachShell() {
       <CompetitionGradientShell
         centerContent
         className="coach-shell coach-shell--loading app-viewport-fill"
-        contentClassName="coach-shell__loading"
+        contentClassName="app-auth-loading-screen"
       >
         <ErrorState
           title="تعذر تحميل لوحة المدرب"
@@ -55,16 +53,6 @@ export function CoachShell() {
       <div className="coach-shell__header">
         <CompetitionBrandHeaderCard centerLabel="لوحة المدرب" />
         <p className="coach-shell__team-name">{teamSummary?.teamName ?? "فريق"}</p>
-        <button
-          type="button"
-          className="coach-shell__cta"
-          onClick={() => {
-            setCoachViewMode("player");
-            router.push("/team?view=player");
-          }}
-        >
-          الانتقال لشاشة المتسابق
-        </button>
       </div>
 
       <section className="coach-card">

@@ -14,6 +14,7 @@ import {
   prepareStage2QuestionSession,
 } from "@/features/facilitator/prepare-stage-question-session";
 import { fetchFinalResultTeams } from "@/features/facilitator/use-final-results";
+import { getSyncedNowMs, resolveSyncedNowMs } from "@/lib/server-clock-sync";
 import type { GameFlowStatus } from "@/types";
 
 async function stopTimerDoc() {
@@ -24,7 +25,7 @@ async function stopTimerDoc() {
   );
 }
 
-async function startStage1TimerDoc(seconds: number, now = Date.now()) {
+async function startStage1TimerDoc(seconds: number, now = getSyncedNowMs()) {
   await setDoc(
     timerRef,
     {
@@ -72,16 +73,18 @@ export async function setGameFlowStatus(
 
   if (nextStatus === "stage1_running" || nextStatus === "stage2_reading") {
     const durations = await fetchTimerDurations();
+    const syncedNow = await resolveSyncedNowMs(true);
     if (nextStatus === "stage1_running") {
       await prepareStage1QuestionSession();
-      writes.push(startStage1TimerDoc(durations.stage1));
+      writes.push(startStage1TimerDoc(durations.stage1, syncedNow));
     } else {
       await prepareStage2QuestionSession();
-      writes.push(startStage2ReadingTimerDoc(durations.stage2Reading));
+      writes.push(startStage2ReadingTimerDoc(durations.stage2Reading, syncedNow));
     }
   } else if (nextStatus === "stage2_player_turns") {
     const durations = await fetchTimerDurations();
-    writes.push(startStage2AnsweringTimerDoc(durations.stage2Turn));
+    const syncedNow = await resolveSyncedNowMs(true);
+    writes.push(startStage2AnsweringTimerDoc(durations.stage2Turn, syncedNow));
   }
 
   await Promise.all(writes);
@@ -121,19 +124,22 @@ export async function finishStage(
   await Promise.all([updateDoc(gameFlowRef, payload), stopTimerDoc()]);
 }
 
-export async function startStage1Timer(now = Date.now()): Promise<void> {
+export async function startStage1Timer(now?: number): Promise<void> {
   const durations = await fetchTimerDurations();
-  await startStage1TimerDoc(durations.stage1, now);
+  const syncedNow = now ?? (await resolveSyncedNowMs(true));
+  await startStage1TimerDoc(durations.stage1, syncedNow);
 }
 
 export async function startStage2ReadingTimer(): Promise<void> {
   const durations = await fetchTimerDurations();
-  await startStage2ReadingTimerDoc(durations.stage2Reading);
+  const syncedNow = await resolveSyncedNowMs(true);
+  await startStage2ReadingTimerDoc(durations.stage2Reading, syncedNow);
 }
 
 export async function startStage2AnsweringTimer(): Promise<void> {
   const durations = await fetchTimerDurations();
-  await startStage2AnsweringTimerDoc(durations.stage2Turn);
+  const syncedNow = await resolveSyncedNowMs(true);
+  await startStage2AnsweringTimerDoc(durations.stage2Turn, syncedNow);
 }
 
 export async function stopTimer(): Promise<void> {
@@ -144,7 +150,8 @@ export async function stopTimer(): Promise<void> {
  * Freeze the running timer at its current remaining time. All screens read the
  * timer doc, so the countdown halts everywhere and auto-advance handlers idle.
  */
-export async function pauseTimer(now = Date.now()): Promise<void> {
+export async function pauseTimer(): Promise<void> {
+  const now = await resolveSyncedNowMs(true);
   const snapshot = await getDoc(timerRef);
   const timer = snapshot.data();
 
@@ -163,7 +170,8 @@ export async function pauseTimer(now = Date.now()): Promise<void> {
 }
 
 /** Resume a paused timer: recompute the end time from the frozen remaining ms. */
-export async function resumeTimer(now = Date.now()): Promise<void> {
+export async function resumeTimer(): Promise<void> {
+  const now = await resolveSyncedNowMs(true);
   const snapshot = await getDoc(timerRef);
   const timer = snapshot.data();
 
@@ -208,7 +216,8 @@ export async function unfreezeCompetition(): Promise<void> {
   }
 }
 
-export async function resetTimer(now = Date.now()): Promise<void> {
+export async function resetTimer(): Promise<void> {
+  const now = await resolveSyncedNowMs(true);
   const snapshot = await getDoc(timerRef);
   const timer = snapshot.data();
 

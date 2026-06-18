@@ -12,6 +12,7 @@ import type { ConfirmStage3AnswerResult } from "@/features/stage3/stage3-answer-
 import { parseStage3QuestionMetadata } from "@/features/stage3/stage3-question-metadata";
 import { buildStage3AnswerPayload } from "@/features/stage3/stage3-answer-payload";
 import { computeStage3PointsDelta } from "@/features/stage3/stage3-scoring";
+import { getSyncedNowMs } from "@/lib/server-clock-sync";
 const MAIN_COMPETITION_ID = "main";
 
 export async function finalizeStage3OwnerNoAnswer(): Promise<ConfirmStage3AnswerResult> {
@@ -55,7 +56,7 @@ export async function finalizeStage3OwnerNoAnswer(): Promise<ConfirmStage3Answer
     }
 
     const timerExpired =
-      typeof timer.endsAtMs === "number" && timer.endsAtMs <= Date.now();
+      typeof timer.endsAtMs === "number" && timer.endsAtMs <= getSyncedNowMs();
 
     if (!timerExpired) {
       throw new Error("Stage 3 answer timer has not expired yet.");
