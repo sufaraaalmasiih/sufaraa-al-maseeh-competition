@@ -84,7 +84,7 @@ function normalizeQuestion(raw: unknown, fallbackIndex: number): Stage1MockQuest
       ...(imageUrl ? { imageUrl } : {}),
       correctAnswer: orderForAnswer.join(" | "),
       parts,
-      ...(correctOrder.length > 0 ? { correctOrder } : {}),
+      correctOrder: orderForAnswer,
     };
   }
 

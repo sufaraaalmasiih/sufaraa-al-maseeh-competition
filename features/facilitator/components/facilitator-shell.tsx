@@ -1,9 +1,11 @@
 "use client";
 
 import type { ReactNode } from "react";
+import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AppHeader } from "@/components/layout/app-header";
+import { LoadingState } from "@/components/layout/state-view";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AuthGate } from "@/features/auth/components/auth-gate";
 import { useCompetitionContentSync } from "@/features/competition-content/competition-content-runtime";
@@ -12,10 +14,31 @@ import { FacilitatorAdminTab } from "@/features/facilitator/components/facilitat
 import { FacilitatorAudienceTab } from "@/features/facilitator/components/facilitator-audience-tab";
 import { FacilitatorControlsTab } from "@/features/facilitator/components/facilitator-controls-tab";
 import { FacilitatorFlowPanel } from "@/features/facilitator/components/facilitator-flow-panel";
-import { FacilitatorHistoryTab } from "@/features/facilitator/components/facilitator-history-tab";
-import { FacilitatorQuestionBankTab } from "@/features/facilitator/components/facilitator-question-bank-tab";
-import { FacilitatorResultsTab } from "@/features/facilitator/components/facilitator-results-tab";
 import { FacilitatorSettingsTab } from "@/features/facilitator/components/facilitator-settings-tab";
+
+const FacilitatorQuestionBankTab = dynamic(
+  () =>
+    import("@/features/facilitator/components/facilitator-question-bank-tab").then(
+      (module) => module.FacilitatorQuestionBankTab,
+    ),
+  { loading: () => <LoadingState variant="inline" /> },
+);
+
+const FacilitatorHistoryTab = dynamic(
+  () =>
+    import("@/features/facilitator/components/facilitator-history-tab").then(
+      (module) => module.FacilitatorHistoryTab,
+    ),
+  { loading: () => <LoadingState variant="inline" /> },
+);
+
+const FacilitatorResultsTab = dynamic(
+  () =>
+    import("@/features/facilitator/components/facilitator-results-tab").then(
+      (module) => module.FacilitatorResultsTab,
+    ),
+  { loading: () => <LoadingState variant="inline" /> },
+);
 import { FacilitatorStage12Automation } from "@/features/facilitator/components/facilitator-stage12-automation";
 import { FacilitatorStage3Automation } from "@/features/facilitator/components/facilitator-stage3-automation";
 import { FacilitatorStage4Automation } from "@/features/facilitator/components/facilitator-stage4-automation";

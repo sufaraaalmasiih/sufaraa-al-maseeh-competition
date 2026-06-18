@@ -1,10 +1,12 @@
 import { runTransaction, serverTimestamp } from "firebase/firestore";
 import { getClientFirestore } from "@/firebase/firebaseClient";
 import { gameFlowRef, timerRef } from "@/firebase/firestore";
+import { canCloseStage4AnswersNow } from "@/features/stage4/stage4-answer-window";
 import { getSyncedNowMs } from "@/lib/server-clock-sync";
 
 export interface AutoCloseStage4AnswersResult {
   skipped: boolean;
+  reason?: "window";
 }
 
 /**
@@ -37,6 +39,15 @@ export async function autoCloseStage4Answers(): Promise<AutoCloseStage4AnswersRe
       timer.endsAtMs > now
     ) {
       return { skipped: true };
+    }
+
+    const openedAtMs =
+      typeof gameFlow.stage4QuestionOpenedAtMs === "number"
+        ? gameFlow.stage4QuestionOpenedAtMs
+        : null;
+
+    if (!canCloseStage4AnswersNow(openedAtMs, now)) {
+      return { skipped: true, reason: "window" };
     }
 
     transaction.update(gameFlowRef, {

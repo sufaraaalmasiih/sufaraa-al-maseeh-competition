@@ -3,6 +3,12 @@ import type { Stage3BankQuestion } from "@/features/facilitator/question-bank-ty
 import type { Stage1MockQuestion } from "@/features/stage1/stage1-types";
 import type { Stage4QuestionMetadata } from "@/features/stage4/stage4-question-types";
 
+export function sanitizeStage1BankForTeam(
+  bank: Stage1MockQuestion[],
+): Stage1MockQuestion[] {
+  return bank.map((question) => stripStage1Question(question));
+}
+
 function stripStage1Question<T extends Stage1MockQuestion>(question: T): T {
   if (question.type === "arrange") {
     return {

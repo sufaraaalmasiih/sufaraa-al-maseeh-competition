@@ -10,6 +10,7 @@ import {
 } from "@/features/facilitator/stage1-question-bank-parser";
 import { stage1MockQuestions } from "@/features/stage1/stage1-mock-questions";
 import type { Stage1MockQuestion } from "@/features/stage1/stage1-types";
+import { sanitizeStage1BankForTeam } from "@/lib/sanitize-question-bank";
 
 export { parseStage1Questions, parseStage1RowsToQuestions };
 
@@ -29,7 +30,16 @@ export async function saveStage1Bank(questions: Stage1MockQuestion[]): Promise<v
 
 let cache: Stage1MockQuestion[] | null = null;
 let subscribed = false;
+let sanitizeForTeamPlayback = false;
 const listeners = new Set<() => void>();
+
+export function setStage1BankSanitizeForTeamPlayback(enabled: boolean): void {
+  sanitizeForTeamPlayback = enabled;
+}
+
+function getRawStage1Bank(): Stage1MockQuestion[] {
+  return cache && cache.length > 0 ? cache : [...stage1MockQuestions];
+}
 
 function startSubscription() {
   if (subscribed) {
@@ -49,16 +59,22 @@ function startSubscription() {
   );
 }
 
-/** Active gameplay bank: the Firestore bank when present, else the static one. */
+/** Active gameplay bank: sanitized for team playback when the flag is set. */
 export function getActiveStage1Bank(): Stage1MockQuestion[] {
-  return cache && cache.length > 0 ? cache : [...stage1MockQuestions];
+  const bank = getRawStage1Bank();
+  return sanitizeForTeamPlayback ? sanitizeStage1BankForTeam(bank) : bank;
 }
 
-/** Resolve a question from the live bank by id (for authoritative scoring). */
+/** Full bank with answers intact — used for facilitator scoring and labels. */
+export function getAuthoritativeStage1Bank(): Stage1MockQuestion[] {
+  return getRawStage1Bank();
+}
+
+/** Resolve a question from the raw bank by id (for authoritative scoring). */
 export function getAuthoritativeStage1Question(
   questionId: string,
 ): Stage1MockQuestion | null {
-  return getActiveStage1Bank().find((question) => question.id === questionId) ?? null;
+  return getAuthoritativeStage1Bank().find((question) => question.id === questionId) ?? null;
 }
 
 /** Subscribe to bank changes so consumers re-render when it updates. */

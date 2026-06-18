@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   computeRemainingSeconds,
   isTimerExpiredForSubmit,
@@ -27,8 +27,9 @@ describe("competition-timer-display", () => {
   });
 
   it("uses synced server clock offset when now is omitted", () => {
+    const localNow = 1_700_000_000_000;
+    const dateSpy = vi.spyOn(Date, "now").mockReturnValue(localNow);
     setServerClockOffsetForTests(10_000);
-    const localNow = Date.now();
     const syncedNow = localNow + 10_000;
     const timer = {
       active: true,
@@ -43,5 +44,6 @@ describe("competition-timer-display", () => {
 
     expect(computeRemainingSeconds(timer)).toBe(55);
     setServerClockOffsetForTests(0);
+    dateSpy.mockRestore();
   });
 });

@@ -37,7 +37,7 @@ export function TrainingModeCleanup() {
     };
 
     tick();
-    const intervalId = window.setInterval(tick, 30_000);
+    const intervalId = window.setInterval(tick, 5_000);
     return () => window.clearInterval(intervalId);
   }, [competitionMode, trainingEndsAtMs]);
 

@@ -17,6 +17,7 @@ import type { Stage2CompleteVerseQuestion } from "@/features/stage2/stage2-compl
 import type { Stage2MatchingQuestion } from "@/features/stage2/stage2-matching-types";
 import type { Stage2TrueFalseCorrectQuestion } from "@/features/stage2/stage2-true-false-correct-types";
 import type { Stage4QuestionMetadata } from "@/features/stage4/stage4-question-types";
+import { setStage1BankSanitizeForTeamPlayback } from "@/features/facilitator/stage1-question-bank-store";
 import { subscribeFirestoreDoc } from "@/lib/firestore-listener";
 import { useAuthRole } from "@/hooks/use-auth-role";
 
@@ -131,7 +132,9 @@ export function useQuestionBankRuntimeSync(): void {
 
   useEffect(() => {
     const isStaff = role === "facilitator" || role === "super_admin";
-    setQuestionBankSanitizeForTeamPlayback(!isStaff);
+    const sanitizeForTeam = !isStaff;
+    setQuestionBankSanitizeForTeamPlayback(sanitizeForTeam);
+    setStage1BankSanitizeForTeamPlayback(sanitizeForTeam);
   }, [role]);
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { getActiveStage1Bank } from "@/features/facilitator/stage1-question-bank-store";
+import { getAuthoritativeStage1Question } from "@/features/facilitator/stage1-question-bank-store";
 import {
   getAuthoritativeRuntimeStage3Question,
   getAuthoritativeStage2ArrangeVerseQuestion,
@@ -87,7 +87,7 @@ export function resolveAnswerCorrectLabel({
   }
 
   if (stage === "stage1") {
-    const question = getActiveStage1Bank().find((item) => item.id === questionId);
+    const question = getAuthoritativeStage1Question(questionId);
     if (!question) {
       return null;
     }

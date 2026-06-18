@@ -23,4 +23,11 @@ describe("stage4-answer-window", () => {
     expect(stage4AnswerWindowRemainingMs(openedAt, openedAt + 2_000)).toBe(6_000);
     expect(stage4AnswerWindowRemainingMs(openedAt, openedAt + STAGE4_MIN_ANSWER_WINDOW_MS)).toBe(0);
   });
+
+  it("documents auto-close skip reason when minimum window is unmet", () => {
+    const openedAt = 12_000;
+    const now = openedAt + STAGE4_MIN_ANSWER_WINDOW_MS - 500;
+    expect(canCloseStage4AnswersNow(openedAt, now)).toBe(false);
+    expect(stage4AnswerWindowRemainingMs(openedAt, now)).toBe(500);
+  });
 });

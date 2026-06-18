@@ -28,11 +28,45 @@ export function FacilitatorStage4Automation() {
       return;
     }
 
-    attemptedRef.current = fingerprint;
+    let cancelled = false;
+    let intervalId: number | undefined;
 
-    void autoCloseStage4Answers().catch(() => {
-      attemptedRef.current = null;
-    });
+    const tryClose = () => {
+      void autoCloseStage4Answers()
+        .then((result) => {
+          if (cancelled) {
+            return;
+          }
+          if (!result.skipped) {
+            attemptedRef.current = fingerprint;
+            if (intervalId !== undefined) {
+              window.clearInterval(intervalId);
+            }
+            return;
+          }
+          if (result.reason !== "window") {
+            attemptedRef.current = fingerprint;
+            if (intervalId !== undefined) {
+              window.clearInterval(intervalId);
+            }
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            attemptedRef.current = null;
+          }
+        });
+    };
+
+    tryClose();
+    intervalId = window.setInterval(tryClose, 1_000);
+
+    return () => {
+      cancelled = true;
+      if (intervalId !== undefined) {
+        window.clearInterval(intervalId);
+      }
+    };
   }, [status, currentStage, isExpired, timer?.active, timer?.stage, timer?.purpose, timer?.endsAtMs]);
 
   return null;
