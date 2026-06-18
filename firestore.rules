@@ -167,9 +167,12 @@ service cloud.firestore {
         allow delete: if isFacilitator();
       }
 
-      // Session history + edit log (facilitator only)
+      // Session history + edit log.
+      // Read: facilitators + signed-in teams (per-team archive views on /team and /coach).
+      // Write: facilitators only.
       match /history/{sessionId} {
-        allow read, write: if isFacilitator();
+        allow read: if isSignedIn();
+        allow write: if isFacilitator();
       }
 
       // Audit trail (facilitator only)

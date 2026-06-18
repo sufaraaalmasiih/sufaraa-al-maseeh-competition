@@ -10,6 +10,8 @@ import { exportAnswersExcel } from "@/features/facilitator/export-answers-excel"
 import { exportElementAsPng } from "@/features/facilitator/export-results-image";
 import { useCoachDashboard } from "@/features/coach/use-coach-dashboard";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
+import { TeamArchivePanel } from "@/features/facilitator/components/team-archive-panel";
+import { firebaseAuth } from "@/firebase/firebaseClient";
 import { setCoachViewMode } from "@/lib/coach-view-mode";
 
 export function CoachShell() {
@@ -178,6 +180,13 @@ export function CoachShell() {
             ))}
           </ul>
         )}
+      </section>
+
+      <section className="coach-history">
+        <TeamArchivePanel
+          teamId={firebaseAuth.currentUser?.uid ?? null}
+          teamName={teamSummary?.teamName}
+        />
       </section>
     </CompetitionGradientShell>
   );

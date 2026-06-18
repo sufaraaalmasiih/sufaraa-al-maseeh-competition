@@ -5,6 +5,8 @@ import competitionLogo from "@/features/team/assets/competition-logo-white-trans
 import { GameReadyButton } from "@/components/ui/game-ready-button";
 import { confirmTeamReady } from "@/features/team/confirm-team-ready";
 import { useTeamCompetitionContext } from "@/features/team/use-team-competition-context";
+import { TeamArchivePanel } from "@/features/facilitator/components/team-archive-panel";
+import { firebaseAuth } from "@/firebase/firebaseClient";
 import type { TeamPlayer } from "@/types";
 
 const COMPETITION_NAME = "سفراء المسيح";
@@ -127,6 +129,13 @@ export function TeamWaitingScreen() {
         >
           {saving ? "جاري التسجيل..." : ready ? "تم التسجيل" : "جاهز"}
         </GameReadyButton>
+      </div>
+
+      <div className="mt-6 w-full max-w-xl">
+        <TeamArchivePanel
+          teamId={firebaseAuth.currentUser?.uid ?? null}
+          teamName={teamName}
+        />
       </div>
     </div>
   );

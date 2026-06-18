@@ -8,6 +8,7 @@ import { FacilitatorControlsSessionLogPanel } from "@/features/facilitator/compo
 import { FacilitatorControlsTeamActionsPanel } from "@/features/facilitator/components/facilitator-controls-team-actions-panel";
 import { FacilitatorControlsTeamPicker } from "@/features/facilitator/components/facilitator-controls-team-picker";
 import { FacilitatorControlsTeamProfilePanel } from "@/features/facilitator/components/facilitator-controls-team-profile-panel";
+import { TeamArchivePanel } from "@/features/facilitator/components/team-archive-panel";
 import { useFacilitatorControlsTab } from "@/features/facilitator/components/use-facilitator-controls-tab";
 
 export function FacilitatorControlsTab() {
@@ -94,6 +95,11 @@ export function FacilitatorControlsTab() {
             onResetTeamData={controls.requestResetTeamData}
             onRemoveTeamFromCompetition={controls.requestRemoveTeamFromCompetition}
             onDeleteTeamCompletely={controls.requestDeleteTeamCompletely}
+          />
+
+          <TeamArchivePanel
+            teamId={controls.selectedTeam.teamId}
+            teamName={controls.selectedTeam.teamName}
           />
         </>
       ) : null}
