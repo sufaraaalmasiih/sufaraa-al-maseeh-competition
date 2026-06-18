@@ -62,13 +62,25 @@ function translateKnownMessage(message: string): string | null {
   return null;
 }
 
+function appendFirebaseDebug(base: string, error: unknown): string {
+  const code = readErrorCode(error);
+  const message = readErrorMessage(error);
+  const parts = [code, message].filter(
+    (part): part is string => typeof part === "string" && part.length > 0 && part !== base,
+  );
+  if (parts.length === 0) {
+    return base;
+  }
+  return `${base} (${parts.join(": ")})`;
+}
+
 export function formatSaveError(
   error: unknown,
   fallback = "تعذر حفظ الإجابة. تحقق من الاتصال وحاول مرة أخرى.",
 ): string {
   const code = readErrorCode(error);
   if (code && FIREBASE_CODE_MESSAGES[code]) {
-    return FIREBASE_CODE_MESSAGES[code];
+    return appendFirebaseDebug(FIREBASE_CODE_MESSAGES[code], error);
   }
 
   const message = readErrorMessage(error);

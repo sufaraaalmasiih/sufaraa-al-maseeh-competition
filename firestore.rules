@@ -78,8 +78,9 @@ service cloud.firestore {
 
     function answerReadable(competitionId) {
       return isFacilitator()
-        || resource.data.visibleToAudience == true
-        || (teamRegisteredInCompetition(competitionId) && resource.data.teamId == request.auth.uid);
+        || (resource != null && resource.data.visibleToAudience == true)
+        || (teamRegisteredInCompetition(competitionId)
+            && (resource == null || resource.data.teamId == request.auth.uid));
     }
 
     // Team profile (registration)

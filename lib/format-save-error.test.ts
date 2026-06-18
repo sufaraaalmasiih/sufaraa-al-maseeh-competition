@@ -3,7 +3,8 @@ import { formatSaveError, formatSaveErrorFromCode } from "@/lib/format-save-erro
 
 describe("formatSaveError", () => {
   it("maps firebase permission-denied codes to Arabic", () => {
-    expect(formatSaveError({ code: "permission-denied", message: "" })).toContain("صلاحية");
+    expect(formatSaveError({ code: "permission-denied", message: "Missing or insufficient permissions." })).toContain("صلاحية");
+    expect(formatSaveError({ code: "permission-denied", message: "Missing or insufficient permissions." })).toContain("permission-denied");
   });
 
   it("translates known English timer messages", () => {

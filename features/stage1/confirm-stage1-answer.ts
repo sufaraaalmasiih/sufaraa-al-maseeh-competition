@@ -13,6 +13,7 @@ import {
   assertAnsweringTimerOpen,
   assertCompetitionNotFrozen,
 } from "@/lib/competition-guards";
+import { ensureTeamProfileDoc } from "@/lib/ensure-team-profile";
 import type { Stage1MockQuestion } from "@/features/stage1/stage1-types";
 
 const MAIN_COMPETITION_ID = "main";
@@ -35,11 +36,15 @@ export async function confirmStage1Answer({
   questionIndex,
   answer,
 }: ConfirmStage1AnswerInput): Promise<ConfirmStage1AnswerResult> {
-  const teamId = firebaseAuth.currentUser?.uid;
+  const user = firebaseAuth.currentUser;
+  const teamId = user?.uid;
 
-  if (!teamId) {
+  if (!teamId || !user) {
     throw new Error("Missing authenticated team.");
   }
+
+  await user.getIdToken(true);
+  await ensureTeamProfileDoc(teamId);
 
   const answerId = `stage1_${question.id}_${teamId}`;
   const confirmedAnswerRef = answerRef(MAIN_COMPETITION_ID, answerId);
@@ -106,18 +111,6 @@ export async function confirmStage1Answer({
           governorate:
             typeof teamState.governorate === "string" ? teamState.governorate : "",
         };
-
-    if (!teamSnapshot.exists()) {
-      transaction.set(currentTeamRef, {
-        teamName: teamData.teamName,
-        governorate: teamData.governorate,
-        email: firebaseAuth.currentUser?.email ?? "",
-        role: "team",
-        active: true,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-    }
 
     const currentStage1Score =
       typeof teamState.stageScores?.stage1 === "number"
