@@ -12,6 +12,7 @@ import { confirmStage2MatchingAnswer } from "@/features/stage2/confirm-stage2-ma
 import type { Stage2MatchingPairings } from "@/features/stage2/stage2-matching";
 import { getActiveStage2MatchingQuestions } from "@/features/facilitator/question-bank-runtime-cache";
 import { Stage2FieldWaitingScreen } from "@/features/stage2/components/stage2-field-waiting-screen";
+import { formatSaveErrorFromCode } from "@/lib/format-save-error";
 
 interface Stage2MatchingFieldScreenProps {
   assignedPlayerName: string;
@@ -26,12 +27,12 @@ export function Stage2MatchingFieldScreen({
   const [confirmed, setConfirmed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const { timer, remainingSeconds, isExpired } = useCompetitionTimer();
+  const { timer, isSubmitExpired } = useCompetitionTimer();
 
   const hasStage2AnsweringTimer = Boolean(
     timer?.active && timer.stage === "stage2" && timer.purpose === "answering",
   );
-  const answeringClosed = Boolean(hasStage2AnsweringTimer && isExpired);
+  const answeringClosed = Boolean(hasStage2AnsweringTimer && isSubmitExpired);
   const matchingQuestions = getActiveStage2MatchingQuestions();
   const questionCount = matchingQuestions.length;
   const currentQuestion = matchingQuestions[questionIndex];
@@ -58,8 +59,8 @@ export function Stage2MatchingFieldScreen({
       });
       setConfirmed(true);
       setSaving(false);
-    } catch {
-      setSaveError("تعذر حفظ الإجابة. تحقق من الاتصال وحاول مرة أخرى.");
+    } catch (error) {
+      setSaveError(formatSaveErrorFromCode(error));
       setSaving(false);
     }
   }

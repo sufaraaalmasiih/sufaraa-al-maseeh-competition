@@ -60,6 +60,9 @@ export function FacilitatorScoreboard({
       <div className="flow-scoreboard__head">
         <h3 className="flow-scoreboard__title">{title}</h3>
         <p className="flow-scoreboard__desc">{desc}</p>
+        {mode === "live" && liveTeams.length > 0 ? (
+          <p className="flow-scoreboard__live-badge">مباشر</p>
+        ) : null}
       </div>
 
       {loading ? <LoadingState variant="inline" /> : null}
@@ -153,8 +156,12 @@ export function FacilitatorScoreboard({
                   </div>
                 </div>
                 <div className="flow-scoreboard__stats flow-scoreboard__stats--live">
-                  <span className="flow-scoreboard__stage">{team.stageScore}</span>
-                  <span className="flow-scoreboard__total">{team.totalScore}</span>
+                  <span className="flow-scoreboard__stage" title="نقاط المرحلة">
+                    {team.stageScore}
+                  </span>
+                  <span className="flow-scoreboard__total" title="المجموع">
+                    {team.totalScore}
+                  </span>
                 </div>
               </li>
             );

@@ -15,28 +15,15 @@ import {
 import { finalizeStage3OwnerNoAnswer } from "@/features/stage3/finalize-stage3-owner-no-answer";
 import { getStage3MockQuestionForPlay } from "@/features/stage3/stage3-mock-questions";
 import { useStage3MyAnswer } from "@/features/stage3/use-stage3-my-answer";
+import { formatSaveErrorFromCode } from "@/lib/format-save-error";
 
 function formatStage3SaveError(error: unknown): string {
-  const message = error instanceof Error ? error.message : "";
-
-  if (message.includes("timer expired") || message.includes("not active")) {
-    return "انتهى وقت الإجابة.";
-  }
-
-  if (message.includes("not accepting answers")) {
-    return "لم يعد بإمكانك الإجابة على هذا السؤال.";
-  }
-
-  if (message.includes("invalid data") || message.includes("undefined")) {
-    return "تعذر حفظ الإجابة. حاول مرة أخرى.";
-  }
-
-  return message || "تعذر حفظ الإجابة. حاول مرة أخرى.";
+  return formatSaveErrorFromCode(error);
 }
 
 export function Stage3TeamQuestionOpenScreen() {
   const { stage3ActiveQuestion, stage3OwnerTeamId, stage3OwnerTeamName } = useGameFlow();
-  const { timer, isExpired } = useCompetitionTimer();
+  const { timer, isSubmitExpired } = useCompetitionTimer();
   const { user } = useAuthRole();
   const { answerState } = useStage3MyAnswer(stage3ActiveQuestion?.id ?? null);
   const teamId = user?.uid ?? null;
@@ -55,7 +42,7 @@ export function Stage3TeamQuestionOpenScreen() {
     teamId && stage3OwnerTeamId && teamId === stage3OwnerTeamId,
   );
   const answeringClosed =
-    isExpired ||
+    isSubmitExpired ||
     !timer?.active ||
     timer.stage !== "stage3" ||
     timer.purpose !== "answering";
@@ -89,7 +76,7 @@ export function Stage3TeamQuestionOpenScreen() {
   useEffect(() => {
     if (
       !isOwner ||
-      !isExpired ||
+      !isSubmitExpired ||
       confirmed ||
       answerState?.confirmed ||
       ownerNoAnswerAttemptedRef.current ||
@@ -115,7 +102,7 @@ export function Stage3TeamQuestionOpenScreen() {
       });
   }, [
     isOwner,
-    isExpired,
+    isSubmitExpired,
     confirmed,
     answerState?.confirmed,
     stage3ActiveQuestion?.id,

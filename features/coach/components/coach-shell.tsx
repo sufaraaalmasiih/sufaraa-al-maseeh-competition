@@ -21,7 +21,11 @@ export function CoachShell() {
 
   if (loading) {
     return (
-      <CompetitionGradientShell centerContent className="app-viewport-fill" contentClassName="app-loading-screen__content">
+      <CompetitionGradientShell
+        centerContent
+        className="coach-shell coach-shell--loading app-viewport-fill"
+        contentClassName="coach-shell__loading"
+      >
         <LoadingState variant="page" title="جاري تحميل لوحة المدرب..." />
       </CompetitionGradientShell>
     );
@@ -29,8 +33,17 @@ export function CoachShell() {
 
   if (error) {
     return (
-      <CompetitionGradientShell centerContent className="app-viewport-fill" contentClassName="app-loading-screen__content">
-        <ErrorState title="تعذر تحميل لوحة المدرب" description={error} actionHref="/team-login" actionLabel="إعادة تسجيل الدخول" />
+      <CompetitionGradientShell
+        centerContent
+        className="coach-shell coach-shell--loading app-viewport-fill"
+        contentClassName="coach-shell__loading"
+      >
+        <ErrorState
+          title="تعذر تحميل لوحة المدرب"
+          description={error}
+          actionHref="/team-login"
+          actionLabel="إعادة تسجيل الدخول"
+        />
       </CompetitionGradientShell>
     );
   }
@@ -42,6 +55,16 @@ export function CoachShell() {
       <div className="coach-shell__header">
         <CompetitionBrandHeaderCard centerLabel="لوحة المدرب" />
         <p className="coach-shell__team-name">{teamSummary?.teamName ?? "فريق"}</p>
+        <button
+          type="button"
+          className="coach-shell__cta"
+          onClick={() => {
+            setCoachViewMode("player");
+            router.push("/team?view=player");
+          }}
+        >
+          الانتقال لشاشة المتسابق
+        </button>
       </div>
 
       <section className="coach-card">
@@ -75,7 +98,11 @@ export function CoachShell() {
             {history.map((item, index) => (
               <li
                 key={item.id}
-                className={index === 0 ? "coach-history__item coach-history__item--latest" : "coach-history__item coach-history__item--past"}
+                className={
+                  index === 0
+                    ? "coach-history__item coach-history__item--latest"
+                    : "coach-history__item coach-history__item--past"
+                }
               >
                 <div className="coach-history__item-head">
                   <span className="coach-history__stage">{item.stage}</span>
@@ -83,7 +110,13 @@ export function CoachShell() {
                 </div>
                 <p className="coach-history__question">{item.questionText}</p>
                 <p className="coach-history__answer">إجابتكم: {item.answer || "—"}</p>
-                <p className={item.isCorrect ? "coach-history__result coach-history__result--ok" : "coach-history__result coach-history__result--bad"}>
+                <p
+                  className={
+                    item.isCorrect
+                      ? "coach-history__result coach-history__result--ok"
+                      : "coach-history__result coach-history__result--bad"
+                  }
+                >
                   {item.isCorrect ? `صحيحة (+${item.pointsDelta})` : "خاطئة"}
                 </p>
               </li>
@@ -91,19 +124,6 @@ export function CoachShell() {
           </ul>
         )}
       </section>
-
-      <div className="coach-shell__footer">
-        <button
-          type="button"
-          className="coach-shell__cta"
-          onClick={() => {
-            setCoachViewMode("player");
-            router.push("/team?view=player");
-          }}
-        >
-          الانتقال لشاشة المتسابق
-        </button>
-      </div>
     </CompetitionGradientShell>
   );
 }

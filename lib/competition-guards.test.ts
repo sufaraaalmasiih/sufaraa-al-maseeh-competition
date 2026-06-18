@@ -36,7 +36,7 @@ describe("competition-guards", () => {
       active: true,
       stage: "stage3",
       purpose: "answering",
-      endsAtMs: Date.now() - 2_000,
+      endsAtMs: Date.now() - 4_000,
       paused: false,
     };
 
@@ -58,5 +58,19 @@ describe("competition-guards", () => {
     expect(() =>
       assertAnsweringTimerOpen(timer, "stage3", "answering", "انتهى الوقت."),
     ).not.toThrow();
+  });
+
+  it("rejects saves after the full grace window", () => {
+    const timer = {
+      active: true,
+      stage: "stage3",
+      purpose: "answering",
+      endsAtMs: Date.now() - 3_500,
+      paused: false,
+    };
+
+    expect(() =>
+      assertAnsweringTimerOpen(timer, "stage3", "answering", "انتهى الوقت."),
+    ).toThrow("انتهى الوقت.");
   });
 });

@@ -50,7 +50,7 @@ function TeamShellAuthenticated() {
   } = gameFlow;
 
   useEffect(() => {
-    if (viewPlayer && status !== "waiting_players" && status !== null) {
+    if (viewPlayer) {
       setCoachViewMode("player");
       return;
     }

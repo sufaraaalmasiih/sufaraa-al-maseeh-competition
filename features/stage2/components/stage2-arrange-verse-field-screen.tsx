@@ -11,6 +11,7 @@ import { Stage2ArrangeVerseQuestionCard } from "@/features/stage2/components/sta
 import { confirmStage2ArrangeVerseAnswer } from "@/features/stage2/confirm-stage2-arrange-verse-answer";
 import { Stage2FieldWaitingScreen } from "@/features/stage2/components/stage2-field-waiting-screen";
 import { getActiveStage2ArrangeVerseQuestions } from "@/features/facilitator/question-bank-runtime-cache";
+import { formatSaveErrorFromCode } from "@/lib/format-save-error";
 
 interface Stage2ArrangeVerseFieldScreenProps {
   assignedPlayerName: string;
@@ -27,12 +28,12 @@ export function Stage2ArrangeVerseFieldScreen({
   const [confirmed, setConfirmed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const { timer, remainingSeconds, isExpired } = useCompetitionTimer();
+  const { timer, isSubmitExpired } = useCompetitionTimer();
 
   const hasStage2AnsweringTimer = Boolean(
     timer?.active && timer.stage === "stage2" && timer.purpose === "answering",
   );
-  const answeringClosed = Boolean(hasStage2AnsweringTimer && isExpired);
+  const answeringClosed = Boolean(hasStage2AnsweringTimer && isSubmitExpired);
   const arrangeVerseQuestions = getActiveStage2ArrangeVerseQuestions();
   const questionCount = arrangeVerseQuestions.length;
   const currentQuestion = arrangeVerseQuestions[questionIndex];
@@ -64,8 +65,8 @@ export function Stage2ArrangeVerseFieldScreen({
       });
       setConfirmed(true);
       setSaving(false);
-    } catch {
-      setSaveError("تعذر حفظ الإجابة. تحقق من الاتصال وحاول مرة أخرى.");
+    } catch (error) {
+      setSaveError(formatSaveErrorFromCode(error));
       setSaving(false);
     }
   }

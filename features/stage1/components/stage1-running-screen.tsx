@@ -22,6 +22,7 @@ import { getStage1QuestionTypeLabel } from "@/features/stage1/stage1-types";
 import { useStage1BankSync } from "@/features/facilitator/stage1-question-bank-store";
 import { useStage1TeamProgress } from "@/features/stage1/use-stage1-team-progress";
 import { firebaseAuth } from "@/firebase/firebaseClient";
+import { formatSaveErrorFromCode } from "@/lib/format-save-error";
 import { realLoadingDebug } from "@/lib/real-loading-debug";
 
 export function Stage1RunningScreen() {
@@ -44,12 +45,12 @@ export function Stage1RunningScreen() {
     loading: progressLoading,
     error: progressError,
   } = useStage1TeamProgress();
-  const { timer, remainingSeconds, isExpired } = useCompetitionTimer();
+  const { timer, isSubmitExpired } = useCompetitionTimer();
   const { status } = useGameFlow();
   const hasStage1Timer = Boolean(timer?.active && timer.stage === "stage1");
   const answeringClosed =
     (status !== null && status !== "stage1_running") ||
-    Boolean(hasStage1Timer && isExpired);
+    Boolean(hasStage1Timer && isSubmitExpired);
 
   const effectiveIndex =
     optimisticIndex !== null ? Math.max(remoteIndex, optimisticIndex) : remoteIndex;
@@ -153,8 +154,8 @@ export function Stage1RunningScreen() {
       window.setTimeout(() => {
         advanceToNextQuestion(effectiveIndex + 1);
       }, STAGE1_MID_QUESTION_ADVANCE_MS);
-    } catch {
-      setSaveError("تعذر حفظ الإجابة. تحقق من الاتصال وحاول مرة أخرى.");
+    } catch (error) {
+      setSaveError(formatSaveErrorFromCode(error));
       setSaving(false);
     }
   }

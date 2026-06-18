@@ -1,6 +1,7 @@
 import { collection, getDocs, query, serverTimestamp, updateDoc, where } from "firebase/firestore";
 import { getClientFirestore } from "@/firebase/firebaseClient";
 import { userRef } from "@/firebase/firestore";
+import { callAdminApi } from "@/lib/admin-api-client";
 import type { AppRole } from "@/types";
 
 export interface StaffAccountRow {
@@ -53,4 +54,8 @@ export async function setStaffAccountActive(uid: string, active: boolean): Promi
     active,
     updatedAt: serverTimestamp(),
   });
+}
+
+export async function deleteStaffAccount(uid: string): Promise<void> {
+  await callAdminApi("/api/admin/delete-staff", { uid });
 }

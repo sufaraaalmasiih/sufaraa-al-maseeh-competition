@@ -19,6 +19,7 @@ interface FacilitatorCommandDeckProps {
   showTimerControls?: boolean;
   readyCount: number | null;
   totalTeams: number;
+  notReadyTeamNames?: string[];
   onAdvance: (plan: FacilitatorPhasePlan) => Promise<void>;
 }
 
@@ -44,6 +45,7 @@ export function FacilitatorCommandDeck({
   showTimerControls = false,
   readyCount,
   totalTeams,
+  notReadyTeamNames,
   onAdvance,
 }: FacilitatorCommandDeckProps) {
   const ringProgress = timerActive
@@ -66,6 +68,7 @@ export function FacilitatorCommandDeck({
           status={status}
           readyCount={readyCount}
           totalTeams={totalTeams}
+          notReadyTeamNames={notReadyTeamNames}
           onAdvance={onAdvance}
           embedded
         />

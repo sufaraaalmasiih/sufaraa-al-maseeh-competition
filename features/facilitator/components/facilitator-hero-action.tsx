@@ -18,6 +18,7 @@ interface FacilitatorHeroActionProps {
   status: GameFlowStatus | null;
   readyCount: number | null;
   totalTeams: number;
+  notReadyTeamNames?: string[];
   onAdvance: (plan: FacilitatorPhasePlan) => Promise<void>;
   embedded?: boolean;
 }
@@ -37,6 +38,7 @@ export function FacilitatorHeroAction({
   status,
   readyCount,
   totalTeams,
+  notReadyTeamNames = [],
   onAdvance,
   embedded = false,
 }: FacilitatorHeroActionProps) {
@@ -152,9 +154,16 @@ export function FacilitatorHeroAction({
       </div>
 
       {readinessBlocked ? (
-        <p className="flow-action__gate">
-          بانتظار جاهزية كل الفرق ({readyCount ?? 0} / {totalTeams})
-        </p>
+        <div className="flow-action__gate">
+          <p>
+            بانتظار جاهزية كل الفرق ({readyCount ?? 0} / {totalTeams})
+          </p>
+          {notReadyTeamNames.length > 0 ? (
+            <p className="flow-action__gate-teams">
+              غير جاهز: {notReadyTeamNames.join("، ")}
+            </p>
+          ) : null}
+        </div>
       ) : null}
       {error ? <p className="facilitator-inline-error">{error}</p> : null}
     </div>

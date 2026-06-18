@@ -3,8 +3,8 @@
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 
-const MAX_STAGGER_DELAY = 1.35;
-const ROW_DELAY = 0.042;
+const MAX_STAGGER_DELAY = 0.75;
+const ROW_DELAY = 0.05;
 
 export function getRankingRowDelay(index: number): number {
   return Math.min(index * ROW_DELAY, MAX_STAGGER_DELAY);
@@ -15,6 +15,7 @@ interface AnimatedRankingRowProps {
   index: number;
   animate?: boolean;
   className?: string;
+  variant?: "default" | "audience";
 }
 
 export function AnimatedRankingRow({
@@ -22,15 +23,18 @@ export function AnimatedRankingRow({
   index,
   animate = true,
   className,
+  variant = "default",
 }: AnimatedRankingRowProps) {
+  const isAudience = variant === "audience";
+
   return (
     <motion.div
-      initial={animate ? { opacity: 0, x: 28, scale: 0.97 } : false}
+      initial={animate ? { opacity: 0, ...(isAudience ? {} : { x: 20, scale: 0.98 }) } : false}
       animate={{ opacity: 1, x: 0, scale: 1 }}
       transition={{
-        duration: 0.36,
+        duration: isAudience ? 0.22 : 0.32,
         delay: animate ? getRankingRowDelay(index) : 0,
-        ease: [0.22, 1, 0.36, 1],
+        ease: "easeOut",
       }}
       className={className}
     >
@@ -44,6 +48,7 @@ interface AnimatedRankingTableRowProps {
   index: number;
   animate?: boolean;
   className?: string;
+  variant?: "default" | "audience";
 }
 
 export function AnimatedRankingTableRow({
@@ -51,16 +56,18 @@ export function AnimatedRankingTableRow({
   index,
   animate = true,
   className,
+  variant = "default",
 }: AnimatedRankingTableRowProps) {
+  const isAudience = variant === "audience";
+
   return (
     <motion.tr
-      initial={animate ? { opacity: 0, y: 18, scale: 0.98 } : false}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
+      initial={animate ? { opacity: 0, ...(isAudience ? {} : { y: 12 }) } : false}
+      animate={{ opacity: 1, y: 0 }}
       transition={{
-        type: "spring",
-        stiffness: 340,
-        damping: 28,
+        duration: isAudience ? 0.2 : 0.28,
         delay: animate ? getRankingRowDelay(index) : 0,
+        ease: "easeOut",
       }}
       className={className}
     >

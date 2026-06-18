@@ -2,18 +2,17 @@
   getDoc,
   getDocs,
   query,
-  runTransaction,
   serverTimestamp,
   setDoc,
   where,
   writeBatch,
 } from "firebase/firestore";
 import { getClientFirestore } from "@/firebase/firebaseClient";
+import { callAdminApi } from "@/lib/admin-api-client";
 import {
   answersCollectionRef,
   buildInitialTeamStateDocument,
   MAIN_COMPETITION_ID,
-  teamRef,
   teamStateRef,
 } from "@/firebase/firestore";
 import {
@@ -114,55 +113,44 @@ export async function resetTeamCompetitionData(input: {
 }
 
 /**
- * Delete a team entirely from the competition: answers, teamState, and profile doc.
- * Firebase Auth account remains until removed via Admin SDK / Console.
+ * Delete a team entirely: Firestore data + Firebase Auth via super-admin API.
  */
 export async function deleteTeamCompletely(input: {
   teamId: string;
   teamName: string;
   reason: string;
 }): Promise<void> {
-  const answersRef = answersCollectionRef(MAIN_COMPETITION_ID);
-  const answersQuery = query(answersRef, where("teamId", "==", input.teamId));
-  const answersSnapshot = await getDocs(answersQuery);
-  const answerRefs = answersSnapshot.docs.map((docSnap) => docSnap.ref);
-
-  for (let index = 0; index < answerRefs.length; index += FIRESTORE_BATCH_LIMIT) {
-    const chunk = answerRefs.slice(index, index + FIRESTORE_BATCH_LIMIT);
-    const batch = writeBatch(getClientFirestore());
-    chunk.forEach((ref) => batch.delete(ref));
-    await batch.commit();
-  }
-
   const stateRef = teamStateRef(MAIN_COMPETITION_ID, input.teamId);
-  const profileRef = teamRef(input.teamId);
-  let beforeValue: Record<string, unknown> | null = null;
+  const stateSnapshot = await getDoc(stateRef);
+  const beforeValue = stateSnapshot.exists()
+    ? {
+        teamName:
+          typeof stateSnapshot.data()?.teamName === "string"
+            ? stateSnapshot.data()?.teamName
+            : input.teamName,
+        governorate:
+          typeof stateSnapshot.data()?.governorate === "string"
+            ? stateSnapshot.data()?.governorate
+            : "",
+        totalScore:
+          typeof stateSnapshot.data()?.totalScore === "number"
+            ? stateSnapshot.data()?.totalScore
+            : 0,
+      }
+    : null;
 
-  await runTransaction(getClientFirestore(), async (transaction) => {
-    const stateSnapshot = await transaction.get(stateRef);
-    if (stateSnapshot.exists()) {
-      const data = stateSnapshot.data();
-      beforeValue = {
-        teamName: typeof data.teamName === "string" ? data.teamName : input.teamName,
-        governorate: typeof data.governorate === "string" ? data.governorate : "",
-        totalScore: typeof data.totalScore === "number" ? data.totalScore : 0,
-      };
-      transaction.delete(stateRef);
-    }
-
-    const profileSnapshot = await transaction.get(profileRef);
-    if (profileSnapshot.exists()) {
-      transaction.delete(profileRef);
-    }
-  });
+  const { deletedAnswers = 0 } = await callAdminApi<{ deletedAnswers?: number }>(
+    "/api/admin/delete-team",
+    { teamId: input.teamId },
+  );
 
   await appendTeamAdminAuditLog({
     type: "delete_team_completely",
     teamId: input.teamId,
     teamName: input.teamName,
-    deletedAnswers: answerRefs.length,
+    deletedAnswers: deletedAnswers ?? 0,
     reason: input.reason,
     beforeValue,
-    afterValue: { deleted: true, deletedAnswers: answerRefs.length },
+    afterValue: { deleted: true, deletedAnswers: deletedAnswers ?? 0 },
   });
 }

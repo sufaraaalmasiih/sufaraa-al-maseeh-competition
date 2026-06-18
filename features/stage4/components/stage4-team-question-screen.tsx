@@ -15,6 +15,7 @@ import { useStage4MyAnswer } from "@/features/stage4/use-stage4-my-answer";
 import { GameReadyButton } from "@/components/ui/game-ready-button";
 import { Input } from "@/components/ui/input";
 import { getStage4QuestionTypeLabel } from "@/features/stage4/stage4-question-types";
+import { formatSaveErrorFromCode } from "@/lib/format-save-error";
 
 function formatSaveError(error: unknown): string {
   const message = error instanceof Error ? error.message : "";
@@ -23,7 +24,7 @@ function formatSaveError(error: unknown): string {
     return "لم يعد بإمكانك الإجابة على هذا السؤال.";
   }
 
-  return message || "تعذر حفظ الإجابة. حاول مرة أخرى.";
+  return formatSaveErrorFromCode(error);
 }
 
 export function Stage4TeamQuestionScreen() {

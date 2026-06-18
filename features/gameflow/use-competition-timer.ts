@@ -2,6 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useTimerStoreSnapshot } from "@/features/gameflow/timer-store";
+import {
+  computeRemainingSeconds,
+  isTimerExpiredForSubmit,
+  isTimerExpiredForUi,
+} from "@/lib/competition-timer-display";
 import { patchLoadingDebug } from "@/lib/loading-debug-store";
 import { realLoadingDebug } from "@/lib/real-loading-debug";
 
@@ -29,23 +34,17 @@ export function useCompetitionTimer() {
     return () => window.clearInterval(intervalId);
   }, [timer?.active, timer?.paused, timer?.endsAtMs]);
 
-  const remainingSeconds = useMemo(() => {
-    if (!timer?.active) {
-      return 0;
-    }
+  const remainingSeconds = useMemo(
+    () => computeRemainingSeconds(timer, now),
+    [now, timer],
+  );
 
-    if (timer.paused) {
-      return Math.max(0, Math.ceil((timer.pausedRemainingMs ?? 0) / 1000));
-    }
+  const isExpired = useMemo(() => isTimerExpiredForUi(timer, now), [now, timer]);
 
-    if (!timer.endsAtMs) {
-      return 0;
-    }
+  const isSubmitExpired = useMemo(
+    () => isTimerExpiredForSubmit(timer, now),
+    [now, timer],
+  );
 
-    return Math.max(0, Math.ceil((timer.endsAtMs - now) / 1000));
-  }, [now, timer]);
-
-  const isExpired = Boolean(timer?.active && !timer.paused && remainingSeconds <= 0);
-
-  return { timer, loading, error, remainingSeconds, isExpired };
+  return { timer, loading, error, remainingSeconds, isExpired, isSubmitExpired };
 }

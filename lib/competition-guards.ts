@@ -1,3 +1,5 @@
+import { ANSWER_SUBMIT_GRACE_MS } from "@/lib/competition-timer-display";
+
 export const COMPETITION_FROZEN_MESSAGE =
   "المسابقة مجمّدة حالياً. انتظروا إشعار الميسّر.";
 export const TIMER_PAUSED_MESSAGE =
@@ -63,7 +65,7 @@ export function assertAnsweringTimerOpen(
   expectedPurpose: string,
   expiredMessage: string,
   now = Date.now(),
-  graceMs = 1500,
+  graceMs = ANSWER_SUBMIT_GRACE_MS,
 ): void {
   assertTimerNotPaused(timer);
 

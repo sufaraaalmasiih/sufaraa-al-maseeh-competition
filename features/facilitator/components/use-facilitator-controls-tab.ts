@@ -331,7 +331,7 @@ export function useFacilitatorControlsTab() {
         { label: "يُحذف", value: "التسجيل · الملف · الإجابات · حالة المسابقة" },
         {
           label: "ملاحظة",
-          value: "حساب الدخول في Firebase يبقى — احذفه من Console إن لزم",
+          value: "يُحذف حساب الدخول في Firebase أيضاً",
         },
       ],
       confirmLabel: "حذف الفريق نهائياً",

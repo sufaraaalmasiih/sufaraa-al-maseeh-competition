@@ -88,6 +88,16 @@ export function FacilitatorFlowPanel() {
     return teams.filter((team) => isTeamReadyForReadiness(team, plan.readinessKey)).length;
   }, [plan.readinessKey, teams]);
 
+  const notReadyTeamNames = useMemo(() => {
+    if (!plan.readinessKey) {
+      return [];
+    }
+
+    return teams
+      .filter((team) => !isTeamReadyForReadiness(team, plan.readinessKey))
+      .map((team) => team.teamName);
+  }, [plan.readinessKey, teams]);
+
   async function runAdvance(activePlan: FacilitatorPhasePlan) {
     const hero = activePlan.hero;
     if (!hero) {
@@ -160,6 +170,7 @@ export function FacilitatorFlowPanel() {
         showTimerControls={showTimerControls}
         readyCount={readyCount}
         totalTeams={teams.length}
+        notReadyTeamNames={notReadyTeamNames}
         onAdvance={handleAdvance}
       />
 

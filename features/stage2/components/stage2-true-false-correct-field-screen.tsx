@@ -12,6 +12,7 @@ import { confirmStage2TrueFalseCorrectAnswer } from "@/features/stage2/confirm-s
 import type { Stage2TrueFalseChoice } from "@/features/stage2/stage2-true-false-correct-types";
 import { getActiveStage2TrueFalseQuestions } from "@/features/facilitator/question-bank-runtime-cache";
 import { Stage2FieldWaitingScreen } from "@/features/stage2/components/stage2-field-waiting-screen";
+import { formatSaveErrorFromCode } from "@/lib/format-save-error";
 
 interface Stage2TrueFalseCorrectFieldScreenProps {
   assignedPlayerName: string;
@@ -28,12 +29,12 @@ export function Stage2TrueFalseCorrectFieldScreen({
   const [confirmed, setConfirmed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const { timer, remainingSeconds, isExpired } = useCompetitionTimer();
+  const { timer, isSubmitExpired } = useCompetitionTimer();
 
   const hasStage2AnsweringTimer = Boolean(
     timer?.active && timer.stage === "stage2" && timer.purpose === "answering",
   );
-  const answeringClosed = Boolean(hasStage2AnsweringTimer && isExpired);
+  const answeringClosed = Boolean(hasStage2AnsweringTimer && isSubmitExpired);
   const trueFalseQuestions = getActiveStage2TrueFalseQuestions();
   const questionCount = trueFalseQuestions.length;
   const currentQuestion = trueFalseQuestions[questionIndex];
@@ -80,8 +81,8 @@ export function Stage2TrueFalseCorrectFieldScreen({
       });
       setConfirmed(true);
       setSaving(false);
-    } catch {
-      setSaveError("تعذر حفظ الإجابة. تحقق من الاتصال وحاول مرة أخرى.");
+    } catch (error) {
+      setSaveError(formatSaveErrorFromCode(error));
       setSaving(false);
     }
   }

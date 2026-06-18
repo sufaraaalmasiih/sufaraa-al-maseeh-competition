@@ -77,6 +77,7 @@ export function Stage1RankingTable({
                 key={team.teamId}
                 index={index}
                 animate={animate}
+                variant={audience ? "audience" : "default"}
                 className={cn(
                   "grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-md border border-primary/10 bg-white p-4",
                   topRankStyles[team.rank],

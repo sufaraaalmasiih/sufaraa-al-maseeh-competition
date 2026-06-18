@@ -1,7 +1,6 @@
 import { EmptyState } from "@/components/layout/empty-state";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
 import { AnimatedRankingRow } from "@/components/motion/animated-ranking-row";
-import { useGradualReveal } from "@/hooks/use-gradual-reveal";
 import { STAGE3_NAME } from "@/features/stage3/stage3-constants";
 import type { RankedStage3Team } from "@/features/stage3/stage3-ranking";
 import { cn } from "@/lib/utils";
@@ -28,12 +27,7 @@ export function Stage3RankingTable({
   animate = false,
 }: Stage3RankingTableProps) {
   const compact = variant === "audience" || variant === "team";
-  const revealedTeams = useGradualReveal(teams, animate ? 720 : 0, {
-    maxDurationMs: 6_000,
-    minIntervalMs: 140,
-  });
-  const visibleTeams = animate ? revealedTeams : teams;
-  const isRevealing = animate && visibleTeams.length < teams.length;
+  const audienceAnimate = animate && variant === "audience";
 
   if (loading) {
     return <LoadingState variant={embedded ? "inline" : "page"} />;
@@ -61,6 +55,7 @@ export function Stage3RankingTable({
         className={cn(
           "competition-ranking-panel",
           embedded && "competition-ranking-panel--embedded",
+          variant === "audience" && "competition-ranking-panel--audience",
           !embedded && "mt-6",
         )}
       >
@@ -72,9 +67,7 @@ export function Stage3RankingTable({
                 {title ?? "ترتيب مرحلة على المحك"}
               </h3>
               <p className="competition-ranking-panel__desc">
-                {isRevealing
-                  ? `جاري الإعلان... (${visibleTeams.length}/${teams.length})`
-                  : (description ?? "الترتيب حسب نقاط المرحلة الثالثة ثم المجموع ثم اسم الفريق.")}
+                {description ?? "الترتيب حسب نقاط المرحلة الثالثة ثم المجموع ثم اسم الفريق."}
               </p>
             </>
           ) : (
@@ -82,20 +75,16 @@ export function Stage3RankingTable({
               <h3 className="competition-ranking-panel__embedded-title">
                 {title ?? "ترتيب مرحلة على المحك"}
               </h3>
-              {isRevealing ? (
-                <p className="competition-ranking-panel__embedded-desc">
-                  جاري الإعلان... ({visibleTeams.length}/{teams.length})
-                </p>
-              ) : null}
             </>
           )}
         </div>
         <div className="competition-ranking-scroll competition-ranking-scroll--cards">
-          {visibleTeams.map((team, index) => (
+          {teams.map((team, index) => (
             <AnimatedRankingRow
               key={team.teamId}
               index={index}
-              animate={animate && isRevealing}
+              animate={audienceAnimate}
+              variant={variant === "audience" ? "audience" : "default"}
               className={cn(
                 "competition-ranking-row competition-ranking-row--card",
                 team.rank === 1 && "competition-ranking-row--gold",
