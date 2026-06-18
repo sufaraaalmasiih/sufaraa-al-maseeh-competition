@@ -65,7 +65,7 @@ export async function confirmStage1Answer({
     assertCompetitionNotFrozen(gameFlow);
 
     if (gameFlow?.status !== "stage1_running") {
-      throw new Error("Stage 1 is not accepting answers.");
+      throw new Error("المرحلة الأولى لا تقبل إجابات الآن.");
     }
 
     if (timerSnapshot.exists()) {
@@ -74,7 +74,7 @@ export async function confirmStage1Answer({
         timer,
         "stage1",
         "answering",
-        "Stage 1 timer expired.",
+        "انتهى وقت الإجابة.",
       );
     }
 
@@ -92,7 +92,7 @@ export async function confirmStage1Answer({
     }
 
     if (!teamSnapshot.exists() || !teamStateSnapshot.exists()) {
-      throw new Error("Missing team profile or team state.");
+      throw new Error("بيانات الفريق غير مكتملة. أعد تسجيل الدخول أو تواصل مع الميسر.");
     }
 
     assertTeamStageUnlocked(teamStateSnapshot.data()?.stageLocks, "stage1");

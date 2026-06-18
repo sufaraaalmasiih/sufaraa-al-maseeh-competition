@@ -59,6 +59,19 @@ service cloud.firestore {
         && data.isCorrect is bool;
     }
 
+    function teamAnswerUpdateAllowed() {
+      let data = request.resource.data;
+      return teamDocExists()
+        && resource.data.teamId == request.auth.uid
+        && resource.data.confirmed != true
+        && data.teamId == request.auth.uid
+        && data.confirmed == true
+        && data.pointsDelta is int
+        && data.pointsDelta >= -200
+        && data.pointsDelta <= 25
+        && data.isCorrect is bool;
+    }
+
     function answerReadable() {
       return isFacilitator()
         || resource.data.visibleToAudience == true
@@ -134,7 +147,8 @@ service cloud.firestore {
       match /answers/{answerId} {
         allow read: if answerReadable();
         allow create: if isFacilitator() || teamAnswerCreateAllowed();
-        allow update, delete: if isFacilitator();
+        allow update: if isFacilitator() || teamAnswerUpdateAllowed();
+        allow delete: if isFacilitator();
       }
 
       // Session history + edit log (facilitator only)

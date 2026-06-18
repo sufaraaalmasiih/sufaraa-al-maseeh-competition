@@ -135,6 +135,14 @@ export function AuthGate({
   }
 
   if (!user) {
+    if (!bootstrapReady) {
+      return (
+        <CompetitionGradientShell centerContent className="app-viewport-fill" contentClassName="app-loading-screen__content">
+          <LoadingState variant="page" title="جاري التحقق من الحساب..." waitingComponent="AuthGate" />
+        </CompetitionGradientShell>
+      );
+    }
+
     return directAccessMessage ? (
       <AuthGateMessageCard
         title="يلزم تسجيل الدخول"

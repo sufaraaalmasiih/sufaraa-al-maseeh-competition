@@ -799,13 +799,21 @@
       line-height: 1.3;
     }
 
-    .competition-intro-screen__wrap,
-    .audience-intro-screen__wrap {
+    .competition-intro-screen__wrap {
       height: 100dvh;
       max-height: 100dvh;
       min-height: 0;
       overflow: hidden;
       padding-block: 0.5rem;
+      padding-inline: 0.75rem;
+    }
+
+    .audience-intro-screen__wrap {
+      height: auto;
+      min-height: 100dvh;
+      max-height: none;
+      overflow: visible;
+      padding-block: 0.75rem;
       padding-inline: 0.75rem;
     }
 
@@ -859,10 +867,14 @@
     }
 
     body:has(.competition-intro-screen__wrap),
-    body:has(.audience-intro-screen__wrap),
-    body:has(.competition-flow-shell__wrap),
-    body:has(.audience-flow-shell__wrap) {
+    body:has(.competition-flow-shell__wrap) {
       overflow: hidden;
+    }
+
+    body:has(.audience-intro-screen__wrap),
+    body:has(.audience-flow-shell__wrap) {
+      overflow-x: hidden;
+      overflow-y: auto;
     }
   }
 
@@ -5455,11 +5467,13 @@
   }
 
   .audience-display .reveal-results-card--with-ranking .reveal-results-card__scroll {
-    max-height: min(36vh, 20rem);
+    max-height: none;
+    overflow: visible;
   }
 
   .audience-display .reveal-results-card--with-ranking .reveal-results-card__ranking {
-    max-height: min(34vh, 18rem);
+    max-height: none;
+    overflow: visible;
   }
 
   .reveal-results-card--density-spacious .reveal-results-card__answer {
@@ -5530,8 +5544,9 @@
     flex: 1 1 auto;
     flex-direction: column;
     align-items: stretch;
-    gap: clamp(0.35rem, 0.8vh, 0.65rem);
-    max-height: calc(100dvh - clamp(4.5rem, 10vh, 6rem));
+    gap: clamp(0.5rem, 1vh, 0.85rem);
+    max-height: none;
+    overflow: visible;
   }
 
   .audience-display .audience-reveal-results-page .reveal-results-card--audience {
@@ -5845,7 +5860,7 @@
   }
 
   .flow-cockpit__grid {
-    @apply grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px];
+    @apply grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(18rem,22rem)];
   }
 
   .flow-cockpit__grid--stacked {
@@ -6699,9 +6714,10 @@
   }
 
   .flow-scoreboard__row {
-    @apply grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border px-3 py-2.5 transition;
+    @apply grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border px-4 py-3.5 transition;
     border-color: rgba(35, 136, 196, 0.08);
     background-color: rgba(255, 255, 255, 0.82);
+    min-height: 4.5rem;
   }
 
   .flow-scoreboard__row:hover {
@@ -6716,7 +6732,7 @@
   }
 
   .flow-scoreboard__rank {
-    @apply flex h-8 w-8 items-center justify-center rounded-full text-xs font-black text-[#143A5A];
+    @apply flex h-10 w-10 items-center justify-center rounded-full text-sm font-black text-[#143A5A];
     background-color: rgba(20, 58, 90, 0.08);
   }
 
@@ -6736,7 +6752,7 @@
   }
 
   .flow-scoreboard__team {
-    @apply text-sm font-black text-[#143A5A];
+    @apply text-base font-black leading-snug text-[#143A5A];
   }
 
   .flow-scoreboard__meta {
@@ -6773,11 +6789,11 @@
   }
 
   .flow-scoreboard__stage {
-    @apply text-xs font-bold text-[#4F8A10];
+    @apply text-sm font-bold text-[#4F8A10];
   }
 
   .flow-scoreboard__total {
-    @apply text-base font-black text-[#2388C4];
+    @apply text-lg font-black text-[#2388C4];
   }
 
   .flow-scoreboard__legend {
@@ -10638,15 +10654,21 @@
   }
 
   .audience-display .competition-ranking-row--card {
-    min-height: 4.25rem;
-    padding: 0.85rem 1rem;
+    min-height: 5.25rem;
+    padding: 1rem 1.15rem;
     border-radius: 1.15rem;
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
-    gap: 0.85rem;
+    gap: 1rem;
     background: rgba(255, 255, 255, 0.96);
     box-shadow: 0 10px 22px rgba(8, 24, 40, 0.1);
+  }
+
+  .audience-display .reveal-results-card__ranking .competition-ranking-scroll--cards {
+    max-height: none;
+    overflow: visible;
+    overscroll-behavior: auto;
   }
 
   .audience-display .competition-ranking-panel--embedded,
