@@ -14,6 +14,19 @@ describe("stage2-matching", () => {
     expect(new Set(answers).size).toBe(5);
   });
 
+  it("falls back to rightOptions when correctRight is stripped for team playback", () => {
+    const question = {
+      ...stage2MatchingMockQuestions[0],
+      pairs: stage2MatchingMockQuestions[0].pairs.map((pair) => ({
+        ...pair,
+        correctRight: "",
+      })),
+    };
+    const answers = getMatchingRightAnswers(question);
+
+    expect(answers).toHaveLength(5);
+    expect(new Set(answers)).toEqual(new Set(stage2MatchingMockQuestions[0].rightOptions));
+  });
   it("shuffles without adding distractors", () => {
     const question = stage2MatchingMockQuestions[0];
     const shuffled = getShuffledMatchingRightOptions(question);

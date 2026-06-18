@@ -7,12 +7,14 @@ interface Stage2ReadingPanelProps {
   reference: string;
   passage?: string;
   hasReadingTimer: boolean;
+  showFinishedNotice?: boolean;
 }
 
 export function Stage2ReadingPanel({
   reference,
   passage,
   hasReadingTimer,
+  showFinishedNotice = false,
 }: Stage2ReadingPanelProps) {
   return (
     <section className="competition-stage-screen competition-stage-screen--reading">
@@ -45,7 +47,17 @@ export function Stage2ReadingPanel({
           </div>
         </div>
 
-        {!hasReadingTimer ? (
+        {showFinishedNotice ? (
+          <div className="competition-stage-screen__wait competition-stage-screen__wait--blue">
+            <span aria-hidden className="competition-stage-screen__wait-pulse competition-stage-screen__wait-pulse--blue" />
+            <p className="competition-stage-screen__wait-title">انتهى وقت القراءة</p>
+            <p className="competition-stage-screen__wait-hint">
+              سيتم الانتقال الآن إلى أسئلة المجالات
+            </p>
+          </div>
+        ) : null}
+
+        {!hasReadingTimer && !showFinishedNotice ? (
           <div className="competition-stage-screen__wait competition-stage-screen__wait--blue">
             <span aria-hidden className="competition-stage-screen__wait-pulse competition-stage-screen__wait-pulse--blue" />
             <p className="competition-stage-screen__wait-title">بانتظار بدء المؤقت</p>

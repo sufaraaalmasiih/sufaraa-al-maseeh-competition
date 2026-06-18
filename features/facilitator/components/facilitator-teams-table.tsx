@@ -47,8 +47,8 @@ export function FacilitatorTeamsTable({
                 <th>الفريق</th>
                 <th>المحافظة</th>
                 <th>الجاهزية</th>
-                <th>السؤال (م1)</th>
-                <th>نقاط م1</th>
+                <th>السؤال (المرحلة الأولى)</th>
+                <th>نقاط المرحلة الأولى</th>
                 <th>المجموع</th>
               </tr>
             </thead>

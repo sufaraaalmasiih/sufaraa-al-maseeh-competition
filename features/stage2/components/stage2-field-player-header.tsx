@@ -17,7 +17,7 @@ export function Stage2FieldPlayerHeader({
     <StageHeaderBar
       segments={[
         { text: "فتشوا الكتب", accent: true },
-        { text: `م${fieldOrder}: ${fieldLabel}` },
+        { text: `مجال ${fieldOrder}: ${fieldLabel}` },
         { text: `اللاعب: ${assignedPlayerName}` },
       ]}
     />

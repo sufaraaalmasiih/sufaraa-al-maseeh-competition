@@ -2273,6 +2273,17 @@
     color: rgba(20, 58, 90, 0.55);
   }
 
+  .competition-ranking-row__bar-track {
+    @apply mt-2 h-2.5 overflow-hidden rounded-full;
+    background: rgba(35, 136, 196, 0.12);
+  }
+
+  .competition-ranking-row__bar-fill {
+    @apply block h-full rounded-full;
+    background: linear-gradient(90deg, #42a6dc 0%, #1f7eb5 100%);
+    transition: width 420ms ease-out;
+  }
+
   .competition-ranking-row__score {
     @apply flex shrink-0 flex-col items-center rounded-xl border px-3 py-2 text-center;
     min-width: 4.5rem;
@@ -2345,6 +2356,14 @@
 
   .competition-ranking-panel--live {
     width: 100%;
+  }
+
+  .stage3-selection-pill {
+    @apply mx-auto mt-2 w-fit rounded-full px-4 py-2 text-center text-sm font-black;
+    color: #0f5f8f;
+    background: rgba(243, 250, 255, 0.95);
+    border: 1px solid rgba(35, 136, 196, 0.2);
+    box-shadow: 0 10px 22px rgba(31, 126, 181, 0.12);
   }
 
   .matching-board-grid {

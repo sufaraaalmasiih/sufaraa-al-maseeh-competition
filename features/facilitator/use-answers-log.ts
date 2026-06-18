@@ -33,6 +33,7 @@ function asString(value: unknown): string {
 }
 
 function normalize(id: string, data: Record<string, unknown>): AnswerLogRow {
+  const answerText = asString(data.answer) || asString(data.answerText) || asString(data.selectedAnswer);
   return {
     id,
     teamId: asString(data.teamId),
@@ -40,7 +41,7 @@ function normalize(id: string, data: Record<string, unknown>): AnswerLogRow {
     stage: asString(data.stage) || "—",
     field: asString(data.field) || null,
     questionText: asString(data.questionText) || asString(data.questionId) || "—",
-    answer: asString(data.answer),
+    answer: answerText,
     isCorrect: typeof data.isCorrect === "boolean" ? data.isCorrect : null,
     pointsDelta: typeof data.pointsDelta === "number" ? data.pointsDelta : null,
     createdAtMs: toMs(data.createdAt) || toMs(data.confirmedAt),

@@ -19,6 +19,16 @@ export function FacilitatorStage12Automation() {
   const { status } = useGameFlow();
   const { timer, isExpired } = useCompetitionTimer();
   const attemptedRef = useRef<string | null>(null);
+  const stage2ReadingDelayRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (stage2ReadingDelayRef.current != null) {
+        window.clearTimeout(stage2ReadingDelayRef.current);
+        stage2ReadingDelayRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!isExpired || !timer?.active) {
@@ -39,7 +49,20 @@ export function FacilitatorStage12Automation() {
       timer.stage === "stage2" &&
       timer.purpose === "reading"
     ) {
-      action = () => setGameFlowStatus("stage2_player_turns", "stage2");
+      action = () =>
+        new Promise<void>((resolve, reject) => {
+          if (stage2ReadingDelayRef.current != null) {
+            window.clearTimeout(stage2ReadingDelayRef.current);
+          }
+          stage2ReadingDelayRef.current = window.setTimeout(() => {
+            setGameFlowStatus("stage2_player_turns", "stage2")
+              .then(resolve)
+              .catch(reject)
+              .finally(() => {
+                stage2ReadingDelayRef.current = null;
+              });
+          }, 1500);
+        });
     }
 
     if (!action) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { QuestionImage } from "@/components/competition/question-image";
+import { QuestionTransition } from "@/components/motion/question-transition";
 import { Stage3GameplayHeader } from "@/features/stage3/components/stage3-gameplay-header";
 import { getStage3MockQuestion } from "@/features/stage3/stage3-mock-questions";
 import {
@@ -41,7 +42,7 @@ export function Stage3QuestionOpenScreen({
       : mockQuestion?.prompt ?? "—";
 
   return (
-    <>
+    <QuestionTransition questionKey={`stage3-selection-${question.id}`}>
       {!hideHeader ? (
         <Stage3GameplayHeader
           ownerTeamName={ownerLabel}
@@ -50,6 +51,10 @@ export function Stage3QuestionOpenScreen({
           difficulty={question.difficulty}
         />
       ) : null}
+
+      <div className="stage3-selection-pill" role="status" aria-live="polite">
+        {`اختار فريق ${ownerLabel} سؤال ${question.questionNumber} من ${question.fieldLabel}`}
+      </div>
 
       <div className="stage3-question-hero stage3-question-hero--prompt-only">
         <p className="stage3-question-hero__prompt">{displayPrompt}</p>
@@ -64,7 +69,7 @@ export function Stage3QuestionOpenScreen({
           </p>
         ) : null}
       </div>
-    </>
+    </QuestionTransition>
   );
 }
 

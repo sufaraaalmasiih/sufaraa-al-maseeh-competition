@@ -32,6 +32,7 @@ export function Stage4RankingTable({
   }
 
   if (variant === "team" || variant === "audience") {
+    const boardAnimate = animate || variant === "team";
     const panel = (
       <div
         className={cn(
@@ -54,7 +55,7 @@ export function Stage4RankingTable({
           ) : null}
         </div>
         <CompetitionRankingBoard
-          animate={animate}
+          animate={boardAnimate}
           bare={embedded}
           scoreLabel="نقاط المرحلة"
           teams={teams.map((team, index) => ({
@@ -67,7 +68,7 @@ export function Stage4RankingTable({
             totalScore: team.totalScore,
             meta: `المجموع: ${team.totalScore} · التسلسل: ${team.streak}`,
           }))}
-          variant={variant === "audience" ? "audience" : "embedded"}
+          variant={variant === "audience" ? "audience" : "team"}
         />
       </div>
     );

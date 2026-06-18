@@ -27,10 +27,10 @@ export function areAllMatchingPairsFilled(
   return question.pairs.every((pair) => Boolean(pairings[pair.left]));
 }
 
-/** Right-column answers: exactly one shuffled card per left pair (5×5 official rules). */
+/** Right-column answers: one card per pair (5×5). Uses rightOptions when team bank strips correctRight. */
 export function getMatchingRightAnswers(question: Stage2MatchingQuestion): string[] {
+  const fromPairs: string[] = [];
   const seen = new Set<string>();
-  const answers: string[] = [];
 
   for (const pair of question.pairs) {
     const right = pair.correctRight.trim();
@@ -38,10 +38,17 @@ export function getMatchingRightAnswers(question: Stage2MatchingQuestion): strin
       continue;
     }
     seen.add(right);
-    answers.push(right);
+    fromPairs.push(right);
   }
 
-  return answers;
+  if (fromPairs.length > 0) {
+    return fromPairs;
+  }
+
+  const fromOptions = (question.rightOptions ?? [])
+    .map((option) => option.trim())
+    .filter(Boolean);
+  return [...new Set(fromOptions)];
 }
 
 /** Right-column pool for team UI — shuffled correct answers only (no MC distractors). */

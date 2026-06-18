@@ -208,9 +208,9 @@ function ArchiveRow({
             <p className="facilitator-archive__sub">
               {archive.governorate ? `محافظة ${archive.governorate} · ` : ""}
               {archive.sourceFileName} · {archive.counts.total} سؤال
-              {" · م1:"}
-              {archive.counts.stage1} م2:{archive.counts.stage2} م3:{archive.counts.stage3} م4:
-              {archive.counts.stage4}
+              {" · المرحلة الأولى: "}
+              {archive.counts.stage1} · المرحلة الثانية: {archive.counts.stage2} · المرحلة الثالثة:{" "}
+              {archive.counts.stage3} · المرحلة الرابعة: {archive.counts.stage4}
             </p>
           </>
         )}

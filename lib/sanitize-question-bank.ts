@@ -23,6 +23,10 @@ export function sanitizeStage2BankForTeam(bank: Stage2QuestionBank): Stage2Quest
     matching: bank.matching.map((question) => ({
       ...question,
       pairs: question.pairs.map((pair) => ({ ...pair, correctRight: "" })),
+      rightOptions:
+        question.rightOptions.length > 0
+          ? question.rightOptions
+          : [...new Set(question.pairs.map((pair) => pair.correctRight.trim()).filter(Boolean))],
     })),
     arrangeVerse: bank.arrangeVerse.map((question) => ({
       ...question,

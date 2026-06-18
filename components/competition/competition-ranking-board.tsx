@@ -81,6 +81,10 @@ export function CompetitionRankingBoard({
       : teams.length > 6
         ? "competition-ranking-scroll--medium"
         : "competition-ranking-scroll--comfortable";
+  const maxStageScore = teams.reduce(
+    (max, team) => (team.stageScore > max ? team.stageScore : max),
+    0,
+  );
 
   const list = (
     <div
@@ -96,7 +100,7 @@ export function CompetitionRankingBoard({
         <AnimatedRankingRow
           key={team.teamId}
           index={index}
-          animate={animate && variant === "audience"}
+          animate={animate}
           variant={variant === "audience" ? "audience" : "default"}
           className={cn(
             "competition-ranking-row competition-ranking-row--card competition-ranking-row--with-logo",
@@ -113,6 +117,20 @@ export function CompetitionRankingBoard({
           <div className="competition-ranking-row__team">
             <p className="competition-ranking-row__name">{team.teamName}</p>
             <p className="competition-ranking-row__meta">{buildMeta(team)}</p>
+            <div className="competition-ranking-row__bar-track" aria-hidden>
+              <span
+                className="competition-ranking-row__bar-fill"
+                style={{
+                  width:
+                    maxStageScore <= 0
+                      ? "0%"
+                      : `${Math.max(
+                          6,
+                          Math.round((team.stageScore / maxStageScore) * 100),
+                        )}%`,
+                }}
+              />
+            </div>
           </div>
           <div className="competition-ranking-row__score">
             <span className="competition-ranking-row__score-label">{scoreLabel}</span>

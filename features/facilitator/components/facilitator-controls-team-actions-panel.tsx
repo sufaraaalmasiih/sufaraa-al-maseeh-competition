@@ -1,6 +1,7 @@
 "use client";
 
-import { Eye, Lock, LockOpen, RotateCcw, Trash2, Wand2 } from "lucide-react";
+import { useRef, useState } from "react";
+import { Download, Eye, Lock, LockOpen, RotateCcw, Trash2, Wand2 } from "lucide-react";
 import { EmptyState } from "@/components/layout/empty-state";
 import { LoadingState } from "@/components/layout/state-view";
 import {
@@ -17,6 +18,8 @@ import type { ControlsConfirmRequest } from "@/features/facilitator/components/f
 import type { AdminStageKey } from "@/features/facilitator/facilitator-team-admin";
 import type { TeamFacilitatorOverride } from "@/features/facilitator/team-control-types";
 import type { useAnswersLog } from "@/features/facilitator/use-answers-log";
+import { exportAnswersExcel } from "@/features/facilitator/export-answers-excel";
+import { exportElementAsPng } from "@/features/facilitator/export-results-image";
 
 type AnswerRow = ReturnType<typeof useAnswersLog>["rows"][number];
 
@@ -33,6 +36,7 @@ interface OverrideQuestionValidation {
 }
 
 interface FacilitatorControlsTeamActionsPanelProps {
+  selectedTeamName: string;
   override: TeamFacilitatorOverride | null;
   overrideStatusKey: string;
   onOverrideStatusKeyChange: (value: string) => void;
@@ -60,6 +64,7 @@ interface FacilitatorControlsTeamActionsPanelProps {
 }
 
 export function FacilitatorControlsTeamActionsPanel({
+  selectedTeamName,
   override,
   overrideStatusKey,
   onOverrideStatusKeyChange,
@@ -85,6 +90,52 @@ export function FacilitatorControlsTeamActionsPanel({
   onResetTeamData,
   onDeleteTeamCompletely,
 }: FacilitatorControlsTeamActionsPanelProps) {
+  const answersTableRef = useRef<HTMLDivElement | null>(null);
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExportExcel() {
+    if (filteredAnswers.length === 0 || exporting) {
+      return;
+    }
+    setExporting(true);
+    try {
+      await exportAnswersExcel({
+        teamName: selectedTeamName,
+        rows: filteredAnswers.map((row) => ({
+          time: formatAnswerTime(row.createdAtMs),
+          stage: STAGE_OPTIONS_LABELS[row.stage as AdminStageKey] ?? row.stage,
+          question: row.questionText || "—",
+          answer: row.answer || "—",
+          result:
+            row.isCorrect === true
+              ? "صحيح"
+              : row.isCorrect === false
+                ? "خطأ"
+                : "—",
+          pointsDelta: row.pointsDelta,
+        })),
+        filePrefix: "facilitator-answers",
+      });
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function handleExportImage() {
+    if (!answersTableRef.current || filteredAnswers.length === 0 || exporting) {
+      return;
+    }
+    setExporting(true);
+    try {
+      await exportElementAsPng(
+        answersTableRef.current,
+        `facilitator-answers-${selectedTeamName || "team"}.png`,
+      );
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <div className="facilitator-card">
       <div className="facilitator-card__head">
@@ -239,6 +290,24 @@ export function FacilitatorControlsTeamActionsPanel({
           </button>
           <button
             type="button"
+            className="facilitator-btn facilitator-btn--outline"
+            disabled={filteredAnswers.length === 0 || exporting}
+            onClick={() => void handleExportExcel()}
+          >
+            <Download className="h-4 w-4" aria-hidden />
+            {exporting ? "جارٍ التصدير..." : "تنزيل Excel"}
+          </button>
+          <button
+            type="button"
+            className="facilitator-btn facilitator-btn--outline"
+            disabled={filteredAnswers.length === 0 || exporting}
+            onClick={() => void handleExportImage()}
+          >
+            <Download className="h-4 w-4" aria-hidden />
+            {exporting ? "جارٍ التصدير..." : "تنزيل صورة"}
+          </button>
+          <button
+            type="button"
             className="facilitator-btn facilitator-btn--danger"
             disabled={confirmRequest !== null}
             onClick={onDeleteAnswers}
@@ -253,7 +322,7 @@ export function FacilitatorControlsTeamActionsPanel({
           ) : filteredAnswers.length === 0 ? (
             <EmptyState title="لا توجد إجابات لهذا الفلتر." />
           ) : (
-            <div className="facilitator-table-wrap">
+            <div ref={answersTableRef} className="facilitator-table-wrap">
               <table className="facilitator-table">
                 <thead>
                   <tr>

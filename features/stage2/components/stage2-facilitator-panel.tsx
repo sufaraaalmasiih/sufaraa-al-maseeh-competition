@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
 import { finishStage2Field } from "@/features/stage2/finish-stage2-field";
 import { startStage2AnsweringTimer } from "@/features/facilitator/facilitator-flow-actions";
@@ -22,7 +22,9 @@ function isTeamReadyForNextField(team: Stage2TeamProgressRow): boolean {
 export function Stage2FacilitatorPanel() {
   const { teams, loading, error } = useStage2TeamProgressList();
   const [pending, setPending] = useState(false);
+  const [autoAdvance, setAutoAdvance] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const autoAdvanceAttemptedRef = useRef(false);
 
   const readyTeams = useMemo(
     () => teams.filter((team) => isTeamReadyForNextField(team)),
@@ -41,8 +43,24 @@ export function Stage2FacilitatorPanel() {
     ? `الانتقال إلى ${nextFieldLabel}`
     : "الانتقال للمجال التالي";
 
-  async function handleAdvanceReadyTeams() {
-    if (readyTeams.length === 0 || pending) {
+  const completedTeams = useMemo(
+    () => teams.filter((team) => team.isComplete),
+    [teams],
+  );
+  const inProgressTeams = useMemo(
+    () => teams.filter((team) => !team.isComplete),
+    [teams],
+  );
+
+  async function handleAdvanceReadyTeams(teamIds?: string[]) {
+    if (pending) {
+      return;
+    }
+    const targetTeams =
+      teamIds && teamIds.length > 0
+        ? readyTeams.filter((team) => teamIds.includes(team.teamId))
+        : readyTeams;
+    if (targetTeams.length === 0) {
       return;
     }
 
@@ -51,7 +69,7 @@ export function Stage2FacilitatorPanel() {
 
     try {
       await Promise.all(
-        readyTeams.map((team) => finishStage2Field(team.teamId, team.fieldIndex)),
+        targetTeams.map((team) => finishStage2Field(team.teamId, team.fieldIndex)),
       );
       await startStage2AnsweringTimer();
     } catch {
@@ -60,6 +78,20 @@ export function Stage2FacilitatorPanel() {
       setPending(false);
     }
   }
+
+  useEffect(() => {
+    if (!autoAdvance || readyTeams.length === 0 || pending) {
+      autoAdvanceAttemptedRef.current = false;
+      return;
+    }
+    if (autoAdvanceAttemptedRef.current) {
+      return;
+    }
+    autoAdvanceAttemptedRef.current = true;
+    void handleAdvanceReadyTeams().finally(() => {
+      autoAdvanceAttemptedRef.current = false;
+    });
+  }, [autoAdvance, pending, readyTeams]);
 
   return (
     <div className="flow-workspace-panel stage2-facilitator-wrap">
@@ -84,10 +116,11 @@ export function Stage2FacilitatorPanel() {
                   <th>المجال الحالي</th>
                   <th>رقم المجال</th>
                   <th>المتسابق</th>
-                  <th>السؤال</th>
-                  <th>نقاط م2</th>
+                  <th>رقم السؤال</th>
+                  <th>نقاط المرحلة الثانية</th>
                   <th>المجموع</th>
                   <th>الحالة</th>
+                  <th>إجراء</th>
                 </tr>
               </thead>
               <tbody>
@@ -134,6 +167,16 @@ export function Stage2FacilitatorPanel() {
                               : "قيد التنفيذ"}
                         </span>
                       </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="facilitator-btn facilitator-btn--outline"
+                          disabled={!ready || pending}
+                          onClick={() => void handleAdvanceReadyTeams([team.teamId])}
+                        >
+                          انتقال يدوي
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
@@ -143,6 +186,16 @@ export function Stage2FacilitatorPanel() {
         ) : null}
 
         <div className="stage2-facilitator-toolbar">
+          <div className="facilitator-action-bar">
+            <button
+              type="button"
+              className="facilitator-btn facilitator-btn--outline"
+              onClick={() => setAutoAdvance((value) => !value)}
+            >
+              {autoAdvance ? "إيقاف الانتقال التلقائي" : "تفعيل الانتقال التلقائي"}
+            </button>
+          </div>
+
           <div className="facilitator-action-bar">
             <button
               type="button"
@@ -165,6 +218,24 @@ export function Stage2FacilitatorPanel() {
               بانتظار إنهاء الفرق لأسئلة المجال الحالي...
             </p>
           )}
+          <p className="stage2-facilitator-toolbar__hint">
+            {`الفرق التي أنهت المرحلة: ${completedTeams.length} · الفرق التي لم تنه المرحلة: ${inProgressTeams.length}`}
+          </p>
+          {completedTeams.length > 0 ? (
+            <p className="stage2-facilitator-toolbar__hint">
+              أنهت المرحلة: {completedTeams.map((team) => team.teamName).join("، ")}
+            </p>
+          ) : null}
+          {inProgressTeams.length > 0 ? (
+            <p className="stage2-facilitator-toolbar__hint">
+              لم تنه المرحلة: {inProgressTeams.map((team) => team.teamName).join("، ")}
+            </p>
+          ) : null}
+          {autoAdvance ? (
+            <p className="stage2-facilitator-toolbar__hint stage2-facilitator-toolbar__hint--ready">
+              الانتقال التلقائي مفعل: أي فريق جاهز سينتقل مباشرة للمجال التالي.
+            </p>
+          ) : null}
 
           {actionError ? (
             <ErrorState title="تعذر الانتقال" description={actionError} />

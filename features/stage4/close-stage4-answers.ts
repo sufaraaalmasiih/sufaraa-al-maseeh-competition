@@ -1,14 +1,26 @@
-import { serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
+import { runTransaction, serverTimestamp } from "firebase/firestore";
+import { getClientFirestore } from "@/firebase/firebaseClient";
 import { gameFlowRef, timerRef } from "@/firebase/firestore";
 
 export async function closeStage4Answers() {
-  await Promise.all([
-    updateDoc(gameFlowRef, {
+  await runTransaction(getClientFirestore(), async (transaction) => {
+    const gameFlowSnapshot = await transaction.get(gameFlowRef);
+
+    if (!gameFlowSnapshot.exists()) {
+      throw new Error("Game flow document is missing.");
+    }
+
+    const gameFlow = gameFlowSnapshot.data();
+    if (gameFlow?.status !== "stage4_question_open") {
+      throw new Error("لا يمكن إغلاق الإجابات إلا أثناء فتح السؤال.");
+    }
+
+    transaction.update(gameFlowRef, {
       status: "stage4_answers_closed",
       currentStage: "stage4",
       updatedAt: serverTimestamp(),
-    }),
-    setDoc(
+    });
+    transaction.set(
       timerRef,
       {
         active: false,
@@ -17,6 +29,6 @@ export async function closeStage4Answers() {
         updatedAt: serverTimestamp(),
       },
       { merge: true },
-    ),
-  ]);
+    );
+  });
 }

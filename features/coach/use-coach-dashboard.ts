@@ -65,7 +65,10 @@ function formatAnswerLabel(data: Record<string, unknown>): string {
     return OUTCOME_LABELS[data.outcome];
   }
 
-  const answer = typeof data.answer === "string" ? data.answer.trim() : "";
+  const answer =
+    (typeof data.answer === "string" ? data.answer.trim() : "") ||
+    (typeof data.answerText === "string" ? data.answerText.trim() : "") ||
+    (typeof data.selectedAnswer === "string" ? data.selectedAnswer.trim() : "");
   if (answer.length > 0) {
     return answer;
   }
@@ -102,6 +105,7 @@ export function useCoachDashboard() {
   const { status, loading: gameFlowLoading, error: gameFlowError } = useGameFlow();
   const { docs, loading: teamsLoading, error: teamsError } = useTeamStatesSnapshot("main", Boolean(teamId));
   const [history, setHistory] = useState<CoachHistoryItem[]>([]);
+  const [allHistory, setAllHistory] = useState<CoachHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [historyError, setHistoryError] = useState<string | null>(null);
 
@@ -148,6 +152,7 @@ export function useCoachDashboard() {
   useEffect(() => {
     if (!teamId) {
       setHistory([]);
+      setAllHistory([]);
       setHistoryLoading(false);
       return undefined;
     }
@@ -178,15 +183,17 @@ export function useCoachDashboard() {
             };
           })
           .filter((item): item is CoachHistoryItem & { createdAtMs: number } => item !== null)
-          .sort((first, second) => second.createdAtMs - first.createdAtMs)
-          .slice(0, 5)
-          .map(({ createdAtMs: _createdAtMs, ...row }) => row);
+          .sort((first, second) => second.createdAtMs - first.createdAtMs);
 
-        setHistory(items);
+        const normalized = items.map(({ createdAtMs: _createdAtMs, ...row }) => row);
+
+        setAllHistory(normalized);
+        setHistory(normalized.slice(0, 5));
         setHistoryError(null);
         setHistoryLoading(false);
       },
       () => {
+        setAllHistory([]);
         setHistoryError("تعذر تحميل تاريخ الأسئلة.");
         setHistoryLoading(false);
       },
@@ -199,6 +206,7 @@ export function useCoachDashboard() {
     stageName,
     teamSummary,
     history,
+    allHistory,
     loading: gameFlowLoading || teamsLoading || historyLoading,
     error: gameFlowError ?? teamsError ?? historyError,
   };

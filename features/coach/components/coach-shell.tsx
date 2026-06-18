@@ -1,21 +1,64 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Download } from "lucide-react";
 import { CompetitionBrandHeaderCard } from "@/components/competition/competition-brand-header-card";
 import { CompetitionFrozenBanner } from "@/components/layout/competition-frozen-banner";
 import { CompetitionGradientShell } from "@/components/layout/competition-gradient-shell";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
+import { exportAnswersExcel } from "@/features/facilitator/export-answers-excel";
+import { exportElementAsPng } from "@/features/facilitator/export-results-image";
 import { useCoachDashboard } from "@/features/coach/use-coach-dashboard";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
 import { setCoachViewMode } from "@/lib/coach-view-mode";
 
 export function CoachShell() {
   const { competitionFrozen } = useGameFlow();
-  const { stageName, teamSummary, history, loading, error } = useCoachDashboard();
+  const { stageName, teamSummary, history, allHistory, loading, error } = useCoachDashboard();
+  const historyListRef = useRef<HTMLUListElement | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     setCoachViewMode("coach");
   }, []);
+
+  async function handleExportExcel() {
+    if (allHistory.length === 0 || exporting) {
+      return;
+    }
+    setExporting(true);
+    try {
+      await exportAnswersExcel({
+        teamName: teamSummary?.teamName ?? "team",
+        rows: allHistory.map((item) => ({
+          time: "—",
+          stage: item.stage,
+          question: item.questionText,
+          answer: item.answer || "—",
+          result: item.isCorrect ? "صحيح" : "خطأ",
+          pointsDelta: item.pointsDelta,
+        })),
+        filePrefix: "coach-answers",
+      });
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function handleExportImage() {
+    if (!historyListRef.current || history.length === 0 || exporting) {
+      return;
+    }
+    setExporting(true);
+    try {
+      await exportElementAsPng(
+        historyListRef.current,
+        `coach-answers-${teamSummary?.teamName ?? "team"}.png`,
+      );
+    } finally {
+      setExporting(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -79,10 +122,30 @@ export function CoachShell() {
 
       <section className="coach-history">
         <h2 className="coach-history__title">آخر الأسئلة المعلنة</h2>
+        <div className="facilitator-timer__buttons">
+          <button
+            type="button"
+            className="facilitator-btn facilitator-btn--outline"
+            disabled={allHistory.length === 0 || exporting}
+            onClick={() => void handleExportExcel()}
+          >
+            <Download className="h-4 w-4" aria-hidden />
+            {exporting ? "جارٍ التصدير..." : "تنزيل Excel"}
+          </button>
+          <button
+            type="button"
+            className="facilitator-btn facilitator-btn--outline"
+            disabled={history.length === 0 || exporting}
+            onClick={() => void handleExportImage()}
+          >
+            <Download className="h-4 w-4" aria-hidden />
+            {exporting ? "جارٍ التصدير..." : "تنزيل صورة"}
+          </button>
+        </div>
         {history.length === 0 ? (
           <p className="coach-history__empty">لا توجد أسئلة مُعلنة بعد لفرقك.</p>
         ) : (
-          <ul className="coach-history__list">
+          <ul ref={historyListRef} className="coach-history__list">
             {history.map((item, index) => (
               <li
                 key={item.id}

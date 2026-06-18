@@ -31,7 +31,9 @@ export function Stage4FacilitatorPanel() {
   const [actionError, setActionError] = useState<string | null>(null);
 
   const teamCount = registeredTeams.length;
-  const answeredCount = answers.filter((answer) => answer.confirmed).length;
+  const answeredCount = new Set(
+    answers.filter((answer) => answer.confirmed).map((answer) => answer.teamId),
+  ).size;
   const allResponded = teamCount > 0 && answeredCount >= teamCount;
   const isLastQuestion = stage4QuestionIndex + 1 >= stage4QuestionCount;
 

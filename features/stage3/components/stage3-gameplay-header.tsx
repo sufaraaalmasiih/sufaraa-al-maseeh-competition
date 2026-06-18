@@ -28,7 +28,7 @@ export function Stage3GameplayHeader({
     contextParts.push(fieldLabel);
   }
   if (questionNumber) {
-    contextParts.push(`س${questionNumber}`);
+    contextParts.push(`سؤال ${questionNumber}`);
   }
   if (difficulty) {
     contextParts.push(STAGE3_DIFFICULTY_LABELS[difficulty]);

@@ -336,7 +336,7 @@ export function FacilitatorSettingsTab() {
             <h3 className="facilitator-card__title">قراءة المرحلة الثانية — فتشوا الكتب</h3>
             <p className="facilitator-card__desc">
               النص الذي يظهر على شاشة القراءة قبل بدء الأسئلة. يمكنك تعديله هنا مباشرة
-              أو من ورقة <strong>قراءة_م2</strong> في ملف Excel ثم إعادة الاستيراد.
+              أو من ورقة <strong>قراءة المرحلة الثانية</strong> في ملف Excel ثم إعادة الاستيراد.
             </p>
           </div>
         </div>

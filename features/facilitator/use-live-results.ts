@@ -65,7 +65,7 @@ function buildQuestionLabel(
 
   if (stageKey === "stage1") {
     const idx = num(progress?.stage1QuestionIndex);
-    return idx > 0 ? `س ${idx}` : "بداية";
+    return idx > 0 ? `سؤال ${idx}` : "بداية";
   }
 
   if (stageKey === "stage2") {
@@ -76,7 +76,7 @@ function buildQuestionLabel(
     const field = getStage2FieldByIndex(stage2Progress.stage2FieldIndex);
     const questionPart =
       stage2Progress.stage2QuestionIndex > 0
-        ? ` — س ${stage2Progress.stage2QuestionIndex + 1}`
+        ? ` — سؤال ${stage2Progress.stage2QuestionIndex + 1}`
         : "";
     return field ? `${field.label}${questionPart}` : `مجال ${stage2Progress.stage2FieldIndex + 1}`;
   }
@@ -94,7 +94,7 @@ function buildQuestionLabel(
 
   if (stageKey === "stage4") {
     const current = Math.min(context.stage4QuestionIndex + 1, context.stage4QuestionCount);
-    return `س ${current} / ${context.stage4QuestionCount}`;
+    return `سؤال ${current} / ${context.stage4QuestionCount}`;
   }
 
   return "—";

@@ -27,7 +27,7 @@ export function Stage3RankingTable({
   animate = false,
 }: Stage3RankingTableProps) {
   const compact = variant === "audience" || variant === "team";
-  const audienceAnimate = animate && variant === "audience";
+  const boardAnimate = animate || variant === "team";
 
   if (loading) {
     return <LoadingState variant={embedded ? "inline" : "page"} />;
@@ -79,7 +79,7 @@ export function Stage3RankingTable({
           )}
         </div>
         <CompetitionRankingBoard
-          animate={audienceAnimate}
+          animate={boardAnimate}
           bare={embedded}
           scoreLabel="نقاط المرحلة"
           teams={teams.map((team) => ({
@@ -91,7 +91,7 @@ export function Stage3RankingTable({
             logoUrl: team.logoUrl,
             totalScore: team.totalScore,
           }))}
-          variant={variant === "audience" ? "audience" : "embedded"}
+          variant={variant === "audience" ? "audience" : "team"}
         />
       </div>
     );

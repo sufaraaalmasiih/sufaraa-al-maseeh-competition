@@ -68,6 +68,7 @@ export function FacilitatorControlsTab() {
           />
 
           <FacilitatorControlsTeamActionsPanel
+            selectedTeamName={controls.selectedTeam.teamName}
             override={controls.override}
             overrideStatusKey={controls.overrideStatusKey}
             onOverrideStatusKeyChange={controls.setOverrideStatusKey}
