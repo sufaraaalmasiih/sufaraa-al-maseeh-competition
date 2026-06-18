@@ -5,5 +5,21 @@
   },
   "storage": {
     "rules": "storage.rules"
-  }
+  },
+  "apphosting": [
+    {
+      "backendId": "sufaraa-web",
+      "rootDir": "/",
+      "ignore": [
+        "node_modules",
+        ".git",
+        ".next",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "sufaraa-al-maseeh",
+        "sufaraa-al-maseeh-Final",
+        "_ref-old-zip"
+      ]
+    }
+  ]
 }

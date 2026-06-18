@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { deleteTeamAuthOnServer } from "@/lib/admin-delete-team-server";
+import { deleteTeamCompletelyOnServer } from "@/lib/admin-delete-team-server";
 import { isFirebaseAdminConfigured } from "@/lib/firebase-admin-server";
 import { verifySuperAdminRequest } from "@/lib/verify-super-admin-request";
 
@@ -32,11 +32,15 @@ export async function POST(request: Request) {
   }
 
   try {
-    await deleteTeamAuthOnServer(teamId);
-    return NextResponse.json({ authDeleted: true });
+    const result = await deleteTeamCompletelyOnServer(teamId);
+    return NextResponse.json({
+      firestoreDeleted: true,
+      deletedAnswers: result.deletedAnswers,
+      authDeleted: result.authDeleted,
+    });
   } catch {
     return NextResponse.json(
-      { error: "تعذر حذف حساب الدخول من Firebase Auth." },
+      { error: "تعذر حذف بيانات الفريق من Firestore." },
       { status: 500 },
     );
   }

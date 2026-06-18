@@ -50,12 +50,29 @@ npm run dev
 
 ## 3) النشر على Firebase App Hosting
 
-1. [Firebase Console](https://console.firebase.google.com/project/sufaraaalmasiih-53478) → **App Hosting** → Create backend
-2. اربط مستودع GitHub (أو انشر عبر Firebase CLI)
-3. أضف Environment Variables: كل `NEXT_PUBLIC_FIREBASE_*` من `.env.local`
-4. Deploy
+### أ) إعداد تلقائي (مرة واحدة)
 
-الملف `apphosting.yaml` في جذر المشروع.
+1. **فعّل Blaze:** [ترقية المشروع](https://console.firebase.google.com/project/sufaraaalmasiih-53478/usage/details)
+2. **فعّل Storage** (للشعارات): [Storage → Get started](https://console.firebase.google.com/project/sufaraaalmasiih-53478/storage)
+3. من جذر المشروع:
+
+```powershell
+npm run firebase:setup:apphosting
+```
+
+4. في Console → **App Hosting → sufaraa-web → Settings** → اربط GitHub → فرع `main` → Rollout
+
+### ب) أو يدوياً من Console
+
+1. [Firebase Console](https://console.firebase.google.com/project/sufaraaalmasiih-53478) → **App Hosting** → Create backend (`sufaraa-web`)
+2. اربط مستودع GitHub → فرع `main`
+3. المتغيرات مضبوطة في `apphosting.yaml` — الأسرار تُرفع عبر السكربت أعلاه
+
+```powershell
+npm run firebase:deploy:apphosting
+```
+
+الملفات: `apphosting.yaml`, `firebase.json`
 
 ---
 

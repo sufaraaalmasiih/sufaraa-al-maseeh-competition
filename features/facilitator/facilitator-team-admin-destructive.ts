@@ -9,7 +9,7 @@
   writeBatch,
 } from "firebase/firestore";
 import { getClientFirestore } from "@/firebase/firebaseClient";
-import { callAdminApi } from "@/lib/admin-api-client";
+import { callAdminApiOptional } from "@/lib/admin-api-client";
 import {
   answersCollectionRef,
   buildInitialTeamStateDocument,
@@ -114,8 +114,49 @@ export async function resetTeamCompetitionData(input: {
   });
 }
 
+async function deleteTeamFirestoreOnClient(input: {
+  teamId: string;
+  teamName: string;
+  reason: string;
+}): Promise<number> {
+  return deleteTeamAnswers({
+    teamId: input.teamId,
+    teamName: input.teamName,
+    stage: "all",
+    reason: input.reason,
+    skipAuditLog: true,
+  });
+}
+
+async function appendDeleteTeamCompletelyAudit(input: {
+  teamId: string;
+  teamName: string;
+  reason: string;
+  beforeValue: Record<string, unknown> | null;
+  deletedAnswers: number;
+  authDeleted: boolean;
+}): Promise<void> {
+  try {
+    await appendTeamAdminAuditLog({
+      type: "delete_team_completely",
+      teamId: input.teamId,
+      teamName: input.teamName,
+      deletedAnswers: input.deletedAnswers,
+      reason: input.reason,
+      beforeValue: input.beforeValue,
+      afterValue: {
+        deleted: true,
+        deletedAnswers: input.deletedAnswers,
+        authDeleted: input.authDeleted,
+      },
+    });
+  } catch {
+    // Audit failure must not block team deletion.
+  }
+}
+
 /**
- * Delete a team entirely: Firestore via facilitator permissions + Auth via super-admin API.
+ * Delete a team entirely: Firestore via super-admin API (preferred) or facilitator client rules.
  */
 export async function deleteTeamCompletely(input: {
   teamId: string;
@@ -141,13 +182,23 @@ export async function deleteTeamCompletely(input: {
       }
     : null;
 
-  const deletedAnswers = await deleteTeamAnswers({
-    teamId: input.teamId,
-    teamName: input.teamName,
-    stage: "all",
-    reason: input.reason,
-    skipAuditLog: true,
-  });
+  const apiResult = await callAdminApiOptional<{
+    firestoreDeleted?: boolean;
+    deletedAnswers?: number;
+    authDeleted?: boolean;
+  }>("/api/admin/delete-team", { teamId: input.teamId });
+
+  if (apiResult.ok && apiResult.data.firestoreDeleted) {
+    await appendDeleteTeamCompletelyAudit({
+      ...input,
+      beforeValue,
+      deletedAnswers: apiResult.data.deletedAnswers ?? 0,
+      authDeleted: apiResult.data.authDeleted ?? false,
+    });
+    return { authDeleted: apiResult.data.authDeleted ?? false };
+  }
+
+  const deletedAnswers = await deleteTeamFirestoreOnClient(input);
 
   if (stateSnapshot.exists()) {
     await deleteDoc(stateRef);
@@ -160,32 +211,16 @@ export async function deleteTeamCompletely(input: {
   }
 
   let authDeleted = false;
-  try {
-    await callAdminApi<{ authDeleted?: boolean }>("/api/admin/delete-team", {
-      teamId: input.teamId,
-    });
-    authDeleted = true;
-  } catch {
-    authDeleted = false;
+  if (apiResult.ok) {
+    authDeleted = apiResult.data.authDeleted ?? false;
   }
 
-  try {
-    await appendTeamAdminAuditLog({
-      type: "delete_team_completely",
-      teamId: input.teamId,
-      teamName: input.teamName,
-      deletedAnswers,
-      reason: input.reason,
-      beforeValue,
-      afterValue: {
-        deleted: true,
-        deletedAnswers,
-        authDeleted,
-      },
-    });
-  } catch {
-    // Audit failure must not block team deletion.
-  }
+  await appendDeleteTeamCompletelyAudit({
+    ...input,
+    beforeValue,
+    deletedAnswers,
+    authDeleted,
+  });
 
   return { authDeleted };
 }

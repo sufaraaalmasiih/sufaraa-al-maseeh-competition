@@ -17,6 +17,8 @@
     "simulate:question-import": "npx --yes tsx scripts/simulate-question-bank-import.ts",
     "firebase:deploy": "npx firebase-tools deploy --only firestore:rules,firestore:indexes,storage --project sufaraaalmasiih-53478",
     "firebase:deploy:rules": "npx firebase-tools deploy --only firestore:rules --project sufaraaalmasiih-53478",
+    "firebase:deploy:apphosting": "npx firebase-tools deploy --only apphosting:sufaraa-web --project sufaraaalmasiih-53478",
+    "firebase:setup:apphosting": "powershell -ExecutionPolicy Bypass -File scripts/setup-firebase-apphosting.ps1",
     "firebase:seed": "node scripts/seed-firestore-bootstrap.mjs"
   },
   "dependencies": {

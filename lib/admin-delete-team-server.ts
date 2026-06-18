@@ -1,5 +1,8 @@
 import { getAdminAuth } from "@/lib/firebase-admin-server";
 
+const MAIN_COMPETITION_ID = "main";
+const FIRESTORE_BATCH_LIMIT = 500;
+
 export async function deleteTeamAuthOnServer(teamId: string): Promise<void> {
   const auth = getAdminAuth();
 
@@ -11,6 +14,58 @@ export async function deleteTeamAuthOnServer(teamId: string): Promise<void> {
       throw error;
     }
   }
+}
+
+export async function deleteTeamFirestoreOnServer(
+  teamId: string,
+  competitionId: string = MAIN_COMPETITION_ID,
+): Promise<{ deletedAnswers: number }> {
+  const { getAdminFirestore } = await import("@/lib/firebase-admin-server");
+  const db = getAdminFirestore();
+
+  const answersSnap = await db
+    .collection("competitions")
+    .doc(competitionId)
+    .collection("answers")
+    .where("teamId", "==", teamId)
+    .get();
+
+  const answerDocs = answersSnap.docs;
+  for (let index = 0; index < answerDocs.length; index += FIRESTORE_BATCH_LIMIT) {
+    const batch = db.batch();
+    answerDocs.slice(index, index + FIRESTORE_BATCH_LIMIT).forEach((docSnap) => {
+      batch.delete(docSnap.ref);
+    });
+    await batch.commit();
+  }
+
+  await db
+    .collection("competitions")
+    .doc(competitionId)
+    .collection("teamStates")
+    .doc(teamId)
+    .delete();
+
+  await db.collection("teams").doc(teamId).delete();
+
+  return { deletedAnswers: answerDocs.length };
+}
+
+export async function deleteTeamCompletelyOnServer(teamId: string): Promise<{
+  deletedAnswers: number;
+  authDeleted: boolean;
+}> {
+  const { deletedAnswers } = await deleteTeamFirestoreOnServer(teamId);
+
+  let authDeleted = false;
+  try {
+    await deleteTeamAuthOnServer(teamId);
+    authDeleted = true;
+  } catch {
+    authDeleted = false;
+  }
+
+  return { deletedAnswers, authDeleted };
 }
 
 export async function deleteStaffAccountOnServer(uid: string): Promise<void> {
