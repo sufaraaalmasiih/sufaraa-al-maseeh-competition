@@ -1,11 +1,22 @@
 import { NextResponse } from "next/server";
 import { deleteStaffAccountOnServer } from "@/lib/admin-delete-team-server";
+import { isFirebaseAdminConfigured } from "@/lib/firebase-admin-server";
 import { verifySuperAdminRequest } from "@/lib/verify-super-admin-request";
 
 export async function POST(request: Request) {
   const admin = await verifySuperAdminRequest(request);
   if (!admin) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  if (!isFirebaseAdminConfigured()) {
+    return NextResponse.json(
+      {
+        error:
+          "FIREBASE_SERVICE_ACCOUNT غير مضبوط على Netlify. أضفه في Environment variables.",
+      },
+      { status: 503 },
+    );
   }
 
   let body: { uid?: string };

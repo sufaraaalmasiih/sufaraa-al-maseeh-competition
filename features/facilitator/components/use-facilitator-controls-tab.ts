@@ -336,13 +336,17 @@ export function useFacilitatorControlsTab() {
       ],
       confirmLabel: "حذف الفريق نهائياً",
       onConfirm: async (reason) => {
-        await deleteTeamCompletely({
+        const result = await deleteTeamCompletely({
           teamId: selectedTeam.teamId,
           teamName: selectedTeam.teamName,
           reason,
         });
         setSelectedTeamId("");
-        setToast("تم حذف الفريق بالكامل من المسابقة.");
+        setToast(
+          result.authDeleted
+            ? "تم حذف الفريق بالكامل من المسابقة وحساب الدخول."
+            : "تم حذف بيانات الفريق من المسابقة. لحذف حساب الدخول أيضاً، أضف FIREBASE_SERVICE_ACCOUNT في Netlify.",
+        );
       },
     });
   }

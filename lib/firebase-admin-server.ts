@@ -22,6 +22,10 @@ function initAdminApp(): App {
   throw new Error("FIREBASE_SERVICE_ACCOUNT is not configured.");
 }
 
+export function isFirebaseAdminConfigured(): boolean {
+  return Boolean(process.env.FIREBASE_SERVICE_ACCOUNT?.trim());
+}
+
 export function getAdminFirestore() {
   return getFirestore(initAdminApp());
 }

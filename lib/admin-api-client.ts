@@ -24,7 +24,8 @@ export async function callAdminApi<T = void>(
 
   if (!response.ok) {
     const payload = (await response.json().catch(() => ({}))) as { error?: string };
-    throw new Error(payload.error ?? `Request failed (${response.status}).`);
+    const serverMessage = payload.error?.trim();
+    throw new Error(serverMessage || `Request failed (${response.status}).`);
   }
 
   if (response.status === 204) {

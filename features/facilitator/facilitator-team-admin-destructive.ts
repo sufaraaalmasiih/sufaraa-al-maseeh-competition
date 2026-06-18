@@ -1,4 +1,5 @@
 ﻿import {
+  deleteDoc,
   getDoc,
   getDocs,
   query,
@@ -13,6 +14,7 @@ import {
   answersCollectionRef,
   buildInitialTeamStateDocument,
   MAIN_COMPETITION_ID,
+  teamRef,
   teamStateRef,
 } from "@/firebase/firestore";
 import {
@@ -113,13 +115,13 @@ export async function resetTeamCompetitionData(input: {
 }
 
 /**
- * Delete a team entirely: Firestore data + Firebase Auth via super-admin API.
+ * Delete a team entirely: Firestore via facilitator permissions + Auth via super-admin API.
  */
 export async function deleteTeamCompletely(input: {
   teamId: string;
   teamName: string;
   reason: string;
-}): Promise<void> {
+}): Promise<{ authDeleted: boolean }> {
   const stateRef = teamStateRef(MAIN_COMPETITION_ID, input.teamId);
   const stateSnapshot = await getDoc(stateRef);
   const beforeValue = stateSnapshot.exists()
@@ -139,18 +141,54 @@ export async function deleteTeamCompletely(input: {
       }
     : null;
 
-  const { deletedAnswers = 0 } = await callAdminApi<{ deletedAnswers?: number }>(
-    "/api/admin/delete-team",
-    { teamId: input.teamId },
-  );
+  const deletedAnswers = await deleteTeamAnswers({
+    teamId: input.teamId,
+    teamName: input.teamName,
+    stage: "all",
+    reason: input.reason,
+    skipAuditLog: true,
+  });
+
+  if (stateSnapshot.exists()) {
+    await deleteDoc(stateRef);
+  }
+
+  const teamProfileRef = teamRef(input.teamId);
+  const teamProfileSnapshot = await getDoc(teamProfileRef);
+  if (teamProfileSnapshot.exists()) {
+    await deleteDoc(teamProfileRef);
+  }
+
+  let authDeleted = false;
+  try {
+    await callAdminApi<{ authDeleted?: boolean }>("/api/admin/delete-team", {
+      teamId: input.teamId,
+    });
+    authDeleted = true;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (
+      !message.includes("FIREBASE_SERVICE_ACCOUNT") &&
+      !message.includes("503") &&
+      !message.includes("تعذر حذف حساب الدخول")
+    ) {
+      throw error;
+    }
+  }
 
   await appendTeamAdminAuditLog({
     type: "delete_team_completely",
     teamId: input.teamId,
     teamName: input.teamName,
-    deletedAnswers: deletedAnswers ?? 0,
+    deletedAnswers,
     reason: input.reason,
     beforeValue,
-    afterValue: { deleted: true, deletedAnswers: deletedAnswers ?? 0 },
+    afterValue: {
+      deleted: true,
+      deletedAnswers,
+      authDeleted,
+    },
   });
+
+  return { authDeleted };
 }

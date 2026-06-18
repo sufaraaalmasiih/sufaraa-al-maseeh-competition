@@ -91,14 +91,34 @@ export async function confirmStage1Answer({
       };
     }
 
-    if (!teamSnapshot.exists() || !teamStateSnapshot.exists()) {
+    if (!teamStateSnapshot.exists()) {
       throw new Error("بيانات الفريق غير مكتملة. أعد تسجيل الدخول أو تواصل مع الميسر.");
     }
 
     assertTeamStageUnlocked(teamStateSnapshot.data()?.stageLocks, "stage1");
 
-    const teamData = teamSnapshot.data();
     const teamState = teamStateSnapshot.data();
+    const teamData = teamSnapshot.exists()
+      ? teamSnapshot.data()
+      : {
+          teamName:
+            typeof teamState.teamName === "string" ? teamState.teamName : "فريق بدون اسم",
+          governorate:
+            typeof teamState.governorate === "string" ? teamState.governorate : "",
+        };
+
+    if (!teamSnapshot.exists()) {
+      transaction.set(currentTeamRef, {
+        teamName: teamData.teamName,
+        governorate: teamData.governorate,
+        email: firebaseAuth.currentUser?.email ?? "",
+        role: "team",
+        active: true,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    }
+
     const currentStage1Score =
       typeof teamState.stageScores?.stage1 === "number"
         ? teamState.stageScores.stage1
@@ -108,7 +128,7 @@ export async function confirmStage1Answer({
     const isCorrect = evaluateStage1Answer(question, answer);
     const pointsDelta = isCorrect ? CORRECT_ANSWER_POINTS : 0;
 
-    transaction.set(confirmedAnswerRef, {
+    const answerPayload = {
       teamId,
       teamName:
         typeof teamData.teamName === "string" ? teamData.teamName : "فريق بدون اسم",
@@ -121,9 +141,17 @@ export async function confirmStage1Answer({
       confirmedAt: serverTimestamp(),
       isCorrect,
       pointsDelta,
-      createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-    });
+    };
+
+    if (answerSnapshot.exists()) {
+      transaction.update(confirmedAnswerRef, answerPayload);
+    } else {
+      transaction.set(confirmedAnswerRef, {
+        ...answerPayload,
+        createdAt: serverTimestamp(),
+      });
+    }
 
     transaction.update(currentTeamStateRef, {
       "stageScores.stage1": currentStage1Score + pointsDelta,

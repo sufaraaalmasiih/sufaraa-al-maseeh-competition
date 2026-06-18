@@ -1,11 +1,22 @@
 import { NextResponse } from "next/server";
-import { deleteTeamCompletelyOnServer } from "@/lib/admin-delete-team-server";
+import { deleteTeamAuthOnServer } from "@/lib/admin-delete-team-server";
+import { isFirebaseAdminConfigured } from "@/lib/firebase-admin-server";
 import { verifySuperAdminRequest } from "@/lib/verify-super-admin-request";
 
 export async function POST(request: Request) {
   const admin = await verifySuperAdminRequest(request);
   if (!admin) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  if (!isFirebaseAdminConfigured()) {
+    return NextResponse.json(
+      {
+        error:
+          "FIREBASE_SERVICE_ACCOUNT غير مضبوط على Netlify. أضفه في Environment variables.",
+      },
+      { status: 503 },
+    );
   }
 
   let body: { teamId?: string };
@@ -21,9 +32,12 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await deleteTeamCompletelyOnServer(teamId);
-    return NextResponse.json(result);
+    await deleteTeamAuthOnServer(teamId);
+    return NextResponse.json({ authDeleted: true });
   } catch {
-    return NextResponse.json({ error: "Failed to delete team." }, { status: 500 });
+    return NextResponse.json(
+      { error: "تعذر حذف حساب الدخول من Firebase Auth." },
+      { status: 500 },
+    );
   }
 }

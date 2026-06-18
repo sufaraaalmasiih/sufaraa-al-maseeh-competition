@@ -15,6 +15,14 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/teams/$(request.auth.uid));
     }
 
+    function teamRegisteredInCompetition(competitionId) {
+      return isSignedIn()
+        && (
+          exists(/databases/$(database)/documents/teams/$(request.auth.uid))
+          || exists(/databases/$(database)/documents/competitions/$(competitionId)/teamStates/$(request.auth.uid))
+        );
+    }
+
     function staffDoc() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid));
     }
@@ -48,9 +56,9 @@ service cloud.firestore {
       return boundedScoreDelta(oldTotal, newTotal);
     }
 
-    function teamAnswerCreateAllowed() {
+    function teamAnswerCreateAllowed(competitionId) {
       let data = request.resource.data;
-      return teamDocExists()
+      return teamRegisteredInCompetition(competitionId)
         && data.teamId == request.auth.uid
         && data.confirmed == true
         && data.pointsDelta is int
@@ -59,9 +67,9 @@ service cloud.firestore {
         && data.isCorrect is bool;
     }
 
-    function teamAnswerUpdateAllowed() {
+    function teamAnswerUpdateAllowed(competitionId) {
       let data = request.resource.data;
-      return teamDocExists()
+      return teamRegisteredInCompetition(competitionId)
         && resource.data.teamId == request.auth.uid
         && resource.data.confirmed != true
         && data.teamId == request.auth.uid
@@ -72,10 +80,10 @@ service cloud.firestore {
         && data.isCorrect is bool;
     }
 
-    function answerReadable() {
+    function answerReadable(competitionId) {
       return isFacilitator()
         || resource.data.visibleToAudience == true
-        || (teamDocExists() && resource.data.teamId == request.auth.uid);
+        || (teamRegisteredInCompetition(competitionId) && resource.data.teamId == request.auth.uid);
     }
 
     // Team profile (registration)
@@ -145,9 +153,9 @@ service cloud.firestore {
 
       // Answers: teams submit bounded payloads; audience reads revealed answers
       match /answers/{answerId} {
-        allow read: if answerReadable();
-        allow create: if isFacilitator() || teamAnswerCreateAllowed();
-        allow update: if isFacilitator() || teamAnswerUpdateAllowed();
+        allow read: if answerReadable(competitionId);
+        allow create: if isFacilitator() || teamAnswerCreateAllowed(competitionId);
+        allow update: if isFacilitator() || teamAnswerUpdateAllowed(competitionId);
         allow delete: if isFacilitator();
       }
 
