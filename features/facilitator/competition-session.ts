@@ -22,6 +22,7 @@ import {
   isTrainingMode,
 } from "@/features/facilitator/competition-mode";
 import { wipeTrainingCompetitionData } from "@/features/facilitator/training-mode-wipe";
+import { writeTeamArchivesForSession } from "@/features/facilitator/use-team-archive";
 import type { FinalResultTeam } from "@/features/facilitator/use-final-results";
 import { subscribeFirestoreDoc } from "@/lib/firestore-listener";
 
@@ -373,6 +374,20 @@ export async function saveSessionResults(
     status: "completed",
     archivedAt: serverTimestamp(),
   });
+
+  // نسخة أرشيف لكل فريق في مجموعة خاصة (يقرؤها الفريق نفسه فقط — خصوصية).
+  const sessionData = snapshot.data() as Record<string, unknown> | undefined;
+  await writeTeamArchivesForSession(
+    {
+      sessionId,
+      title: typeof sessionData?.title === "string" ? sessionData.title : "مسابقة",
+      version: typeof sessionData?.version === "string" ? sessionData.version : "",
+      hostGovernorate:
+        typeof sessionData?.hostGovernorate === "string" ? sessionData.hostGovernorate : "",
+      dateMs: Date.now(),
+    },
+    snapshotTeams,
+  );
 
   await appendSessionEditLog(sessionId, {
     action: "results_saved",

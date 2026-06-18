@@ -167,11 +167,17 @@ service cloud.firestore {
         allow delete: if isFacilitator();
       }
 
-      // Session history + edit log.
-      // Read: facilitators + signed-in teams (per-team archive views on /team and /coach).
-      // Write: facilitators only.
+      // Session history + edit log (facilitators only — full archive of all teams).
       match /history/{sessionId} {
-        allow read: if isSignedIn();
+        allow read, write: if isFacilitator();
+      }
+
+      // Per-team archive copies. Read: facilitators (all) + the owning team only
+      // (privacy — a team never sees another team's archived results).
+      // Write: facilitators only (written when results are saved).
+      match /teamArchives/{archiveId} {
+        allow read: if isFacilitator()
+          || (isSignedIn() && resource.data.teamId == request.auth.uid);
         allow write: if isFacilitator();
       }
 

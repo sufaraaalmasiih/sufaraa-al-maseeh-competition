@@ -42,3 +42,36 @@ export async function exportAnswersExcel({
   const fileName = `${filePrefix}-${safeTeamName || "team"}.xlsx`;
   XLSX.writeFile(workbook, fileName);
 }
+
+export interface ExportFinalResultRow {
+  rank: number;
+  teamName: string;
+  governorate: string;
+  stage1: number;
+  stage2: number;
+  stage3: number;
+  stage4: number;
+  total: number;
+}
+
+/** تصدير الترتيب النهائي التفصيلي إلى ملف Excel. */
+export async function exportFinalResultsExcel(
+  rows: ExportFinalResultRow[],
+  filePrefix = "نتائج-سفراء-المسيح",
+): Promise<void> {
+  const XLSX = await import("xlsx");
+  const sheetRows = rows.map((row) => ({
+    المركز: row.rank,
+    الفريق: row.teamName,
+    المحافظة: row.governorate,
+    "المرحلة 1": row.stage1,
+    "المرحلة 2": row.stage2,
+    "المرحلة 3": row.stage3,
+    "المرحلة 4": row.stage4,
+    المجموع: row.total,
+  }));
+  const worksheet = XLSX.utils.json_to_sheet(sheetRows);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "الترتيب النهائي");
+  XLSX.writeFile(workbook, `${filePrefix}.xlsx`);
+}

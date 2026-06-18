@@ -377,6 +377,8 @@ export function FacilitatorSettingsTab() {
             const bankSize = bankMeta?.bankSizes[stage] ?? 50;
             const settings = questionSettings[stage];
             const showOrder = stage !== "stage3";
+            const overBank = settings.displayCount > bankSize;
+            const overBoard = stage === "stage3" && settings.displayCount > 30;
 
             return (
               <div
@@ -430,6 +432,17 @@ export function FacilitatorSettingsTab() {
                     </p>
                   )}
                 </div>
+                {overBank ? (
+                  <p className="mt-2 rounded-lg bg-[#FFF7ED] px-3 py-2 text-xs font-bold text-[#B45309]">
+                    ⚠️ العدد المطلوب ({settings.displayCount}) أكبر من عدد أسئلة البنك
+                    ({bankSize}). سيُعرض {bankSize} سؤالاً فقط — أضف أسئلة في Excel أو قلّل العدد.
+                  </p>
+                ) : null}
+                {overBoard ? (
+                  <p className="mt-2 rounded-lg bg-[#FFF7ED] px-3 py-2 text-xs font-bold text-[#B45309]">
+                    ⚠️ لوحة المرحلة الثالثة لا تتجاوز 30 خلية؛ سيُعرض 30 سؤالاً كحدٍّ أقصى.
+                  </p>
+                ) : null}
               </div>
             );
           })}

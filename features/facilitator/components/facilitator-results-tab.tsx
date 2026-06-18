@@ -8,6 +8,7 @@ import { setGameFlowStatus } from "@/features/facilitator/facilitator-flow-actio
 import { saveActiveSessionResults } from "@/features/facilitator/competition-session";
 import { ArchiveResultsTable } from "@/features/facilitator/components/archive-results-table";
 import { exportElementAsPng } from "@/features/facilitator/export-results-image";
+import { exportFinalResultsExcel } from "@/features/facilitator/export-answers-excel";
 import { useFinalResults } from "@/features/facilitator/use-final-results";
 import { CompetitionPodium } from "@/components/competition/competition-podium";
 
@@ -33,6 +34,29 @@ export function FacilitatorResultsTab() {
       );
     } catch {
       setArchiveMessage("تعذر تصدير الصورة. حاول مرة أخرى.");
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function handleExportExcel() {
+    setExporting(true);
+    setArchiveMessage(null);
+    try {
+      await exportFinalResultsExcel(
+        teams.map((team) => ({
+          rank: team.rank,
+          teamName: team.teamName,
+          governorate: team.governorate,
+          stage1: team.stage1,
+          stage2: team.stage2,
+          stage3: team.stage3,
+          stage4: team.stage4,
+          total: team.total,
+        })),
+      );
+    } catch {
+      setArchiveMessage("تعذر تصدير ملف Excel. حاول مرة أخرى.");
     } finally {
       setExporting(false);
     }
@@ -118,6 +142,15 @@ export function FacilitatorResultsTab() {
           >
             <Download className="h-4 w-4" aria-hidden />
             {exporting ? "جاري التصدير..." : "تصدير كصورة"}
+          </button>
+          <button
+            type="button"
+            className="facilitator-btn facilitator-btn--outline"
+            disabled={exporting}
+            onClick={() => void handleExportExcel()}
+          >
+            <Download className="h-4 w-4" aria-hidden />
+            {exporting ? "جاري التصدير..." : "تصدير Excel"}
           </button>
           <button
             type="button"

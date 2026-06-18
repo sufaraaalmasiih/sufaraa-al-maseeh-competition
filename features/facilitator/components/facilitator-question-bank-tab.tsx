@@ -349,9 +349,25 @@ export function FacilitatorQuestionBankTab() {
         });
       }
 
+      const emptyParts: string[] = [];
+      if (payload.stage1.length === 0) emptyParts.push("المرحلة 1");
+      if (payload.stage2.matching.length === 0) emptyParts.push("م2: توصيل");
+      if (payload.stage2.arrangeVerse.length === 0) emptyParts.push("م2: ترتيب الآية");
+      if (payload.stage2.completeVerse.length === 0) emptyParts.push("م2: إكمال الآية");
+      if (payload.stage2.trueFalseCorrect.length === 0) emptyParts.push("م2: صح/خطأ");
+      if (Object.keys(payload.stage3).length === 0) emptyParts.push("المرحلة 3");
+      if (payload.stage4.length === 0) emptyParts.push("المرحلة 4");
+
+      const baseText = `تم فحص وحفظ الملف تلقائياً من ${sheetName}. ${validation.totalValidQuestions} سؤالاً نشط الآن في كل المراحل.`;
+      const warnText =
+        emptyParts.length > 0
+          ? ` ⚠️ تنبيه: هذه الحقول فارغة وستُعرض أسئلة افتراضية بدلاً منها — أضف لها أسئلة في Excel: ${emptyParts.join("، ")}.`
+          : "";
+
+      // الاستيراد نجح فعلاً (success)، لكن التحذير بارز بالنص عند وجود حقول فارغة.
       setFeedback({
         kind: "success",
-        text: `تم فحص وحفظ الملف تلقائياً من ${sheetName}. ${validation.totalValidQuestions} سؤالاً نشط الآن في كل المراحل.`,
+        text: baseText + warnText,
       });
     } catch (error) {
       const message =
