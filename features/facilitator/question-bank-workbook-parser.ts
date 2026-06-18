@@ -271,6 +271,9 @@ function matchingGroupKey(id: string): string {
   return id.replace(/-\d+$/, "");
 }
 
+/** أقصى عدد أزواج توصيل تُعرض في شاشة واحدة؛ ما زاد يُقسَّم لجولات تلقائياً. */
+export const MAX_MATCHING_PAIRS_PER_SCREEN = 5;
+
 function buildStage2Bank(rows: Record<string, unknown>[]): Stage2QuestionBank {
   const matchingGroups = new Map<string, { rows: Record<string, unknown>[]; reference: string }>();
   const arrangeVerse: Stage2ArrangeVerseQuestion[] = [];
@@ -356,13 +359,31 @@ function buildStage2Bank(rows: Record<string, unknown>[]): Stage2QuestionBank {
       }
     });
 
-    if (pairs.length > 0) {
-      const uniqueRights = [...new Set(pairs.map((pair) => pair.correctRight.trim()).filter(Boolean))];
+    if (pairs.length === 0) {
+      return;
+    }
+
+    // تقسيم تلقائي لجولات من 5 أزواج كحد أقصى لكل شاشة.
+    // (مثال: 15 زوجاً من Excel ⇐ 3 جولات × 5؛ 7 أزواج ⇐ جولة 5 + جولة 2)
+    const roundsCount = Math.ceil(pairs.length / MAX_MATCHING_PAIRS_PER_SCREEN);
+
+    for (let round = 0; round < roundsCount; round += 1) {
+      const chunk = pairs.slice(
+        round * MAX_MATCHING_PAIRS_PER_SCREEN,
+        round * MAX_MATCHING_PAIRS_PER_SCREEN + MAX_MATCHING_PAIRS_PER_SCREEN,
+      );
+      const uniqueRights = [
+        ...new Set(chunk.map((pair) => pair.correctRight.trim()).filter(Boolean)),
+      ];
+
       matching.push({
-        id: key,
-        prompt: "وصّل كل عبارة بما يناسبها",
+        id: roundsCount > 1 ? `${key}-r${round + 1}` : key,
+        prompt:
+          roundsCount > 1
+            ? `وصّل كل عبارة بما يناسبها (جولة ${round + 1} من ${roundsCount})`
+            : "وصّل كل عبارة بما يناسبها",
         reference: group.reference,
-        pairs,
+        pairs: chunk,
         rightOptions: uniqueRights,
       });
     }
