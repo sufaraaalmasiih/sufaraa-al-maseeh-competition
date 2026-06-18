@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import { onAuthStateChanged } from "firebase/auth";
 import { useEffect } from "react";
 import { CompetitionGradientShell } from "@/components/layout/competition-gradient-shell";
 import { CompetitionFrozenBanner } from "@/components/layout/competition-frozen-banner";
@@ -24,7 +25,9 @@ import { TeamShellScreens } from "@/features/team/components/team-shell-screens"
 import { useTeamShellView } from "@/features/team/components/use-team-shell-view";
 import { useTeamGameFlow } from "@/features/team/use-team-game-flow";
 import { useTeamStageEarlyFinish } from "@/features/team/use-team-stage-early-finish";
+import { firebaseAuth } from "@/firebase/firebaseClient";
 import { isCoachDashboardPreferred, setCoachViewMode } from "@/lib/coach-view-mode";
+import { ensureTeamProfileDoc } from "@/lib/ensure-team-profile";
 import { cn } from "@/lib/utils";
 
 function TeamShellAuthenticated() {
@@ -63,6 +66,15 @@ function TeamShellAuthenticated() {
   useQuestionBankRuntimeSync();
   useCompetitionContentSync();
   useCompetitionReauthGuard(true);
+
+  useEffect(() => {
+    return onAuthStateChanged(firebaseAuth, (user) => {
+      if (!user) {
+        return;
+      }
+      void ensureTeamProfileDoc(user.uid);
+    });
+  }, []);
 
   const {
     teams: stage3Teams,

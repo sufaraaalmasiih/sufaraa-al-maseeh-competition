@@ -44,40 +44,36 @@ service cloud.firestore {
     }
 
     function boundedScoreDelta(oldScore, newScore) {
-      return newScore is int
-        && oldScore is int
-        && (newScore - oldScore) >= -200
+      return (newScore - oldScore) >= -200
         && (newScore - oldScore) <= 25;
     }
 
     function teamStateScoreUpdateAllowed() {
-      let oldTotal = resource.data.totalScore is int ? resource.data.totalScore : 0;
-      let newTotal = request.resource.data.totalScore is int ? request.resource.data.totalScore : 0;
+      let oldTotal = resource.data.totalScore is number ? resource.data.totalScore : 0;
+      let newTotal = request.resource.data.totalScore is number
+        ? request.resource.data.totalScore
+        : oldTotal;
       return boundedScoreDelta(oldTotal, newTotal);
     }
 
-    function teamAnswerCreateAllowed(competitionId) {
+    function teamAnswerPayloadAllowed(competitionId) {
       let data = request.resource.data;
       return teamRegisteredInCompetition(competitionId)
         && data.teamId == request.auth.uid
         && data.confirmed == true
-        && data.pointsDelta is int
+        && data.isCorrect is bool
+        && data.pointsDelta is number
         && data.pointsDelta >= -200
-        && data.pointsDelta <= 25
-        && data.isCorrect is bool;
+        && data.pointsDelta <= 25;
+    }
+
+    function teamAnswerCreateAllowed(competitionId) {
+      return teamAnswerPayloadAllowed(competitionId);
     }
 
     function teamAnswerUpdateAllowed(competitionId) {
-      let data = request.resource.data;
-      return teamRegisteredInCompetition(competitionId)
-        && resource.data.teamId == request.auth.uid
-        && resource.data.confirmed != true
-        && data.teamId == request.auth.uid
-        && data.confirmed == true
-        && data.pointsDelta is int
-        && data.pointsDelta >= -200
-        && data.pointsDelta <= 25
-        && data.isCorrect is bool;
+      return resource.data.teamId == request.auth.uid
+        && teamAnswerPayloadAllowed(competitionId);
     }
 
     function answerReadable(competitionId) {
@@ -101,8 +97,10 @@ service cloud.firestore {
     }
 
     function teamStateProgressUpdateAllowed() {
-      let oldTotal = resource.data.totalScore is int ? resource.data.totalScore : 0;
-      let newTotal = request.resource.data.totalScore is int ? request.resource.data.totalScore : 0;
+      let oldTotal = resource.data.totalScore is number ? resource.data.totalScore : 0;
+      let newTotal = request.resource.data.totalScore is number
+        ? request.resource.data.totalScore
+        : oldTotal;
       return oldTotal == newTotal;
     }
 

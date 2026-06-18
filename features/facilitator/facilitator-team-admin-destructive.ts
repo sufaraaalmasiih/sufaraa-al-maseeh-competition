@@ -165,30 +165,27 @@ export async function deleteTeamCompletely(input: {
       teamId: input.teamId,
     });
     authDeleted = true;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "";
-    if (
-      !message.includes("FIREBASE_SERVICE_ACCOUNT") &&
-      !message.includes("503") &&
-      !message.includes("تعذر حذف حساب الدخول")
-    ) {
-      throw error;
-    }
+  } catch {
+    authDeleted = false;
   }
 
-  await appendTeamAdminAuditLog({
-    type: "delete_team_completely",
-    teamId: input.teamId,
-    teamName: input.teamName,
-    deletedAnswers,
-    reason: input.reason,
-    beforeValue,
-    afterValue: {
-      deleted: true,
+  try {
+    await appendTeamAdminAuditLog({
+      type: "delete_team_completely",
+      teamId: input.teamId,
+      teamName: input.teamName,
       deletedAnswers,
-      authDeleted,
-    },
-  });
+      reason: input.reason,
+      beforeValue,
+      afterValue: {
+        deleted: true,
+        deletedAnswers,
+        authDeleted,
+      },
+    });
+  } catch {
+    // Audit failure must not block team deletion.
+  }
 
   return { authDeleted };
 }

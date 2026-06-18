@@ -126,7 +126,7 @@ export async function confirmStage1Answer({
     const currentTotalScore =
       typeof teamState.totalScore === "number" ? teamState.totalScore : 0;
     const isCorrect = evaluateStage1Answer(question, answer);
-    const pointsDelta = isCorrect ? CORRECT_ANSWER_POINTS : 0;
+    const pointsDelta: number = isCorrect ? CORRECT_ANSWER_POINTS : 0;
 
     const answerPayload = {
       teamId,
