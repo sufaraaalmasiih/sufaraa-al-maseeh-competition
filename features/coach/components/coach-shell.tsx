@@ -14,7 +14,6 @@ import { CoachObjectionForm } from "@/features/coach/components/coach-objection-
 import { TeamArchivePanel } from "@/features/facilitator/components/team-archive-panel";
 import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
 import { useTeamLogosMap } from "@/features/gameflow/team-logos-store";
-import { firebaseAuth } from "@/firebase/firebaseClient";
 import { setCoachViewMode } from "@/lib/coach-view-mode";
 
 export function CoachShell() {
@@ -202,10 +201,7 @@ export function CoachShell() {
       </section>
 
       <section className="coach-history">
-        <TeamArchivePanel
-          teamId={firebaseAuth.currentUser?.uid ?? null}
-          teamName={teamSummary?.teamName}
-        />
+        <TeamArchivePanel teamId={teamId} teamName={teamSummary?.teamName} />
       </section>
     </CompetitionGradientShell>
   );

@@ -125,7 +125,7 @@ export function Stage2PlayerTurnsScreen() {
 
   return (
     <p className="arena-question-text text-center text-xl">
-      سيتم بناء أسئلة هذا المجال في الخطوة القادمة
+      بانتظار توجيه الميسّر…
     </p>
   );
 }

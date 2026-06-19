@@ -160,6 +160,7 @@ export function useCoachDashboard() {
     }
 
     setHistoryLoading(true);
+    setHistoryError(null);
     const answersQuery = query(
       answersCollectionRef("main"),
       where("teamId", "==", teamId),
@@ -201,7 +202,9 @@ export function useCoachDashboard() {
         setHistoryLoading(false);
       },
       () => {
+        // عند خطأ صلاحية بعد تحميل سابق: نُفرّغ الصفوف الظاهرة أيضاً حتى لا تبقى قديمة.
         setAllHistory([]);
+        setHistory([]);
         setHistoryError("تعذر تحميل تاريخ الأسئلة.");
         setHistoryLoading(false);
       },
