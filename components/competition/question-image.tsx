@@ -22,7 +22,9 @@ export function QuestionImage({
   return (
     <div className={cn("flex justify-center", className)}>
       {/* object-contain يحافظ على النسبة (طول/عرض/مربع) بلا قصّ؛
-          والأحجام تكبر على الشاشات الأكبر وشاشة الجمهور (CSS في globals). */}
+          والأحجام تكبر على الشاشات الأكبر وشاشة الجمهور (CSS في globals).
+          صور خارجية (روابط Excel) — img عادي مقصود. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={trimmed}
         alt={alt}
