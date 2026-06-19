@@ -11,9 +11,9 @@ import {
   getSecondaryFirebaseAuth,
   ensureAuthPersistence,
 } from "@/firebase/firebaseClient";
-import { createInitialTeamState, teamRef, teamStateRef, userRef } from "@/firebase/firestore";
+import { coachRef, createInitialTeamState, teamRef, teamStateRef, userRef } from "@/firebase/firestore";
 import type { RegisterTeamInput } from "@/features/auth/schemas";
-import type { AppRole, TeamDocument } from "@/types";
+import type { AppRole, CoachDocument, TeamDocument } from "@/types";
 
 const LOGO_UPLOAD_TIMEOUT_MS = 12000;
 const MAIN_COMPETITION_ID = "main";
@@ -220,6 +220,39 @@ export async function registerTeam(input: RegisterTeamInput): Promise<RegisterTe
   }
 
   return { logoUploadFailed };
+}
+
+export interface RegisterCoachInput {
+  name: string;
+  email: string;
+  password: string;
+  linkedTeamId: string;
+  linkedTeamName: string;
+}
+
+/**
+ * ينشئ حساب مدرب منفصلاً (هوية مختلفة عن الفريق) مرتبطاً بفريق. لا يكتب حالة فريق
+ * ولا إجابات — وقواعد الأمان تمنعه من تسجيل أي إجابة، فلا يستطيع اللعب.
+ */
+export async function registerCoach(input: RegisterCoachInput): Promise<void> {
+  const credential = await createUserWithEmailAndPassword(
+    getClientFirebaseAuth(),
+    input.email,
+    input.password,
+  );
+  const uid = credential.user.uid;
+
+  const coachDocument: CoachDocument = {
+    role: "coach",
+    name: input.name,
+    email: input.email,
+    linkedTeamId: input.linkedTeamId,
+    linkedTeamName: input.linkedTeamName,
+    active: true,
+    createdAt: serverTimestamp(),
+  };
+
+  await setDoc(coachRef(uid), coachDocument);
 }
 
 async function uploadTeamLogo(uid: string, file: File): Promise<string> {

@@ -43,6 +43,16 @@ service cloud.firestore {
         && staffDoc().data.role == 'super_admin';
     }
 
+    // حساب مدرب منفصل (للعرض فقط) — مرتبط بفريق عبر coaches/{uid}.linkedTeamId.
+    function isCoach() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/coaches/$(request.auth.uid));
+    }
+
+    function coachLinkedTeamId() {
+      return get(/databases/$(database)/documents/coaches/$(request.auth.uid)).data.linkedTeamId;
+    }
+
     function boundedScoreDelta(oldScore, newScore) {
       // الحد الأعلى 100: يغطّي م3 الصعب (45) وتجاوزات النقاط لكل سؤال (حتى 100).
       return (newScore - oldScore) >= -200
@@ -60,6 +70,7 @@ service cloud.firestore {
     function teamAnswerPayloadAllowed(competitionId) {
       let data = request.resource.data;
       return teamRegisteredInCompetition(competitionId)
+        && !isCoach()
         && data.teamId == request.auth.uid
         && data.confirmed == true
         && data.isCorrect is bool
@@ -89,7 +100,9 @@ service cloud.firestore {
     function answerReadable(competitionId) {
       return isFacilitator()
         || answerVisibleToAudience()
-        || (teamRegisteredInCompetition(competitionId) && answerOwnedByAuthUser());
+        || (teamRegisteredInCompetition(competitionId) && answerOwnedByAuthUser())
+        // المدرب المرتبط يقرأ إجابات فريقه (للمتابعة) — لكنه لا يكتب أبداً.
+        || (isCoach() && resource != null && resource.data.teamId == coachLinkedTeamId());
     }
 
     // Team profile (registration)
@@ -98,6 +111,16 @@ service cloud.firestore {
       allow create: if isOwner(uid);
       allow update: if isOwner(uid) || isFacilitator();
       allow delete: if isFacilitator();
+    }
+
+    // Coach accounts (separate, view-only, linked to a team). NEVER write answers.
+    match /coaches/{coachUid} {
+      allow read: if isOwner(coachUid) || isFacilitator();
+      allow create: if isOwner(coachUid)
+        && request.resource.data.role == 'coach'
+        && request.resource.data.linkedTeamId is string;
+      allow update: if isOwner(coachUid) || isFacilitator();
+      allow delete: if isOwner(coachUid) || isFacilitator();
     }
 
     // Staff accounts (facilitator / super_admin / viewer)
@@ -154,9 +177,9 @@ service cloud.firestore {
       // Rankings visible to audience; teams update own doc with bounded score deltas
       match /teamStates/{teamId} {
         allow read: if true;
-        allow create: if isOwner(teamId);
+        allow create: if isOwner(teamId) && !isCoach();
         allow update: if isFacilitator()
-          || (isOwner(teamId) && (teamStateScoreUpdateAllowed() || teamStateProgressUpdateAllowed()));
+          || (isOwner(teamId) && !isCoach() && (teamStateScoreUpdateAllowed() || teamStateProgressUpdateAllowed()));
         allow delete: if isFacilitator();
       }
 

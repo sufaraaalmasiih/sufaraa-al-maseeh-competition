@@ -1,5 +1,5 @@
 import { getDoc, type DocumentReference, type DocumentSnapshot } from "firebase/firestore";
-import { teamRef, userRef } from "@/firebase/firestore";
+import { coachRef, teamRef, userRef } from "@/firebase/firestore";
 import type { AppRole } from "@/types";
 
 const ROLE_DOC_TIMEOUT_MS = 4_000;
@@ -26,6 +26,11 @@ export async function getUserRole(uid: string): Promise<AppRole | null> {
   const teamSnapshot = await getDocWithTimeout(teamRef(uid), "teamRef");
   if (teamSnapshot.exists()) {
     return "team";
+  }
+
+  const coachSnapshot = await getDocWithTimeout(coachRef(uid), "coachRef");
+  if (coachSnapshot.exists()) {
+    return "coach";
   }
 
   const userSnapshot = await getDocWithTimeout(userRef(uid), "userRef");

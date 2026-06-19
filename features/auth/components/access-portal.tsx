@@ -33,13 +33,6 @@ const portalSections: PortalSection[] = [
     title: "الفرق",
     links: [
       {
-        href: "/coach",
-        label: "لوحة المدرب",
-        hint: "متابعة النقاط والأسئلة — للموبايل",
-        icon: BarChart3,
-        prefetch: true,
-      },
-      {
         href: "/team-login",
         label: "دخول الفرق",
         hint: "للاعبين المسجّلين مسبقاً",
@@ -50,6 +43,20 @@ const portalSections: PortalSection[] = [
         href: "/register",
         label: "تسجيل فريق جديد",
         hint: "إنشاء حساب فريق للمشاركة",
+        icon: UserPlus,
+        prefetch: true,
+      },
+      {
+        href: "/coach-login",
+        label: "دخول المدرب",
+        hint: "متابعة النقاط — للعرض فقط (لا يلعب)",
+        icon: BarChart3,
+        prefetch: true,
+      },
+      {
+        href: "/coach-register",
+        label: "تسجيل مدرب جديد",
+        hint: "حساب مدرب منفصل مرتبط بفريق",
         icon: UserPlus,
         prefetch: true,
       },

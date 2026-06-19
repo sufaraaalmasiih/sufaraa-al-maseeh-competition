@@ -2,7 +2,7 @@
 
 import { onSnapshot, query, where } from "firebase/firestore";
 import { useEffect, useMemo, useState } from "react";
-import { answersCollectionRef } from "@/firebase/firestore";
+import { answersCollectionRef, coachRef } from "@/firebase/firestore";
 import { resolveAnswerCorrectLabel } from "@/features/facilitator/resolve-answer-correct-label";
 import { getFacilitatorPhasePlan } from "@/features/facilitator/facilitator-flow-plan";
 import { useTeamStatesSnapshot } from "@/features/gameflow/team-states-store";
@@ -103,7 +103,24 @@ function stageScoreFromKey(
 
 export function useCoachDashboard() {
   const { user } = useAuthRole();
-  const teamId = user?.uid ?? null;
+  // حساب مدرب منفصل → الفريق المرتبط من coaches/{uid}. حساب فريق (وضع مدرب) → uid نفسه.
+  const [linkedTeamId, setLinkedTeamId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!user?.uid) {
+      setLinkedTeamId(null);
+      return undefined;
+    }
+    return onSnapshot(
+      coachRef(user.uid),
+      (snapshot) => {
+        const linked = snapshot.exists() ? snapshot.data()?.linkedTeamId : null;
+        setLinkedTeamId(typeof linked === "string" && linked ? linked : user.uid);
+      },
+      () => setLinkedTeamId(user.uid ?? null),
+    );
+  }, [user?.uid]);
+
+  const teamId = linkedTeamId;
   const { status, loading: gameFlowLoading, error: gameFlowError } = useGameFlow();
   const { docs, loading: teamsLoading, error: teamsError } = useTeamStatesSnapshot("main", Boolean(teamId));
   const [history, setHistory] = useState<CoachHistoryItem[]>([]);

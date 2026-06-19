@@ -1,9 +1,10 @@
 import type { AppRole } from "@/types";
 
-export type StaffRole = Exclude<AppRole, "team">;
+export type StaffRole = Exclude<AppRole, "team" | "coach">;
 
 export const ROLE_LABELS: Record<AppRole, string> = {
   team: "فريق",
+  coach: "مدرب",
   facilitator: "ميسر",
   super_admin: "مشرف عام",
   viewer: "جمهور (حساب)",

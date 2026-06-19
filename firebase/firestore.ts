@@ -39,6 +39,7 @@ export const audienceDisplayRef = doc(
 );
 
 export const teamRef = (uid: string) => doc(getClientFirestore(), "teams", uid);
+export const coachRef = (uid: string) => doc(getClientFirestore(), "coaches", uid);
 export const userRef = (uid: string) => doc(getClientFirestore(), "users", uid);
 export const answersCollectionRef = (competitionId: string) =>
   collection(getClientFirestore(), "competitions", competitionId, "answers");

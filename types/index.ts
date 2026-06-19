@@ -1,6 +1,18 @@
 import type { FieldValue, Timestamp } from "firebase/firestore";
 
-export type AppRole = "team" | "viewer" | "facilitator" | "super_admin";
+export type AppRole = "team" | "coach" | "viewer" | "facilitator" | "super_admin";
+
+/** حساب مدرب منفصل — للعرض فقط، مرتبط بفريق، ولا يستطيع تسجيل أي إجابة. */
+export interface CoachDocument {
+  role: "coach";
+  name: string;
+  email: string;
+  /** معرّف الفريق المرتبط (= uid حساب الفريق). */
+  linkedTeamId: string;
+  linkedTeamName: string;
+  active: true;
+  createdAt: Timestamp | FieldValue;
+}
 
 export type GameFlowStatus =
   | "waiting_players"
@@ -161,6 +173,7 @@ export interface TeamStateDocument {
 
 export const roleRoutes: Record<AppRole, string> = {
   team: "/team",
+  coach: "/coach",
   facilitator: "/facilitator",
   super_admin: "/facilitator",
   viewer: "/audience",
@@ -168,6 +181,7 @@ export const roleRoutes: Record<AppRole, string> = {
 
 export const roleLoginRoutes: Record<AppRole, string> = {
   team: "/team-login",
+  coach: "/coach-login",
   facilitator: "/facilitator-login",
   super_admin: "/admin-login",
   viewer: "/login",
