@@ -12,7 +12,6 @@ import { useCompetitionReauthGuard } from "@/features/competition-session/use-co
 import { useQuestionBankRuntimeSync } from "@/features/facilitator/question-bank-runtime";
 import { isTeamStage2FieldWaiting } from "@/features/stage2/stage2-field-waiting-state";
 import { useTeamStage2Progress } from "@/features/stage2/use-team-stage2-progress";
-import { CompetitionStage3Automation } from "@/features/stage3/competition-stage3-automation";
 import { useStage3Ranking } from "@/features/stage3/use-stage3-ranking";
 import { TeamFlowContent } from "@/features/team/components/team-flow-content";
 import { TeamCoachModeBanner } from "@/features/team/components/team-coach-mode-banner";
@@ -146,7 +145,6 @@ function TeamShellAuthenticated() {
     >
       <TeamFullscreenPrompt />
       <TeamCoachModeBanner />
-      <CompetitionStage3Automation />
       <CompetitionFrozenBanner frozen={competitionFrozen} />
       <TeamFlowContent
         status={layoutStatus}

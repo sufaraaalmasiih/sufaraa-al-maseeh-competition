@@ -3,21 +3,27 @@
 import { useEffect, useRef } from "react";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
 import { useCompetitionTimer } from "@/features/gameflow/use-competition-timer";
+import { useAuthRole } from "@/hooks/use-auth-role";
 import { handleStage3SelectionTimeout } from "@/features/stage3/handle-stage3-selection-timeout";
 import { autoCloseAndRevealStage3Question } from "@/features/stage3/auto-close-and-reveal-stage3-question";
 import { autoFinishStage3RevealAndReturnBoard } from "@/features/stage3/auto-finish-stage3-reveal-and-return-board";
 
 /**
- * Headless watcher that keeps Stage 3 timed automation running from any
- * connected client (team, audience, facilitator). Handlers are idempotent.
+ * Headless watcher that drives Stage 3 timed automation. The transitions write
+ * gameFlow/timer, which Firestore rules allow only for the facilitator — so this
+ * runs ONLY for staff. On team/audience clients it would just spam rejected
+ * writes, so we gate it by role (handlers stay idempotent).
  */
 export function CompetitionStage3Automation() {
   const { status, currentStage, competitionFrozen } = useGameFlow();
   const { timer, isExpired } = useCompetitionTimer();
+  const { role } = useAuthRole();
+  const isStaff = role === "facilitator" || role === "super_admin";
   const attemptedRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (
+      !isStaff ||
       competitionFrozen ||
       currentStage !== "stage3" ||
       !isExpired ||
@@ -85,6 +91,7 @@ export function CompetitionStage3Automation() {
       }
     };
   }, [
+    isStaff,
     status,
     currentStage,
     competitionFrozen,

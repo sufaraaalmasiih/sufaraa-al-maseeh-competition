@@ -123,7 +123,7 @@ export async function confirmStage1Answer({
     const scoredQuestion =
       getAuthoritativeStage1Question(question.id) ?? question;
     const isCorrect = evaluateStage1Answer(scoredQuestion, answer);
-    // تجاوز نقاط لكل سؤال إن حُدِّد — مع احترام سقف كتابة الفريق لنفسه (≤25) في قواعد الأمان.
+    // تجاوز نقاط لكل سؤال إن حُدِّد — مع احترام سقف كتابة الفريق لنفسه (≤100) في قواعد الأمان.
     const overridePoints = scoredQuestion.points;
     const correctPoints =
       typeof overridePoints === "number" && overridePoints > 0

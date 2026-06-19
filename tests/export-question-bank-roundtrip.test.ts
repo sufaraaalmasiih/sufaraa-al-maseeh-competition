@@ -74,6 +74,8 @@ const payload = {
       prompt: "كم عدد التلاميذ؟",
       correctAnswer: "12",
       options: ["12", "10"],
+      acceptedAnswers: ["اثنا عشر", "١٢"],
+      points: 20,
       order: 1,
     },
   ],
@@ -112,5 +114,13 @@ describe("question bank Excel round-trip", () => {
     const rows = buildBankExportRows(payload);
     const reimported = parseWorkbookRowsToBank(rows);
     expect(reimported.stage2.trueFalseCorrect[0].correctIsTrue).toBe(false);
+  });
+
+  it("preserves points, accepted answers, and the custom stage-3 category label", () => {
+    const rows = buildBankExportRows(payload);
+    const reimported = parseWorkbookRowsToBank(rows);
+    expect(reimported.stage4[0].points).toBe(20);
+    expect(reimported.stage4[0].acceptedAnswers).toEqual(["اثنا عشر", "١٢"]);
+    expect(reimported.stage3["s3_q1"].fieldLabel).toBe("شخصيات");
   });
 });

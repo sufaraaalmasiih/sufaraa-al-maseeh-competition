@@ -241,7 +241,7 @@ export function Stage4TeamQuestionScreen() {
                   <div className="game-ready-btn-wrap">
                     <GameReadyButton
                       type="button"
-                      disabled={saving}
+                      disabled={saving || !answerText.trim()}
                       onClick={() => void submitAnswer(answerText)}
                     >
                       {saving ? "جاري الإرسال..." : "إرسال الإجابة"}

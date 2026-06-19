@@ -139,7 +139,7 @@ export async function confirmStage4Answer({
       ? false
       : validateStage4Answer(mockQuestion ?? activeQuestion, answer);
     const streakAfter = resolveStage4StreakAfterAnswer(streakBefore, isCorrect, passed);
-    // تجاوز نقاط لكل سؤال إن حُدِّد (بدل تصاعد السلسلة) — مع احترام سقف كتابة الفريق (≤25).
+    // تجاوز نقاط لكل سؤال إن حُدِّد (بدل تصاعد السلسلة) — مع احترام سقف كتابة الفريق (≤100).
     const overridePoints =
       mockQuestion && typeof (mockQuestion as { points?: unknown }).points === "number"
         ? Math.min(100, Math.floor((mockQuestion as { points: number }).points))

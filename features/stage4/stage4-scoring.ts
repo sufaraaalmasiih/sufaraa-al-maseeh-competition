@@ -3,7 +3,8 @@ export function computeStage4PointsForCorrect(streakIncludingThis: number): numb
     return 0;
   }
 
-  return 15 + (streakIncludingThis - 1) * 2;
+  // مقصوص على 100 = حدّ قاعدة الأمان لزيادة الفريق لنفسه (boundedScoreDelta).
+  return Math.min(100, 15 + (streakIncludingThis - 1) * 2);
 }
 
 export function resolveStage4StreakAfterAnswer(

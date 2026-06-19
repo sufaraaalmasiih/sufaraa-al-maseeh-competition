@@ -1,52 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { isAudienceEmbeddedView } from "@/features/audience/audience-display-utils";
-import { audienceDisplayRef } from "@/firebase/firestore";
-import { subscribeFirestoreDoc } from "@/lib/firestore-listener";
-
-export function useAudienceFullscreenMode(): boolean {
-  const [fullscreen, setFullscreen] = useState(false);
-  const embedded = isAudienceEmbeddedView();
-
-  useEffect(() => {
-    return subscribeFirestoreDoc(
-      audienceDisplayRef,
-      (snapshot) => {
-        setFullscreen(snapshot.data()?.fullscreen === true);
-      },
-      () => {
-        setFullscreen(false);
-      },
-    );
-  }, []);
-
-  useEffect(() => {
-    if (typeof document === "undefined" || embedded) {
-      return;
-    }
-
-    const root = document.documentElement;
-
-    if (fullscreen) {
-      root.classList.add("audience-fullscreen-mode");
-      return () => {
-        root.classList.remove("audience-fullscreen-mode");
-      };
-    }
-
-    root.classList.remove("audience-fullscreen-mode");
-
-    // الإيقاف عن بُعد يعمل بالكامل: الخروج من ملء الشاشة الأصلي لا يحتاج ضغطة مستخدم (#12).
-    if (document.fullscreenElement && document.exitFullscreen) {
-      void document.exitFullscreen().catch(() => {
-        // المتصفح قد يرفض في سياقات نادرة — نتجاهل بأمان.
-      });
-    }
-  }, [embedded, fullscreen]);
-
-  return embedded ? false : fullscreen;
-}
 
 export function useAudienceNativeFullscreen(): {
   active: boolean;

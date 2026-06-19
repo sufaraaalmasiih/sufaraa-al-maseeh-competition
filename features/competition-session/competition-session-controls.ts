@@ -1,5 +1,5 @@
-import { getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
-import { competitionSessionRef, audienceDisplayRef } from "@/firebase/firestore";
+import { getDoc, serverTimestamp, setDoc } from "firebase/firestore";
+import { competitionSessionRef } from "@/firebase/firestore";
 import { resetCompetition, type CompetitionResetResult } from "@/features/gameflow/competition-reset";
 
 export const COMPETITION_REAUTH_STORAGE_KEY = "competitionReauthEpoch";
@@ -46,16 +46,4 @@ export async function startNewCompetition(): Promise<CompetitionResetResult> {
     { merge: true },
   );
   return result;
-}
-
-export async function setAudienceFullscreen(enabled: boolean): Promise<void> {
-  await updateDoc(audienceDisplayRef, {
-    fullscreen: enabled,
-    updatedAt: serverTimestamp(),
-  }).catch(async () => {
-    await setDoc(audienceDisplayRef, {
-      fullscreen: enabled,
-      updatedAt: serverTimestamp(),
-    });
-  });
 }
