@@ -10,6 +10,7 @@ import {
 import { patchLoadingDebug } from "@/lib/loading-debug-store";
 import { realLoadingDebug } from "@/lib/real-loading-debug";
 import { getSyncedNowMs, syncServerClockOffset } from "@/lib/server-clock-sync";
+import { useWorkerTick } from "@/lib/use-worker-tick";
 
 export function useCompetitionTimer() {
   const { timer, loading, error } = useTimerStoreSnapshot();
@@ -36,16 +37,17 @@ export function useCompetitionTimer() {
     }
   }, [loading, timer?.active]);
 
+  // مؤقّت Web Worker لا يخنقه المتصفح في الخلفية — يبقي «الآن» يتحدّث حتى لو كانت
+  // نافذة الميسّر غير نشطة، فتعمل الأتمتة واكتشاف انتهاء الوقت دائماً.
+  const tickActive = Boolean(timer?.active && !timer.paused);
+  const workerTick = useWorkerTick(tickActive, 250);
+
   useEffect(() => {
-    if (!timer?.active || timer.paused) {
-      return undefined;
+    if (!tickActive) {
+      return;
     }
-
     setNow(getSyncedNowMs());
-    const intervalId = window.setInterval(() => setNow(getSyncedNowMs()), 250);
-
-    return () => window.clearInterval(intervalId);
-  }, [timer?.active, timer?.paused, timer?.endsAtMs]);
+  }, [tickActive, workerTick, timer?.endsAtMs]);
 
   const remainingSeconds = useMemo(
     () => computeRemainingSeconds(timer, now),
