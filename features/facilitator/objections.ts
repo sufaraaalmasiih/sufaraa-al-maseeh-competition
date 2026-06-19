@@ -33,6 +33,18 @@ export function objectionReasonLabel(id: string): string {
 
 export type ObjectionStatus = "open" | "reviewed";
 
+/**
+ * يحصر الاعتراضات على المسابقة النشطة فقط — فعند بدء مسابقة جديدة أو إعادة الضبط
+ * (sessionId جديد، أو null بعد فصل السجل) يعود العدّاد الحيّ إلى صفر، بينما تبقى
+ * اعتراضات المسابقات السابقة محفوظة في الأرشيف (تبويب السجل يعرضها حسب sessionId).
+ */
+export function objectionsForActiveSession<T extends { sessionId: string | null }>(
+  objections: T[],
+  activeSessionId: string | null,
+): T[] {
+  return objections.filter((objection) => objection.sessionId === activeSessionId);
+}
+
 export interface CompetitionObjection {
   id: string;
   teamId: string;

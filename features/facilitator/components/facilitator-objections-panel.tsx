@@ -5,8 +5,10 @@ import { Check, MessageSquareWarning } from "lucide-react";
 import {
   markObjectionReviewed,
   objectionReasonLabel,
+  objectionsForActiveSession,
   useObjections,
 } from "@/features/facilitator/objections";
+import { useActiveSessionId } from "@/features/facilitator/competition-session";
 
 function formatTime(ms: number): string {
   if (!ms) {
@@ -20,9 +22,16 @@ function formatTime(ms: number): string {
 }
 
 export function FacilitatorObjectionsPanel() {
-  const { objections, loading } = useObjections();
+  const { objections: allObjections, loading } = useObjections();
+  const activeSessionId = useActiveSessionId();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [showReviewed, setShowReviewed] = useState(false);
+
+  // المسابقة النشطة فقط — اعتراضات المسابقات السابقة تبقى في تبويب «السجل».
+  const objections = useMemo(
+    () => objectionsForActiveSession(allObjections, activeSessionId),
+    [allObjections, activeSessionId],
+  );
 
   const open = useMemo(
     () => objections.filter((objection) => objection.status === "open"),

@@ -5,9 +5,11 @@ import { MessageSquareWarning, Send } from "lucide-react";
 import {
   OBJECTION_REASONS,
   objectionReasonLabel,
+  objectionsForActiveSession,
   submitObjection,
   useTeamObjections,
 } from "@/features/facilitator/objections";
+import { useActiveSessionId } from "@/features/facilitator/competition-session";
 import type { CoachHistoryItem } from "@/features/coach/use-coach-dashboard";
 
 interface CoachObjectionFormProps {
@@ -25,7 +27,13 @@ export function CoachObjectionForm({ teamId, teamName, questions }: CoachObjecti
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
-  const { objections } = useTeamObjections(teamId);
+  const { objections: allObjections } = useTeamObjections(teamId);
+  const activeSessionId = useActiveSessionId();
+  // اعتراضات المسابقة الحالية فقط — تعود إلى صفر عند بدء مسابقة جديدة.
+  const objections = useMemo(
+    () => objectionsForActiveSession(allObjections, activeSessionId),
+    [allObjections, activeSessionId],
+  );
 
   const options = useMemo(() => {
     const seen = new Set<string>();

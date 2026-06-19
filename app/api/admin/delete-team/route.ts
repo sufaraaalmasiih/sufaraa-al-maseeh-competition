@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          "FIREBASE_SERVICE_ACCOUNT غير مضبوط على Netlify. أضفه في Environment variables.",
+          "FIREBASE_SERVICE_ACCOUNT غير مضبوط على Vercel. أضفه في Environment variables ثم أعد النشر.",
       },
       { status: 503 },
     );
