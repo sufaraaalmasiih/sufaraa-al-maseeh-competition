@@ -152,5 +152,6 @@ export function clampSettingsToBankSizes(
       ...settings.stage4,
       displayCount: Math.min(settings.stage4.displayCount, bankSizes.stage4),
     },
+    stage2Fields: settings.stage2Fields,
   };
 }

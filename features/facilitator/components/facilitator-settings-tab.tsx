@@ -21,9 +21,12 @@ import {
   getStageDisplayLabel,
   parseQuestionDisplaySettings,
   STAGE_DISPLAY_KEYS,
+  STAGE2_FIELD_KEYS,
+  STAGE2_FIELD_LABELS,
   writeQuestionDisplaySettings,
   type QuestionDisplaySettings,
   type QuestionOrderMode,
+  type Stage2FieldDisplaySettings,
   type StageQuestionDisplaySettings,
 } from "@/features/facilitator/question-display-settings";
 import type { AdminStageKey } from "@/features/facilitator/facilitator-team-admin";
@@ -164,6 +167,15 @@ export function FacilitatorSettingsTab() {
     setQuestionSettings((current) => ({
       ...current,
       [stage]: { ...current[stage], ...patch },
+    }));
+  }
+
+  function updateStage2Field(field: keyof Stage2FieldDisplaySettings, value: number) {
+    setQuestionSaved(false);
+    setQuestionDirty(true);
+    setQuestionSettings((current) => ({
+      ...current,
+      stage2Fields: { ...current.stage2Fields, [field]: Math.max(1, value || 1) },
     }));
   }
 
@@ -446,6 +458,33 @@ export function FacilitatorSettingsTab() {
               </div>
             );
           })}
+        </div>
+
+        <div className="mt-5 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+          <h4 className="mb-1 text-sm font-black text-[#143A5A]">
+            عدد أسئلة مجالات المرحلة الثانية
+          </h4>
+          <p className="mb-3 text-xs text-[#64748B]">
+            كم يظهر لكل مجال من بنك Excel: «التوصيل» = عدد الجولات (كل جولة حتى 5 أزواج
+            في شاشة)، وبقية المجالات = عدد الأسئلة. إن كان البنك أقل، يُعرض المتاح فقط.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {STAGE2_FIELD_KEYS.map((field) => (
+              <label key={field} className="facilitator-field">
+                <span className="facilitator-field__label">{STAGE2_FIELD_LABELS[field]}</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={50}
+                  className="facilitator-input"
+                  value={questionSettings.stage2Fields[field]}
+                  onChange={(event) =>
+                    updateStage2Field(field, Number(event.target.value) || 1)
+                  }
+                />
+              </label>
+            ))}
+          </div>
         </div>
 
         <div className="facilitator-timer__buttons mt-4">

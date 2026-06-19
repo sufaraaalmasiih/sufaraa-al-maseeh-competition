@@ -13,12 +13,43 @@ export interface StageQuestionDisplaySettings {
   orderMode: QuestionOrderMode;
 }
 
+/** عدد الأسئلة الظاهرة لكل حقل من حقول المرحلة الثانية الأربعة. */
+export interface Stage2FieldDisplaySettings {
+  matching: number;
+  arrangeVerse: number;
+  completeVerse: number;
+  trueFalseCorrect: number;
+}
+
 export interface QuestionDisplaySettings {
   stage1: StageQuestionDisplaySettings;
   stage2: StageQuestionDisplaySettings;
   stage3: StageQuestionDisplaySettings;
   stage4: StageQuestionDisplaySettings;
+  /** تحكم منفصل بعدد أسئلة كل مجال في المرحلة الثانية (#5). */
+  stage2Fields: Stage2FieldDisplaySettings;
 }
+
+export const DEFAULT_STAGE2_FIELD_DISPLAY: Stage2FieldDisplaySettings = {
+  matching: 5,
+  arrangeVerse: 5,
+  completeVerse: 5,
+  trueFalseCorrect: 5,
+};
+
+export const STAGE2_FIELD_KEYS: (keyof Stage2FieldDisplaySettings)[] = [
+  "matching",
+  "arrangeVerse",
+  "completeVerse",
+  "trueFalseCorrect",
+];
+
+export const STAGE2_FIELD_LABELS: Record<keyof Stage2FieldDisplaySettings, string> = {
+  matching: "التوصيل",
+  arrangeVerse: "ترتيب الآية",
+  completeVerse: "إكمال الآية",
+  trueFalseCorrect: "صح أو خطأ",
+};
 
 export const STAGE_DISPLAY_KEYS: AdminStageKey[] = ["stage1", "stage2", "stage3", "stage4"];
 
@@ -27,7 +58,27 @@ export const DEFAULT_QUESTION_DISPLAY_SETTINGS: QuestionDisplaySettings = {
   stage2: { displayCount: 20, orderMode: "order" },
   stage3: { displayCount: 30, orderMode: "order" },
   stage4: { displayCount: 15, orderMode: "order" },
+  stage2Fields: { ...DEFAULT_STAGE2_FIELD_DISPLAY },
 };
+
+function clampFieldCount(value: unknown, fallback: number): number {
+  const parsed =
+    typeof value === "number" && Number.isFinite(value) ? Math.floor(value) : fallback;
+  return Math.max(1, Math.min(50, parsed));
+}
+
+export function parseStage2FieldSettings(raw: unknown): Stage2FieldDisplaySettings {
+  const record = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  return {
+    matching: clampFieldCount(record.matching, DEFAULT_STAGE2_FIELD_DISPLAY.matching),
+    arrangeVerse: clampFieldCount(record.arrangeVerse, DEFAULT_STAGE2_FIELD_DISPLAY.arrangeVerse),
+    completeVerse: clampFieldCount(record.completeVerse, DEFAULT_STAGE2_FIELD_DISPLAY.completeVerse),
+    trueFalseCorrect: clampFieldCount(
+      record.trueFalseCorrect,
+      DEFAULT_STAGE2_FIELD_DISPLAY.trueFalseCorrect,
+    ),
+  };
+}
 
 export const DEFAULT_BANK_SIZES: Record<AdminStageKey, number> = {
   stage1: 50,
@@ -92,6 +143,7 @@ export function parseQuestionDisplaySettings(
         { ...DEFAULT_QUESTION_DISPLAY_SETTINGS.stage4, displayCount: legacyStage4 },
         sizes.stage4,
       ),
+      stage2Fields: parseStage2FieldSettings(record.stage2Fields),
     };
   }
 
@@ -103,6 +155,7 @@ export function parseQuestionDisplaySettings(
       displayCount: clampDisplayCount(legacyStage4, DEFAULT_QUESTION_DISPLAY_SETTINGS.stage4.displayCount, sizes.stage4),
       orderMode: "order",
     },
+    stage2Fields: parseStage2FieldSettings(undefined),
   };
 }
 

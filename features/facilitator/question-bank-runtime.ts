@@ -4,14 +4,16 @@ import { doc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { getClientFirebaseAuth, getClientFirestore } from "@/firebase/firebaseClient";
-import { MAIN_COMPETITION_ID } from "@/firebase/firestore";
+import { gameFlowRef, MAIN_COMPETITION_ID } from "@/firebase/firestore";
 import type { Stage2QuestionBank, Stage3BankQuestion } from "@/features/facilitator/question-bank-types";
 import {
   setRuntimeStage2Bank,
   setRuntimeStage3Bank,
   setRuntimeStage4Bank,
+  setStage2FieldLimits,
   setQuestionBankSanitizeForTeamPlayback,
 } from "@/features/facilitator/question-bank-runtime-cache";
+import { parseStage2FieldSettings } from "@/features/facilitator/question-display-settings";
 import type { Stage2ArrangeVerseQuestion } from "@/features/stage2/stage2-arrange-verse-types";
 import type { Stage2CompleteVerseQuestion } from "@/features/stage2/stage2-complete-verse-types";
 import type { Stage2MatchingQuestion } from "@/features/stage2/stage2-matching-types";
@@ -100,6 +102,17 @@ function startBankListeners(): void {
           ? (questions as Stage4QuestionMetadata[])
           : null,
       );
+      notify();
+    }),
+  );
+
+  // حدود عدد أسئلة كل مجال في المرحلة الثانية من الإعدادات (#5).
+  bankUnsubscribes.push(
+    subscribeFirestoreDoc(gameFlowRef, (snapshot) => {
+      const nested = snapshot.data()?.questionDisplaySettings;
+      const record =
+        nested && typeof nested === "object" ? (nested as Record<string, unknown>) : {};
+      setStage2FieldLimits(parseStage2FieldSettings(record.stage2Fields));
       notify();
     }),
   );

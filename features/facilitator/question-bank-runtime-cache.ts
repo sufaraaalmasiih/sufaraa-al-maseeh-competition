@@ -26,6 +26,26 @@ let stage3Raw: Record<string, Stage3BankQuestion> | null = null;
 let stage4Raw: Stage4QuestionMetadata[] | null = null;
 let sanitizeForTeamPlayback = false;
 
+// حدود عدد أسئلة كل مجال في المرحلة الثانية (#5) — يضبطها الميسّر من الإعدادات.
+interface Stage2FieldLimits {
+  matching: number;
+  arrangeVerse: number;
+  completeVerse: number;
+  trueFalseCorrect: number;
+}
+let stage2FieldLimits: Stage2FieldLimits | null = null;
+
+export function setStage2FieldLimits(limits: Stage2FieldLimits | null): void {
+  stage2FieldLimits = limits;
+}
+
+function limitField<T>(questions: T[], limit: number | undefined): T[] {
+  if (typeof limit !== "number" || limit <= 0 || questions.length <= limit) {
+    return questions;
+  }
+  return questions.slice(0, limit);
+}
+
 export function setQuestionBankSanitizeForTeamPlayback(enabled: boolean): void {
   sanitizeForTeamPlayback = enabled;
 }
@@ -70,7 +90,9 @@ export function getAuthoritativeStage2Bank(): Stage2QuestionBank {
 
 export function getActiveStage2MatchingQuestions(): Stage2MatchingQuestion[] {
   const bank = getActiveStage2Bank();
-  return bank.matching.length > 0 ? bank.matching : maybeSanitizeStage2(DEFAULT_STAGE2).matching;
+  const questions =
+    bank.matching.length > 0 ? bank.matching : maybeSanitizeStage2(DEFAULT_STAGE2).matching;
+  return limitField(questions, stage2FieldLimits?.matching);
 }
 
 export function getAuthoritativeStage2MatchingQuestion(
@@ -83,7 +105,9 @@ export function getAuthoritativeStage2MatchingQuestion(
 
 export function getActiveStage2ArrangeVerseQuestions(): Stage2ArrangeVerseQuestion[] {
   const bank = getActiveStage2Bank();
-  return bank.arrangeVerse.length > 0 ? bank.arrangeVerse : maybeSanitizeStage2(DEFAULT_STAGE2).arrangeVerse;
+  const questions =
+    bank.arrangeVerse.length > 0 ? bank.arrangeVerse : maybeSanitizeStage2(DEFAULT_STAGE2).arrangeVerse;
+  return limitField(questions, stage2FieldLimits?.arrangeVerse);
 }
 
 export function getAuthoritativeStage2ArrangeVerseQuestion(
@@ -96,7 +120,9 @@ export function getAuthoritativeStage2ArrangeVerseQuestion(
 
 export function getActiveStage2CompleteVerseQuestions(): Stage2CompleteVerseQuestion[] {
   const bank = getActiveStage2Bank();
-  return bank.completeVerse.length > 0 ? bank.completeVerse : maybeSanitizeStage2(DEFAULT_STAGE2).completeVerse;
+  const questions =
+    bank.completeVerse.length > 0 ? bank.completeVerse : maybeSanitizeStage2(DEFAULT_STAGE2).completeVerse;
+  return limitField(questions, stage2FieldLimits?.completeVerse);
 }
 
 export function getAuthoritativeStage2CompleteVerseQuestion(
@@ -110,9 +136,11 @@ export function getAuthoritativeStage2CompleteVerseQuestion(
 
 export function getActiveStage2TrueFalseQuestions(): Stage2TrueFalseCorrectQuestion[] {
   const bank = getActiveStage2Bank();
-  return bank.trueFalseCorrect.length > 0
-    ? bank.trueFalseCorrect
-    : maybeSanitizeStage2(DEFAULT_STAGE2).trueFalseCorrect;
+  const questions =
+    bank.trueFalseCorrect.length > 0
+      ? bank.trueFalseCorrect
+      : maybeSanitizeStage2(DEFAULT_STAGE2).trueFalseCorrect;
+  return limitField(questions, stage2FieldLimits?.trueFalseCorrect);
 }
 
 export function getAuthoritativeStage2TrueFalseQuestion(
