@@ -3,26 +3,27 @@
 import { Maximize2 } from "lucide-react";
 import { useAudienceNativeFullscreen } from "@/features/audience/use-audience-fullscreen";
 
-interface AudienceFullscreenPromptProps {
-  enabled: boolean;
-}
-
-export function AudienceFullscreenPrompt({ enabled }: AudienceFullscreenPromptProps) {
+/**
+ * زر ملء الشاشة الذاتي على شاشة الجمهور — ملء الشاشة الأصلي يجب أن يُفعَّل بضغطة
+ * محلية على جهاز العرض (قيد المتصفّح)، فيظهر هنا دائماً ما لم نكن في وضع ملء الشاشة.
+ */
+export function AudienceFullscreenPrompt() {
   const { active, enter } = useAudienceNativeFullscreen();
 
-  if (!enabled || active) {
+  if (active) {
     return null;
   }
 
   return (
-    <div className="audience-fullscreen-prompt">
-      <p className="audience-fullscreen-prompt__text">
-        وضع العرض الكامل مفعّل من لوحة الميسر. اضغط الزر أدناه لملء الشاشة على هذا الجهاز.
-      </p>
-      <button type="button" className="audience-fullscreen-prompt__button" onClick={() => void enter()}>
-        <Maximize2 className="h-4 w-4" aria-hidden />
-        ملء الشاشة الآن
-      </button>
-    </div>
+    <button
+      type="button"
+      className="audience-fs-fab"
+      onClick={() => void enter()}
+      title="ملء الشاشة"
+      aria-label="ملء الشاشة"
+    >
+      <Maximize2 className="h-5 w-5" aria-hidden />
+      <span className="audience-fs-fab__label">ملء الشاشة</span>
+    </button>
   );
 }

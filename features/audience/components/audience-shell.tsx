@@ -11,14 +11,12 @@ import {
 } from "@/features/audience/components/audience-shell-layout";
 import { AudienceShellScreens } from "@/features/audience/components/audience-shell-screens";
 import { AudienceFullscreenPrompt } from "@/features/audience/components/audience-fullscreen-prompt";
-import { useAudienceFullscreenMode } from "@/features/audience/use-audience-fullscreen";
 import { useAudienceShellData } from "@/features/audience/use-audience-shell-data";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
 import { CompetitionStage3Automation } from "@/features/stage3/competition-stage3-automation";
 
 export function AudienceShell() {
   const embedded = isAudienceEmbeddedView();
-  const fullscreen = useAudienceFullscreenMode();
   const { competitionFrozen } = useGameFlow();
   const data = useAudienceShellData();
   const { status, loading } = data;
@@ -33,7 +31,7 @@ export function AudienceShell() {
         loading ? "app-loading-screen__content" : getAudienceShellContentClassName(status)
       }
     >
-      {!embedded ? <AudienceFullscreenPrompt enabled={fullscreen} /> : null}
+      {!embedded ? <AudienceFullscreenPrompt /> : null}
       <CompetitionStage3Automation />
       <CompetitionFrozenBanner frozen={competitionFrozen} />
       <AudienceFlowContent status={status} loading={loading} embedded={embedded}>

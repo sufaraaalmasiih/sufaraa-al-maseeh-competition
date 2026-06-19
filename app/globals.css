@@ -8526,21 +8526,21 @@
     color: #3d6278;
   }
 
-  .audience-fullscreen-prompt {
-    @apply mx-auto mb-4 flex w-full max-w-3xl flex-col items-center gap-3 rounded-2xl border px-4 py-3 text-center sm:flex-row sm:justify-between sm:text-right;
-    border-color: rgba(35, 136, 196, 0.25);
-    background: rgba(255, 255, 255, 0.82);
-  }
-
-  .audience-fullscreen-prompt__text {
-    @apply text-sm font-semibold text-[#143A5A];
-  }
-
-  .audience-fullscreen-prompt__button {
-    @apply inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition;
+  /* زر ملء الشاشة الذاتي العائم على شاشة الجمهور (غير متطفّل). */
+  .audience-fs-fab {
+    @apply fixed bottom-4 left-4 z-50 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-bold shadow-md transition;
     border-color: rgba(35, 136, 196, 0.35);
-    background: linear-gradient(180deg, #ffffff 0%, #f2f9ff 100%);
+    background: rgba(255, 255, 255, 0.92);
     color: #0f4f78;
+    opacity: 0.85;
+  }
+
+  .audience-fs-fab:hover {
+    opacity: 1;
+  }
+
+  .audience-fs-fab__label {
+    @apply hidden sm:inline;
   }
 
   .audience-podium-screen .competition-stage-screen__card,
