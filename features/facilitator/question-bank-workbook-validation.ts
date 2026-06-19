@@ -474,6 +474,21 @@ export function validateQuestionBankRows(
 
     validateTypeRequirements(errors, rowNumber, row, type);
 
+    // المرحلة 2 — ترتيب الآية: لا يُعرض أكثر من 5 أجزاء سويّاً، فإن زادت قسّم الآية
+    // إلى سؤالين أو أكثر (كل منهما ≤5 أجزاء).
+    if (stage === "stage2" && type === "arrangeVerse") {
+      const fragments = splitPipeList(row.data);
+      if (fragments.length > 5) {
+        pushError(
+          errors,
+          rowNumber,
+          row,
+          "المعطيات",
+          `«رتّب الآية» يحتوي ${fragments.length} أجزاء — الحد الأقصى 5 أجزاء لكل سؤال. قسّمها إلى أسئلة أصغر.`,
+        );
+      }
+    }
+
     const hadRowErrors = errors.some((error) => error.row === rowNumber);
     if (!hadRowErrors) {
       collectTypeWarnings(warnings, rowNumber, row, type);

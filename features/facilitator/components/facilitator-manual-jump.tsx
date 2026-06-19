@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AlertTriangle, ChevronDown } from "lucide-react";
 import { finishStage, setGameFlowStatus } from "@/features/facilitator/facilitator-flow-actions";
 import { startStage3Reveal } from "@/features/stage3/start-stage3-reveal";
+import { resetCompetition } from "@/features/gameflow/competition-reset";
 import { cn } from "@/lib/utils";
 import type { GameFlowStatus } from "@/types";
 
@@ -46,6 +47,27 @@ export function FacilitatorManualJump({ status, embedded = false }: FacilitatorM
   const [error, setError] = useState<string | null>(null);
 
   async function handle(control: ManualControl) {
+    // العودة لوضع الاستعداد = الوضع الطبيعي: تصفير كل العلامات وإعادة المسابقة للبداية.
+    if (control.status === "waiting_players") {
+      if (
+        !window.confirm(
+          "العودة لوضع الاستعداد ستُصفّر كل علامات الفرق وتُعيد المسابقة للوضع الطبيعي (تبقى الفرق مسجّلة الدخول). متابعة؟",
+        )
+      ) {
+        return;
+      }
+      setPending(control.status);
+      setError(null);
+      try {
+        await resetCompetition();
+      } catch {
+        setError("تعذر العودة لوضع الاستعداد.");
+      } finally {
+        setPending(null);
+      }
+      return;
+    }
+
     setPending(control.status);
     setError(null);
     try {
