@@ -31,8 +31,12 @@ concurrent competitions).
 - **Single competition:** `MAIN_COMPETITION_ID = "main"`. ALL data lives under
   `competitions/main/...` (system/gameFlow, system/timer, teamStates/{teamId},
   answers/{answerId}, questionBanks/{stage1..4,meta}, objections/, teamArchives/, history/).
-- **Roles:** `super_admin`, `facilitator` (الميسّر), `team` (الفريق/المتسابق), `coach` (المدرب).
-  **Audience** (الجمهور) is a PUBLIC screen — no login.
+- **Roles:** `super_admin`, `facilitator` (الميسّر), `team` (الفريق/المتسابق), `coach` (المدرب),
+  `viewer`. **Audience** (الجمهور) is a PUBLIC screen — no login. A **coach** is a SEPARATE
+  view-only account (`coaches/{uid}` doc with `linkedTeamId`) — it can read its linked team's data
+  but Firestore rules block it from submitting answers or creating a team-state, so a coach
+  physically cannot play. Role lookup: `teams/{uid}` → team; `coaches/{uid}` → coach;
+  `users/{uid}.role` → facilitator/super_admin/viewer.
 - **Singleton stores** (subscribe once, share everywhere): `use-game-flow.ts` (gameFlow status),
   `team-states-store.ts` (scores/progress), `team-logos-store.ts`.
 - **Timer:** a **Web Worker** tick (`lib/use-worker-tick.ts`) drives `useCompetitionTimer` so
@@ -50,9 +54,10 @@ concurrent competitions).
 - **Stage 2 «فتّشوا الكتب»:** 4 fields, one player each — `matching` (توصيل, auto-split into rounds
   of max 5 pairs), `arrangeVerse` (رتّب الآية, **max 5 parts per question**), `completeVerse`
   (أكمل الآية), `trueFalseCorrect` (صح/خطأ: the player taps the WRONG word(s) of the sentence and
-  types the correction). The 5+5+5 grade (mark-wrong / wrong-part / correction) is now **AUTOMATIC**
-  at submission — no facilitator step. The wrong-part match uses an optional `expectedWrongPart`
-  (the Excel `targetPart` column) and an Arabic-normalizing comparison.
+  types the correction). The 5+5+5 grade (mark-wrong / wrong-part / correction) is **AUTOMATIC**
+  at submission — no facilitator step. The wrong-part point needs an **EXACT** Arabic-normalized
+  match to the question's `expectedWrongPart` (editable in the in-app editor, or the Excel
+  `targetpart` column), so selecting extra/all words scores 0 — no select-all exploit.
 - **Stage 3 «على المحك»:** a Jeopardy board, **bank-driven**: columns = the categories present in
   the bank (up to **6**, with **custom names**), cells = each category's questions; the board
   scales to fit. Turn order by total score; owner answers first, others can steal. Scoring by
@@ -88,6 +93,9 @@ Two equivalent paths, both validated by the SAME validator + parser:
   code to never get silently rejected.
 - gameFlow/timer writes require the facilitator (exceptions: stage-3 owner selecting a cell, and the
   team setting its own stage-3 answering timer).
+- The coach (`coaches/{uid}`) can READ its linked team's answers; `!isCoach()` guards block it from
+  writing answers / a team-state. Coach registration (`/coach-register`) reads the public
+  team-states list to pick a team; coach login is `/coach-login`.
 - **You (the AI) CANNOT deploy rules.** If you change `firestore.rules`, tell the user to publish
   them via Firebase Console → Firestore → Rules → Publish (or `npm run firebase:deploy:rules`).
 
@@ -98,7 +106,7 @@ Two equivalent paths, both validated by the SAME validator + parser:
    minimize Firestore listeners/writes).
 3. **Verify before finishing:**
    - `npm run typecheck` (tsc --noEmit) — must be clean.
-   - `npx vitest run` — all tests must pass (currently 128 across ~27 files). Add a test for new
+   - `npx vitest run` — all tests must pass (currently 131 across ~27 files). Add a test for new
      pure logic.
    - Do NOT rely on a local `next build` on Windows (SWC native binary fails locally; Vercel Linux
      builds fine). `npm run dev` works locally via a WASM workaround.
@@ -130,6 +138,9 @@ Two equivalent paths, both validated by the SAME validator + parser:
 - The audience screen has its own local "ملء الشاشة" button (native fullscreen must be triggered on
   the display device — a browser limitation; it can't be forced remotely).
 - "وضع الاستعداد / شاشة الانتظار" (standby) resets ALL scores to zero (full clean reset).
+- The stage-progress indicator (`components/competition/step-journey.tsx`) is responsive: ≤14
+  questions render as dots, >14 collapse to a compact progress bar so a 40-question bank never
+  overflows the card.
 
 ## 10) التعديلات المطلوبة (write your request here)
 <<< اكتب هنا بالعربية ما تريد تعديله أو إضافته بالتفصيل. مثال: «في المرحلة الثانية، أريد أن يظهر
