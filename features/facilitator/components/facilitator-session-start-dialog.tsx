@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ClipboardList, GraduationCap, Trophy, X } from "lucide-react";
+import { ClipboardList, GraduationCap, MapPin, Trophy, X } from "lucide-react";
 import { createCompetitionSession } from "@/features/facilitator/competition-session";
 import { writeCompetitionMode, type CompetitionMode } from "@/features/facilitator/competition-mode";
 
@@ -25,6 +25,8 @@ export function FacilitatorSessionStartDialog({
   onStarted,
 }: FacilitatorSessionStartDialogProps) {
   const [mode, setMode] = useState<CompetitionMode>("official");
+  const [version, setVersion] = useState("");
+  const [hostGovernorate, setHostGovernorate] = useState("");
   const [trainingEndsAt, setTrainingEndsAt] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +34,9 @@ export function FacilitatorSessionStartDialog({
   if (!open) {
     return null;
   }
+
+  const officialReady =
+    mode !== "official" || (version.trim().length >= 2 && hostGovernorate.trim().length >= 2);
 
   async function handleSubmit() {
     setPending(true);
@@ -44,12 +49,20 @@ export function FacilitatorSessionStartDialog({
         }
         await writeCompetitionMode({ mode: "training", trainingEndsAtMs: endsAtMs });
       } else {
+        if (version.trim().length < 2 || hostGovernorate.trim().length < 2) {
+          throw new Error("اكتب نسخة المسابقة والمحافظة.");
+        }
         await writeCompetitionMode({ mode: "official", trainingEndsAtMs: null });
-        await createCompetitionSession();
+        await createCompetitionSession({
+          version: version.trim(),
+          hostGovernorate: hostGovernorate.trim(),
+        });
       }
 
       await onStarted();
       setMode("official");
+      setVersion("");
+      setHostGovernorate("");
       setTrainingEndsAt("");
       onClose();
     } catch (mutationError) {
@@ -135,6 +148,37 @@ export function FacilitatorSessionStartDialog({
             </button>
           </div>
 
+          {mode === "official" ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="facilitator-controls-confirm__reason">
+                <span className="facilitator-controls-confirm__reason-label">
+                  نسخة المسابقة <em>إلزامي</em>
+                </span>
+                <input
+                  type="text"
+                  className="facilitator-input"
+                  placeholder="مثال: النسخة الأولى"
+                  value={version}
+                  onChange={(event) => setVersion(event.target.value)}
+                  disabled={pending}
+                />
+              </label>
+              <label className="facilitator-controls-confirm__reason">
+                <span className="facilitator-controls-confirm__reason-label">
+                  <MapPin className="inline h-3.5 w-3.5" aria-hidden /> المحافظة <em>إلزامي</em>
+                </span>
+                <input
+                  type="text"
+                  className="facilitator-input"
+                  placeholder="مثال: دمشق"
+                  value={hostGovernorate}
+                  onChange={(event) => setHostGovernorate(event.target.value)}
+                  disabled={pending}
+                />
+              </label>
+            </div>
+          ) : null}
+
           {mode === "training" ? (
             <label className="facilitator-controls-confirm__reason">
               <span className="facilitator-controls-confirm__reason-label">
@@ -175,7 +219,7 @@ export function FacilitatorSessionStartDialog({
           <button
             type="button"
             className="facilitator-controls-confirm__submit"
-            disabled={pending}
+            disabled={pending || !officialReady}
             onClick={() => void handleSubmit()}
           >
             {pending

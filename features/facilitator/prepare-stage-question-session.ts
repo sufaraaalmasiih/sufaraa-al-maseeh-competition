@@ -1,5 +1,6 @@
-import { getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
-import { gameFlowRef } from "@/firebase/firestore";
+import { doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { gameFlowRef, MAIN_COMPETITION_ID } from "@/firebase/firestore";
+import { getClientFirestore } from "@/firebase/firebaseClient";
 import { readActiveSessionId } from "@/features/facilitator/competition-session";
 import {
   buildActiveQuestionIndices,
@@ -14,10 +15,31 @@ async function readSessionSeed(prefix: string): Promise<string> {
   return `${prefix}-${sessionId ?? "default"}`;
 }
 
+/**
+ * عدد أسئلة بنك المرحلة من Firestore مباشرة (وليس من الذاكرة المؤقتة) — لأن المؤقتة
+ * قد تكون فارغة على شاشة الميسّر فترجع لبنك افتراضي صغير، فيُحسب العدد خطأً (سبب
+ * مشكلة «يظهر 40 ثم 6»).
+ */
+async function readStoredBankCount(stage: string, fallback: number): Promise<number> {
+  try {
+    const snapshot = await getDoc(
+      doc(getClientFirestore(), "competitions", MAIN_COMPETITION_ID, "questionBanks", stage),
+    );
+    const questions = snapshot.data()?.questions;
+    return Array.isArray(questions) && questions.length > 0 ? questions.length : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export async function prepareStage1QuestionSession(): Promise<number[]> {
   const [gameFlowSnapshot, meta] = await Promise.all([getDoc(gameFlowRef), fetchQuestionBankMeta()]);
-  const settings = parseQuestionDisplaySettings(gameFlowSnapshot.data(), meta.bankSizes);
-  const bankLength = getActiveStage1Bank().length;
+  const bankLength = await readStoredBankCount("stage1", getActiveStage1Bank().length);
+  // نستخدم العدد الفعلي للبنك في القصّ أيضاً (لا أحجام البنك القديمة من meta).
+  const settings = parseQuestionDisplaySettings(gameFlowSnapshot.data(), {
+    ...meta.bankSizes,
+    stage1: bankLength,
+  });
   const indices = buildActiveQuestionIndices(
     bankLength,
     settings.stage1.displayCount,
@@ -63,8 +85,11 @@ export async function prepareStage2QuestionSession(): Promise<{
 
 export async function prepareStage4QuestionSession(): Promise<number[]> {
   const [gameFlowSnapshot, meta] = await Promise.all([getDoc(gameFlowRef), fetchQuestionBankMeta()]);
-  const settings = parseQuestionDisplaySettings(gameFlowSnapshot.data(), meta.bankSizes);
-  const bankLength = getStage4MockQuestions().length;
+  const bankLength = await readStoredBankCount("stage4", getStage4MockQuestions().length);
+  const settings = parseQuestionDisplaySettings(gameFlowSnapshot.data(), {
+    ...meta.bankSizes,
+    stage4: bankLength,
+  });
   const indices = buildActiveQuestionIndices(
     bankLength,
     settings.stage4.displayCount,
