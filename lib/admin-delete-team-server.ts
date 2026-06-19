@@ -68,6 +68,30 @@ export async function deleteTeamCompletelyOnServer(teamId: string): Promise<{
   return { deletedAnswers, authDeleted };
 }
 
+export async function updateTeamAuthCredentialsOnServer(
+  uid: string,
+  input: { email?: string; password?: string },
+): Promise<{ emailUpdated: boolean; passwordUpdated: boolean }> {
+  const auth = getAdminAuth();
+  const update: { email?: string; password?: string } = {};
+  if (input.email) {
+    update.email = input.email;
+  }
+  if (input.password) {
+    update.password = input.password;
+  }
+
+  if (!update.email && !update.password) {
+    return { emailUpdated: false, passwordUpdated: false };
+  }
+
+  await auth.updateUser(uid, update);
+  return {
+    emailUpdated: Boolean(update.email),
+    passwordUpdated: Boolean(update.password),
+  };
+}
+
 export async function deleteStaffAccountOnServer(uid: string): Promise<void> {
   const { getAdminFirestore } = await import("@/lib/firebase-admin-server");
   const db = getAdminFirestore();

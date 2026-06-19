@@ -8,6 +8,7 @@ import {
 } from "@/features/facilitator/components/facilitator-controls-confirm-card";
 import { FacilitatorControlsTeamProfilePanel } from "@/features/facilitator/components/facilitator-controls-team-profile-panel";
 import { updateTeamFullProfile } from "@/features/facilitator/facilitator-team-admin";
+import { callAdminApiOptional } from "@/lib/admin-api-client";
 import { useAllRegisteredTeams } from "@/features/facilitator/use-all-teams";
 import { useTeamProfile } from "@/features/facilitator/use-team-profile";
 import type { TeamPlayer } from "@/types";
@@ -87,6 +88,27 @@ export function FacilitatorAdminTeamManagementPanel() {
           email: accountEmail.trim(),
           reason,
         });
+
+        // تغيير بريد/كلمة مرور تسجيل الدخول الحقيقية يحتاج Admin SDK (خادم).
+        const emailChanged =
+          accountEmail.trim().length > 0 && accountEmail.trim() !== email.trim();
+        const passwordSet = accountPassword.trim().length >= 6;
+
+        if (emailChanged || passwordSet) {
+          const result = await callAdminApiOptional("/api/admin/update-team-credentials", {
+            teamId: selectedTeam.teamId,
+            ...(emailChanged ? { email: accountEmail.trim() } : {}),
+            ...(passwordSet ? { password: accountPassword.trim() } : {}),
+          });
+          setAccountPassword("");
+          setToast(
+            result.ok
+              ? "تم حفظ البيانات وتحديث بيانات الدخول الفعلية."
+              : `حُفظت بيانات الفريق، لكن تعذّر تحديث بيانات الدخول: ${result.error}`,
+          );
+          return;
+        }
+
         setAccountPassword("");
         setToast("تم حفظ بيانات الفريق.");
       },
