@@ -49,10 +49,10 @@ export function FacilitatorHeroAction({
   const hero = plan.hero;
   const showHint = shouldShowHint(status, plan);
 
-  const readinessBlocked =
-    plan.readinessKey !== null &&
-    totalTeams > 0 &&
-    (readyCount ?? 0) < totalTeams;
+  // الجاهزية معلومة إرشادية فقط — لا تحجب الميسّر عن المتابعة (لا داعٍ لانتظار موافقة الفرق).
+  const showReadinessInfo =
+    plan.readinessKey !== null && totalTeams > 0;
+  const allReady = (readyCount ?? 0) >= totalTeams;
 
   const Icon =
     hero?.kind === "finish"
@@ -62,7 +62,7 @@ export function FacilitatorHeroAction({
         : ArrowLeft;
 
   async function handleClick() {
-    if (pending || readinessBlocked || !hero) {
+    if (pending || !hero) {
       return;
     }
 
@@ -70,7 +70,7 @@ export function FacilitatorHeroAction({
   }
 
   async function handleConfirmedAdvance() {
-    if (pending || readinessBlocked || !hero) {
+    if (pending || !hero) {
       return;
     }
 
@@ -138,7 +138,7 @@ export function FacilitatorHeroAction({
               hero.kind === "finish" && "flow-action__btn--finish",
               hero.kind === "final" && "flow-action__btn--final",
             )}
-            disabled={pending || readinessBlocked}
+            disabled={pending}
             onClick={() => void handleClick()}
           >
             {pending ? (
@@ -153,14 +153,14 @@ export function FacilitatorHeroAction({
         ) : null}
       </div>
 
-      {readinessBlocked ? (
-        <div className="flow-action__gate">
+      {showReadinessInfo && !allReady ? (
+        <div className="flow-action__gate flow-action__gate--info">
           <p>
-            بانتظار جاهزية كل الفرق ({readyCount ?? 0} / {totalTeams})
+            الجاهزية: {readyCount ?? 0} / {totalTeams} — يمكنك المتابعة دون انتظار.
           </p>
           {notReadyTeamNames.length > 0 ? (
             <p className="flow-action__gate-teams">
-              غير جاهز: {notReadyTeamNames.join("، ")}
+              لم يضغط «جاهز» بعد: {notReadyTeamNames.join("، ")}
             </p>
           ) : null}
         </div>

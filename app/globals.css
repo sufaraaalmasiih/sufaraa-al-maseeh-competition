@@ -6366,6 +6366,12 @@
     color: #a9670c;
   }
 
+  /* الجاهزية كمعلومة فقط (ليست حجباً) — لون محايد. */
+  .flow-action__gate--info {
+    background-color: rgba(233, 246, 252, 0.9);
+    color: #1a6fa3;
+  }
+
   .flow-manual__toggle {
     @apply col-start-2 row-start-1 flex h-full min-h-[3.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl border px-4 py-3 text-center transition;
     border-color: rgba(180, 83, 9, 0.25);
