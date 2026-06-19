@@ -181,52 +181,73 @@ export async function deleteQuestionBankArchive(archiveId: string): Promise<void
   await deleteDoc(archiveDoc(archiveId));
 }
 
-export async function backupCurrentQuestionBank(label: string): Promise<string | null> {
-  const [s1, s2, s3, s4] = await Promise.all([
+/**
+ * يقرأ بنك الأسئلة الحالي المخزَّن (المراحل الأربع + بيانات القراءة) كحمولة كاملة —
+ * بدون أي كتابة. يُستخدم للتصدير إلى Excel وللنسخ الاحتياطي.
+ */
+export async function readCurrentQuestionBankPayload(): Promise<FullQuestionBankPayload | null> {
+  const [s1, s2, s3, s4, metaSnapshot] = await Promise.all([
     getDoc(stageDoc("stage1")),
     getDoc(stageDoc("stage2")),
     getDoc(stageDoc("stage3")),
     getDoc(stageDoc("stage4")),
+    getDoc(doc(getClientFirestore(), ...BANK_ROOT, "meta")),
   ]);
 
   const stage1 = Array.isArray(s1.data()?.questions) ? s1.data()?.questions : [];
   const stage2Data = s2.data() ?? {};
   const stage3Raw = s3.data()?.questions;
   const stage4 = Array.isArray(s4.data()?.questions) ? s4.data()?.questions : [];
+  const metaData = metaSnapshot.data() ?? {};
+
+  const stage2 = {
+    matching: Array.isArray(stage2Data.matching) ? stage2Data.matching : [],
+    arrangeVerse: Array.isArray(stage2Data.arrangeVerse) ? stage2Data.arrangeVerse : [],
+    completeVerse: Array.isArray(stage2Data.completeVerse) ? stage2Data.completeVerse : [],
+    trueFalseCorrect: Array.isArray(stage2Data.trueFalseCorrect)
+      ? stage2Data.trueFalseCorrect
+      : [],
+  };
 
   const hasData =
     stage1.length > 0 ||
     Object.keys(stage3Raw ?? {}).length > 0 ||
     stage4.length > 0 ||
-    (Array.isArray(stage2Data.matching) && stage2Data.matching.length > 0);
+    stage2.matching.length > 0 ||
+    stage2.arrangeVerse.length > 0 ||
+    stage2.completeVerse.length > 0 ||
+    stage2.trueFalseCorrect.length > 0;
 
   if (!hasData) {
     return null;
   }
 
-  const payload: FullQuestionBankPayload = {
+  return {
     stage1,
-    stage2: {
-      matching: Array.isArray(stage2Data.matching) ? stage2Data.matching : [],
-      arrangeVerse: Array.isArray(stage2Data.arrangeVerse) ? stage2Data.arrangeVerse : [],
-      completeVerse: Array.isArray(stage2Data.completeVerse) ? stage2Data.completeVerse : [],
-      trueFalseCorrect: Array.isArray(stage2Data.trueFalseCorrect)
-        ? stage2Data.trueFalseCorrect
-        : [],
-    },
+    stage2,
     stage3: stage3Raw && typeof stage3Raw === "object" ? stage3Raw : {},
     stage4,
     meta: {
       bankSizes: {
         stage1: stage1.length,
-        stage2: 0,
+        stage2: countStage2Questions(stage2),
         stage3: Object.keys(stage3Raw ?? {}).length,
         stage4: stage4.length,
       },
-      stage2ReadingReference: "",
-      stage2ReadingPassage: "",
+      stage2ReadingReference:
+        typeof metaData.stage2ReadingReference === "string" ? metaData.stage2ReadingReference : "",
+      stage2ReadingPassage:
+        typeof metaData.stage2ReadingPassage === "string" ? metaData.stage2ReadingPassage : "",
     },
   };
+}
+
+export async function backupCurrentQuestionBank(label: string): Promise<string | null> {
+  const payload = await readCurrentQuestionBankPayload();
+
+  if (!payload) {
+    return null;
+  }
 
   return createQuestionBankArchive({
     name: label,

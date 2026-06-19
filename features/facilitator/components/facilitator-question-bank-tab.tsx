@@ -24,10 +24,12 @@ import {
   createQuestionBankArchive,
   deleteQuestionBankArchive,
   loadQuestionBankArchive,
+  readCurrentQuestionBankPayload,
   saveFullQuestionBank,
   subscribeQuestionBankArchives,
   updateQuestionBankArchiveMeta,
 } from "@/features/facilitator/question-bank-store";
+import { exportQuestionBankToExcel } from "@/features/facilitator/export-question-bank-excel";
 import { useQuestionBankRuntimeSync } from "@/features/facilitator/question-bank-runtime";
 import type { FullQuestionBankPayload, QuestionBankArchiveRecord } from "@/features/facilitator/question-bank-types";
 import { useStage1BankEditor } from "@/features/facilitator/stage1-question-bank-store";
@@ -288,6 +290,7 @@ export function FacilitatorQuestionBankTab() {
   >(null);
   const [downloadingTemplate, setDownloadingTemplate] = useState(false);
   const [downloadingEasyBank, setDownloadingEasyBank] = useState(false);
+  const [exportingBank, setExportingBank] = useState(false);
   const [importReport, setImportReport] = useState<WorkbookValidationReport | null>(null);
   const [lastImportFileName, setLastImportFileName] = useState("");
   const [importing, setImporting] = useState(false);
@@ -412,6 +415,30 @@ export function FacilitatorQuestionBankTab() {
       setFeedback({ kind: "error", text: "تعذر تنزيل بنك الأسئلة السهل." });
     } finally {
       setDownloadingEasyBank(false);
+    }
+  }
+
+  async function handleExportCurrentBank() {
+    setExportingBank(true);
+    setFeedback(null);
+    try {
+      const payload = await readCurrentQuestionBankPayload();
+      if (!payload) {
+        setFeedback({
+          kind: "error",
+          text: "لا يوجد بنك مخصّص لتصديره — استورد ملف Excel أولاً.",
+        });
+        return;
+      }
+      const count = exportQuestionBankToExcel(payload);
+      setFeedback({
+        kind: "success",
+        text: `تم تصدير البنك الحالي (${count} سؤالاً) إلى Excel. عدّله ثم أعد استيراده من «استيراد وفحص Excel».`,
+      });
+    } catch {
+      setFeedback({ kind: "error", text: "تعذر تصدير البنك الحالي." });
+    } finally {
+      setExportingBank(false);
     }
   }
 
@@ -576,6 +603,16 @@ export function FacilitatorQuestionBankTab() {
           >
             <Upload className="h-4 w-4" aria-hidden />
             {importing ? "جارٍ الفحص والحفظ..." : "استيراد وفحص Excel"}
+          </button>
+          <button
+            type="button"
+            className="facilitator-btn facilitator-btn--outline"
+            disabled={exportingBank || !usingFirestore}
+            onClick={() => void handleExportCurrentBank()}
+            title={usingFirestore ? "نزّل البنك الحالي لتعديله وإعادة رفعه" : "لا يوجد بنك مخصّص بعد"}
+          >
+            <Download className="h-4 w-4" aria-hidden />
+            {exportingBank ? "جارٍ التصدير..." : "تصدير البنك الحالي (Excel)"}
           </button>
           <button
             type="button"
