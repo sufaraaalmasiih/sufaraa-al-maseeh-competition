@@ -14,7 +14,7 @@ import { advanceStage4Question } from "@/features/stage4/advance-stage4-question
  * كلها تلقائية على المؤقت افتراضياً؛ أزرار الميسر اليدوية تبقى متاحة (manual = opt-in).
  */
 export function FacilitatorStage4Automation() {
-  const { status, currentStage, competitionFrozen } = useGameFlow();
+  const { status, currentStage, competitionFrozen, stage4QuestionIndex } = useGameFlow();
   const { timer, isExpired } = useCompetitionTimer();
   const attemptedRef = useRef<string | null>(null);
 
@@ -72,8 +72,9 @@ export function FacilitatorStage4Automation() {
     }
 
     // إعلان النتائج تلقائياً بمجرد إغلاق الإجابات (لا مؤقت في هذا الطور).
+    // البصمة خاصة بكل سؤال حتى لا تتخطّى الأسئلة التالية.
     if (status === "stage4_answers_closed") {
-      const fingerprint = "reveal:answers_closed";
+      const fingerprint = `reveal:answers_closed:${stage4QuestionIndex}`;
       if (attemptedRef.current === fingerprint) {
         return;
       }
@@ -123,6 +124,7 @@ export function FacilitatorStage4Automation() {
     status,
     currentStage,
     competitionFrozen,
+    stage4QuestionIndex,
     isExpired,
     timer?.active,
     timer?.stage,
