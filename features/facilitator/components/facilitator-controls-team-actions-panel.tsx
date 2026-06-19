@@ -57,6 +57,7 @@ interface FacilitatorControlsTeamActionsPanelProps {
   confirmRequest: ControlsConfirmRequest | null;
   onApplyOverride: () => void;
   onClearOverride: () => void;
+  onResetTimer: () => void;
   onToggleLock: (stage: AdminStageKey, locked: boolean) => void;
   onDeleteAnswers: () => void;
   onResetTeamData: () => void;
@@ -88,6 +89,7 @@ export function FacilitatorControlsTeamActionsPanel({
   confirmRequest,
   onApplyOverride,
   onClearOverride,
+  onResetTimer,
   onToggleLock,
   onDeleteAnswers,
   onResetTeamData,
@@ -234,7 +236,18 @@ export function FacilitatorControlsTeamActionsPanel({
           >
             إلغاء الانتقال الاستثنائي
           </button>
+          <button
+            type="button"
+            className="facilitator-btn facilitator-btn--outline"
+            onClick={onResetTimer}
+          >
+            إعادة ضبط مؤقت المرحلة الحالية
+          </button>
         </div>
+        <p className="mt-1 text-xs text-[#64748B]">
+          عند إعادة فريق بعودة استثنائية وقد انتهى وقته: اضغط «إعادة ضبط المؤقت»
+          ليبدأ وقت الإجابة من جديد.
+        </p>
       </div>
 
       <div className="facilitator-controls-section">

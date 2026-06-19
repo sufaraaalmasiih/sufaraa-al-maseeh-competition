@@ -4,7 +4,9 @@ import { useMemo, useState } from "react";
 import { MessageSquareWarning, Send } from "lucide-react";
 import {
   OBJECTION_REASONS,
+  objectionReasonLabel,
   submitObjection,
+  useTeamObjections,
 } from "@/features/facilitator/objections";
 import type { CoachHistoryItem } from "@/features/coach/use-coach-dashboard";
 
@@ -23,6 +25,7 @@ export function CoachObjectionForm({ teamId, teamName, questions }: CoachObjecti
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const { objections } = useTeamObjections(teamId);
 
   const options = useMemo(() => {
     const seen = new Set<string>();
@@ -167,6 +170,43 @@ export function CoachObjectionForm({ teamId, teamName, questions }: CoachObjecti
         </p>
       ) : null}
       {error ? <p className="mt-2 text-sm font-bold text-[#B45309]">{error}</p> : null}
+
+      {objections.length > 0 ? (
+        <div className="mt-4 border-t border-[#FDE68A] pt-3">
+          <p className="mb-2 text-sm font-black text-[#143A5A]">اعتراضاتك ({objections.length})</p>
+          <div className="space-y-2">
+            {objections.map((objection) => (
+              <div
+                key={objection.id}
+                className="rounded-lg border border-[#FDE68A] bg-white/80 px-3 py-2"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-sm font-bold text-[#143A5A]">
+                    {objection.questionLabel}
+                  </span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs font-black ${
+                      objection.status === "reviewed"
+                        ? "bg-[#ECFDF5] text-[#047857]"
+                        : "bg-[#FEF3C7] text-[#B45309]"
+                    }`}
+                  >
+                    {objection.status === "reviewed" ? "تمت المراجعة ✓" : "قيد المراجعة"}
+                  </span>
+                </div>
+                {objection.reasons.length > 0 ? (
+                  <p className="mt-1 text-xs font-semibold text-[#B91C1C]">
+                    {objection.reasons.map(objectionReasonLabel).join(" · ")}
+                  </p>
+                ) : null}
+                {objection.note ? (
+                  <p className="mt-1 text-xs text-[#143A5A]">{objection.note}</p>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

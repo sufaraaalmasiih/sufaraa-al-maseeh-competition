@@ -24,7 +24,10 @@ export function FacilitatorAllTeamsPanel() {
   );
 
   const competitionStarted = status !== null && status !== "waiting_players";
-  const participatingCount = teams.filter((team) => participatingIds.has(team.teamId)).length;
+  // فريق «مشارك» = هناك مسابقة جارية وله بيانات مسابقة. بعد الإنهاء يصبح الجميع غير مشاركين.
+  const isParticipating = (teamId: string) =>
+    competitionStarted && participatingIds.has(teamId);
+  const participatingCount = teams.filter((team) => isParticipating(team.teamId)).length;
 
   return (
     <div className="facilitator-card">
@@ -60,7 +63,7 @@ export function FacilitatorAllTeamsPanel() {
             <p className="text-sm font-semibold text-[#64748B]">لا توجد فرق مسجّلة بعد.</p>
           ) : null}
           {teams.map((team) => {
-            const participating = participatingIds.has(team.teamId);
+            const participating = isParticipating(team.teamId);
             const open = expandedTeamId === team.teamId;
             return (
               <div

@@ -29,6 +29,7 @@ const ANSWERING_STATUS_MAP: Partial<Record<GameFlowStatus, AnsweringTimerMapping
  */
 export async function resetTimerForExceptionalReturn(
   status: GameFlowStatus,
+  force = false,
 ): Promise<void> {
   const mapping = ANSWERING_STATUS_MAP[status];
   if (!mapping) {
@@ -50,7 +51,8 @@ export async function resetTimerForExceptionalReturn(
     typeof timer.endsAtMs === "number" &&
     timer.endsAtMs > now;
 
-  if (stillRunningForStage) {
+  // force = إعادة فورية حتى لو كان المؤقت ما زال يعمل (زر الميسّر الصريح).
+  if (!force && stillRunningForStage) {
     return;
   }
 

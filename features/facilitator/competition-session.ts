@@ -11,17 +11,19 @@ import {
   query,
   runTransaction,
   serverTimestamp,
+  setDoc,
   updateDoc,
   type Timestamp,
 } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { getClientFirestore, firebaseAuth } from "@/firebase/firebaseClient";
-import { gameFlowRef, MAIN_COMPETITION_ID } from "@/firebase/firestore";
+import { competitionSessionRef, gameFlowRef, MAIN_COMPETITION_ID } from "@/firebase/firestore";
 import {
   fetchCompetitionMode,
   isTrainingMode,
 } from "@/features/facilitator/competition-mode";
-import { wipeTrainingCompetitionData } from "@/features/facilitator/training-mode-wipe";
+import { resetCompetition } from "@/features/gameflow/competition-reset";
+import { deleteTrainingObjections } from "@/features/facilitator/objections";
 import { writeTeamArchivesForSession } from "@/features/facilitator/use-team-archive";
 import type { FinalResultTeam } from "@/features/facilitator/use-final-results";
 import { subscribeFirestoreDoc } from "@/lib/firestore-listener";
@@ -436,9 +438,10 @@ export async function endCompetition(teams: FinalResultTeam[]): Promise<void> {
   const competitionMode = await fetchCompetitionMode();
 
   if (isTrainingMode(competitionMode)) {
-    // تدريب: لا أرشيف — تُمسح بيانات المسابقة مباشرة مع الإبقاء على الفرق والبنك.
-    await wipeTrainingCompetitionData();
+    // تدريب: لا أرشيف — تُحذف اعتراضات التدريب أيضاً.
+    await deleteTrainingObjections();
   } else {
+    // رسمية: تُحفظ النتائج في السجل (الاعتراضات تبقى مرتبطة بالسجل).
     const sessionId = await readActiveSessionId();
     if (sessionId) {
       await saveSessionResults(
@@ -450,8 +453,18 @@ export async function endCompetition(teams: FinalResultTeam[]): Promise<void> {
     }
   }
 
+  // بداية نظيفة كاملة كأن مسابقة جديدة: حذف الإجابات، تصفير الفرق،
+  // إرجاع gameFlow إلى waiting_players، وفصل السجل النشط.
+  await resetCompetition();
+
+  // تسجيل خروج كل الفرق (آليتان: teamSignOutAt + reauthEpoch) — يصبحون غير مشاركين
+  // حتى يعودوا ويسجّلوا الدخول من جديد.
+  await setDoc(
+    competitionSessionRef,
+    { reauthEpoch: Date.now(), updatedAt: serverTimestamp() },
+    { merge: true },
+  );
   await updateDoc(gameFlowRef, {
-    activeSessionId: null,
     teamSignOutAt: Date.now(),
     updatedAt: serverTimestamp(),
   });

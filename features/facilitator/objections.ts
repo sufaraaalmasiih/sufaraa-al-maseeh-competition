@@ -3,8 +3,10 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
+  getDocs,
   onSnapshot,
   orderBy,
   query,
@@ -122,6 +124,14 @@ export async function submitObjection(input: {
     createdAt: serverTimestamp(),
     createdAtMs: Date.now(),
   });
+}
+
+/** يحذف اعتراضات التدريب (التي لا ترتبط بسجل مسابقة رسمية). يُستدعى عند إنهاء تدريب. */
+export async function deleteTrainingObjections(): Promise<void> {
+  const snapshot = await getDocs(
+    query(objectionsCollection(), where("sessionId", "==", null)),
+  );
+  await Promise.all(snapshot.docs.map((document) => deleteDoc(document.ref)));
 }
 
 export async function markObjectionReviewed(id: string): Promise<void> {

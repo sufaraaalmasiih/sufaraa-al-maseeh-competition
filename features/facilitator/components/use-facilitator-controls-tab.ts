@@ -35,7 +35,7 @@ import type { GameFlowStatus } from "@/types";
 import type { TeamPlayer } from "@/types";
 
 export function useFacilitatorControlsTab() {
-  const { stage4QuestionCount } = useGameFlow();
+  const { stage4QuestionCount, status } = useGameFlow();
   const { teams, loading, error } = useStage1Ranking();
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [confirmRequest, setConfirmRequest] = useState<ControlsConfirmRequest | null>(null);
@@ -244,6 +244,18 @@ export function useFacilitatorControlsTab() {
         setToast("تم إرسال الفريق إلى الشاشة المختارة.");
       },
     });
+  }
+
+  async function requestResetTeamTimer() {
+    if (!status) {
+      return;
+    }
+    try {
+      await resetTimerForExceptionalReturn(status, true);
+      setToast("تم إعادة ضبط مؤقت المرحلة الحالية.");
+    } catch {
+      setToast("تعذّر إعادة ضبط المؤقت — تحقّق أنك في مرحلة إجابة.");
+    }
   }
 
   function requestClearOverride() {
@@ -460,6 +472,7 @@ export function useFacilitatorControlsTab() {
     requestSaveProfile,
     requestApplyOverride,
     requestClearOverride,
+    requestResetTeamTimer,
     requestToggleLock,
     requestResetTeamData,
     requestRemoveTeamFromCompetition,

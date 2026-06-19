@@ -96,6 +96,7 @@ export function FacilitatorControlsTab() {
             confirmRequest={controls.confirmRequest}
             onApplyOverride={controls.requestApplyOverride}
             onClearOverride={controls.requestClearOverride}
+            onResetTimer={controls.requestResetTeamTimer}
             onToggleLock={controls.requestToggleLock}
             onDeleteAnswers={controls.requestDeleteAnswers}
             onResetTeamData={controls.requestResetTeamData}
