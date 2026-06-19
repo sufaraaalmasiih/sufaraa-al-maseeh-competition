@@ -49,9 +49,10 @@ concurrent competitions).
   (tap to order), `missing` (ماذا ينقص), `fill_blank` (فراغات). Default +5 per correct.
 - **Stage 2 «فتّشوا الكتب»:** 4 fields, one player each — `matching` (توصيل, auto-split into rounds
   of max 5 pairs), `arrangeVerse` (رتّب الآية, **max 5 parts per question**), `completeVerse`
-  (أكمل الآية), `trueFalseCorrect` (صح/خطأ: the player taps the WRONG segment of the sentence and
-  types the correction; the facilitator grades it **5 + 5 + 5** = mark-wrong / identify-wrong-part /
-  approve-correction).
+  (أكمل الآية), `trueFalseCorrect` (صح/خطأ: the player taps the WRONG word(s) of the sentence and
+  types the correction). The 5+5+5 grade (mark-wrong / wrong-part / correction) is now **AUTOMATIC**
+  at submission — no facilitator step. The wrong-part match uses an optional `expectedWrongPart`
+  (the Excel `targetPart` column) and an Arabic-normalizing comparison.
 - **Stage 3 «على المحك»:** a Jeopardy board, **bank-driven**: columns = the categories present in
   the bank (up to **6**, with **custom names**), cells = each category's questions; the board
   scales to fit. Turn order by total score; owner answers first, others can steal. Scoring by
@@ -71,6 +72,13 @@ Two equivalent paths, both validated by the SAME validator + parser:
    type-aware form (add / edit / delete / reorder / **live preview** of what the player sees /
    per-question points / free-text category / accepted answers). Works in the same "row space" as
    Excel, so it reuses `parseWorkbookRowsToBank` + `validateQuestionBankRows`.
+- **Per-question points** are editable in the editor for ALL stages (default-override; stage-1/3/4
+  and stage-2 matching/arrange/complete; stage-2 «صح أو خطأ» keeps 5+5+5). Each question shows its
+  points as a badge. Points are clamped to the 100 security cap.
+- The downloadable official template is **empty** (headers + blank rows + README/Lists/أمثلة sheets,
+  no pre-filled questions). There is also a **ready 150-question Bible bank** download
+  (`/templates/sufaraa-bible-bank.xlsx`, 60/40/30/20). Any archived import can be set as the active
+  bank via «اجعله البنك الحالي».
 - Editing the bank is locked while a competition is running.
 
 ## 6) Security rules (CRITICAL constraint)
@@ -114,6 +122,8 @@ Two equivalent paths, both validated by the SAME validator + parser:
 
 ## 9) Operational notes / gotchas
 - Keep the **facilitator window open** during a competition (it drives automation).
+- The normal stage-advance button is **hard-blocked until all teams are ready**; the ONLY way to
+  force-advance (e.g. an absent team) is the «تحكم يدوي متقدم» control, which bypasses readiness.
 - After changing `firestore.rules`, the USER must publish them (you can't).
 - Fully deleting a team's login account needs `FIREBASE_SERVICE_ACCOUNT` set on Vercel; otherwise
   only Firestore data is deleted.
