@@ -387,7 +387,7 @@ export function useFacilitatorControlsTab() {
         setToast(
           result.authDeleted
             ? "تم حذف الفريق بالكامل من المسابقة وحساب الدخول."
-            : "تم حذف بيانات الفريق من المسابقة. لحذف حساب الدخول أيضاً، أضف FIREBASE_SERVICE_ACCOUNT في Vercel.",
+            : "تم حذف بيانات الفريق من المسابقة. لحذف حساب الدخول أيضاً، أضف FIREBASE_SERVICE_ACCOUNT على Vercel.",
         );
       },
     });
