@@ -62,9 +62,6 @@ interface FacilitatorControlsTeamActionsPanelProps {
   onDeleteAnswers: () => void;
   onResetTeamData: () => void;
   onRemoveTeamFromCompetition: () => void;
-  onDeleteTeamCompletely: () => void;
-  /** حذف الفريق بالكامل (حذف حساب Firebase) — للمشرف العام فقط. */
-  canDeleteCompletely?: boolean;
 }
 
 export function FacilitatorControlsTeamActionsPanel({
@@ -94,8 +91,6 @@ export function FacilitatorControlsTeamActionsPanel({
   onDeleteAnswers,
   onResetTeamData,
   onRemoveTeamFromCompetition,
-  onDeleteTeamCompletely,
-  canDeleteCompletely = false,
 }: FacilitatorControlsTeamActionsPanelProps) {
   const answersTableRef = useRef<HTMLDivElement | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -382,7 +377,7 @@ export function FacilitatorControlsTeamActionsPanel({
         <p className="facilitator-card__desc">
           «إخراج من المسابقة» يزيل الفريق من اللعب الحالي فقط دون حذف حساب الدخول
           (يمكنه العودة لاحقاً). «حذف بيانات الفريق» يحذف النقاط والتقدم والإجابات
-          مع إبقاء الحساب. «حذف الفريق بالكامل» يحذف كل شيء بما فيه حساب الدخول.
+          مع إبقاء الحساب.
         </p>
         <div className="facilitator-timer__buttons">
           <button
@@ -403,23 +398,10 @@ export function FacilitatorControlsTeamActionsPanel({
             <RotateCcw className="h-4 w-4" aria-hidden />
             حذف بيانات الفريق المختار
           </button>
-          {canDeleteCompletely ? (
-            <button
-              type="button"
-              className="facilitator-btn facilitator-btn--danger"
-              disabled={confirmRequest !== null}
-              onClick={onDeleteTeamCompletely}
-            >
-              <Trash2 className="h-4 w-4" aria-hidden />
-              حذف الفريق بالكامل
-            </button>
-          ) : null}
         </div>
-        {!canDeleteCompletely ? (
-          <p className="mt-1 text-xs text-[#64748B]">
-            «حذف الفريق بالكامل» (حذف الحساب نهائياً) متاح للمشرف العام فقط.
-          </p>
-        ) : null}
+        <p className="mt-1 text-xs text-[#64748B]">
+          «حذف الفريق بالكامل» (حذف الحساب نهائياً) أصبح في تبويب «الإدارة».
+        </p>
       </div>
     </div>
   );

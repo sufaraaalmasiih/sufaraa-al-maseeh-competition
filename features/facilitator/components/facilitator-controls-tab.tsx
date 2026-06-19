@@ -7,16 +7,12 @@ import { FacilitatorControlsGlobalLocksPanel } from "@/features/facilitator/comp
 import { FacilitatorControlsSessionLogPanel } from "@/features/facilitator/components/facilitator-controls-session-log-panel";
 import { FacilitatorControlsTeamActionsPanel } from "@/features/facilitator/components/facilitator-controls-team-actions-panel";
 import { FacilitatorControlsTeamPicker } from "@/features/facilitator/components/facilitator-controls-team-picker";
-import { FacilitatorControlsTeamProfilePanel } from "@/features/facilitator/components/facilitator-controls-team-profile-panel";
 import { FacilitatorObjectionsPanel } from "@/features/facilitator/components/facilitator-objections-panel";
 import { TeamArchivePanel } from "@/features/facilitator/components/team-archive-panel";
 import { useFacilitatorControlsTab } from "@/features/facilitator/components/use-facilitator-controls-tab";
-import { useAuthRole } from "@/hooks/use-auth-role";
 
 export function FacilitatorControlsTab() {
   const controls = useFacilitatorControlsTab();
-  const { role } = useAuthRole();
-  const isSuperAdmin = role === "super_admin";
 
   if (controls.loading) {
     return <LoadingState variant="page" />;
@@ -56,24 +52,6 @@ export function FacilitatorControlsTab() {
 
       {controls.selectedTeam ? (
         <>
-          <FacilitatorControlsTeamProfilePanel
-            profileLoading={controls.profileLoading}
-            adminLoading={controls.adminLoading}
-            profileError={controls.profileError}
-            teamName={controls.teamName}
-            onTeamNameChange={controls.setTeamName}
-            governorate={controls.governorate}
-            onGovernorateChange={controls.setGovernorate}
-            accountEmail={controls.accountEmail}
-            onAccountEmailChange={controls.setAccountEmail}
-            accountPassword={controls.accountPassword}
-            onAccountPasswordChange={controls.setAccountPassword}
-            playerNames={controls.playerNames}
-            onPlayerNamesChange={controls.setPlayerNames}
-            confirmRequest={controls.confirmRequest}
-            onSaveProfile={controls.requestSaveProfile}
-          />
-
           <FacilitatorControlsTeamActionsPanel
             selectedTeamName={controls.selectedTeam.teamName}
             override={controls.override}
@@ -101,8 +79,6 @@ export function FacilitatorControlsTab() {
             onDeleteAnswers={controls.requestDeleteAnswers}
             onResetTeamData={controls.requestResetTeamData}
             onRemoveTeamFromCompetition={controls.requestRemoveTeamFromCompetition}
-            onDeleteTeamCompletely={controls.requestDeleteTeamCompletely}
-            canDeleteCompletely={isSuperAdmin}
           />
 
           <TeamArchivePanel
