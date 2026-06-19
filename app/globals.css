@@ -6455,8 +6455,29 @@
 
   .flow-teams-table th,
   .flow-teams-table td {
-    overflow-wrap: anywhere;
-    word-break: break-word;
+    /* لا تكسر الكلمة العربية في منتصفها — اكسر عند المسافات فقط. */
+    overflow-wrap: break-word;
+    word-break: normal;
+    vertical-align: middle;
+  }
+
+  .flow-teams-table__team {
+    white-space: normal;
+    line-height: 1.35;
+    font-weight: 800;
+    color: #143a5a;
+  }
+
+  /* أعمدة الرقم/المحافظة/الجاهزية مدمجة حتى يأخذ اسم الفريق المساحة الأكبر. */
+  .flow-teams-table th:first-child,
+  .flow-teams-table td:first-child {
+    width: 2.5rem;
+  }
+
+  .flow-teams-table__gov {
+    white-space: nowrap;
+    color: rgba(20, 58, 90, 0.6);
+    font-size: 0.8rem;
   }
 
   .flow-teams-table thead {

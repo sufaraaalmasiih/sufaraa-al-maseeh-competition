@@ -62,6 +62,8 @@ interface FacilitatorControlsTeamActionsPanelProps {
   onResetTeamData: () => void;
   onRemoveTeamFromCompetition: () => void;
   onDeleteTeamCompletely: () => void;
+  /** حذف الفريق بالكامل (حذف حساب Firebase) — للمشرف العام فقط. */
+  canDeleteCompletely?: boolean;
 }
 
 export function FacilitatorControlsTeamActionsPanel({
@@ -91,6 +93,7 @@ export function FacilitatorControlsTeamActionsPanel({
   onResetTeamData,
   onRemoveTeamFromCompetition,
   onDeleteTeamCompletely,
+  canDeleteCompletely = false,
 }: FacilitatorControlsTeamActionsPanelProps) {
   const answersTableRef = useRef<HTMLDivElement | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -387,16 +390,23 @@ export function FacilitatorControlsTeamActionsPanel({
             <RotateCcw className="h-4 w-4" aria-hidden />
             حذف بيانات الفريق المختار
           </button>
-          <button
-            type="button"
-            className="facilitator-btn facilitator-btn--danger"
-            disabled={confirmRequest !== null}
-            onClick={onDeleteTeamCompletely}
-          >
-            <Trash2 className="h-4 w-4" aria-hidden />
-            حذف الفريق بالكامل
-          </button>
+          {canDeleteCompletely ? (
+            <button
+              type="button"
+              className="facilitator-btn facilitator-btn--danger"
+              disabled={confirmRequest !== null}
+              onClick={onDeleteTeamCompletely}
+            >
+              <Trash2 className="h-4 w-4" aria-hidden />
+              حذف الفريق بالكامل
+            </button>
+          ) : null}
         </div>
+        {!canDeleteCompletely ? (
+          <p className="mt-1 text-xs text-[#64748B]">
+            «حذف الفريق بالكامل» (حذف الحساب نهائياً) متاح للمشرف العام فقط.
+          </p>
+        ) : null}
       </div>
     </div>
   );

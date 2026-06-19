@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CreateFacilitatorForm } from "@/features/auth/components/create-facilitator-form";
 import { CompetitionResetPanel } from "@/features/gameflow/components/competition-reset-panel";
 import { FacilitatorStaffPanel } from "@/features/facilitator/components/facilitator-staff-panel";
+import { FacilitatorAllTeamsPanel } from "@/features/facilitator/components/facilitator-all-teams-panel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -27,6 +28,8 @@ export function FacilitatorAdminTab() {
           ) : null}
         </CardContent>
       </Card>
+
+      <FacilitatorAllTeamsPanel />
 
       <CompetitionResetPanel />
     </div>

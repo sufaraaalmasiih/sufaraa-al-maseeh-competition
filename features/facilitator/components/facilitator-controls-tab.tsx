@@ -11,9 +11,12 @@ import { FacilitatorControlsTeamProfilePanel } from "@/features/facilitator/comp
 import { FacilitatorObjectionsPanel } from "@/features/facilitator/components/facilitator-objections-panel";
 import { TeamArchivePanel } from "@/features/facilitator/components/team-archive-panel";
 import { useFacilitatorControlsTab } from "@/features/facilitator/components/use-facilitator-controls-tab";
+import { useAuthRole } from "@/hooks/use-auth-role";
 
 export function FacilitatorControlsTab() {
   const controls = useFacilitatorControlsTab();
+  const { role } = useAuthRole();
+  const isSuperAdmin = role === "super_admin";
 
   if (controls.loading) {
     return <LoadingState variant="page" />;
@@ -98,6 +101,7 @@ export function FacilitatorControlsTab() {
             onResetTeamData={controls.requestResetTeamData}
             onRemoveTeamFromCompetition={controls.requestRemoveTeamFromCompetition}
             onDeleteTeamCompletely={controls.requestDeleteTeamCompletely}
+            canDeleteCompletely={isSuperAdmin}
           />
 
           <TeamArchivePanel
