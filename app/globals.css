@@ -2739,8 +2739,15 @@
       inset 0 1px 0 rgba(255, 255, 255, 0.5);
   }
 
+  /* hover: تمييز خفيف بالإطار والظل فقط — بلا تبييض كامل وبلا تكبير
+     (حتى لا يختفي نص البطاقة المختارة الداكنة، ولا يقفز حجمها). */
   .matching-card:hover:not(:disabled) {
-    @apply -translate-y-1 border-[#2388C4]/40 bg-white shadow-[0_12px_28px_rgba(35,136,196,0.22)];
+    @apply border-[#2388C4]/55 shadow-[0_10px_24px_rgba(35,136,196,0.18)];
+  }
+
+  /* البطاقة المختارة الداكنة عند المرور عليها تبقى داكنة وواضحة. */
+  .matching-card-selected:hover:not(:disabled) {
+    @apply border-slate-600 shadow-[0_12px_28px_rgba(15,23,42,0.32)];
   }
 
   .matching-card:active:not(:disabled) {
