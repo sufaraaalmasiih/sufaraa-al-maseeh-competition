@@ -58,7 +58,9 @@ function TeamShellAuthenticated() {
       return;
     }
 
-    if (isCoachDashboardPreferred() && (status === "waiting_players" || status === null)) {
+    // وضع المدرب يبقى على لوحته في كل الحالات (وليس فقط الانتظار) — حتى لا يدخل
+    // شاشة اللعب أثناء المسابقة. (ردع فقط؛ المنع الكامل يحتاج حساب مدرب منفصل.)
+    if (isCoachDashboardPreferred()) {
       router.replace("/coach");
     }
   }, [router, status, viewPlayer]);
