@@ -31,6 +31,7 @@
 20. [مهام معلقة](#20-مهام-معلقة)
 21. [سياق المحادثات الأخيرة](#21-سياق-المحادثات-الأخيرة)
 22. [كيف تبدأ AI جديدة](#22-كيف-تبدأ-ai-جديدة)
+23. [تحديثات يونيو 2026 — الدفعة الكبيرة](#23-تحديثات-يونيو-2026--الدفعة-الكبيرة-21-تعديل--اعتراضات--تحصين) ⭐ **اقرأه لمعرفة الحالة الحالية**
 
 ---
 
@@ -752,10 +753,13 @@ All use fingerprint refs to avoid duplicate writes from multiple facilitator tab
 - [x] editLogEntries cap (`MAX_EDIT_LOG_ENTRIES = 150`)
 - [ ] viewer role login path or removal
 - [ ] Team password change via Admin SDK
-- [ ] Excel export for final results
+- [x] Excel export for final results (`exportFinalResultsExcel` — تبويب النتائج)
 - [ ] Fix readiness field inconsistency (stage1 vs stage1Intro)
 - [ ] Audience coverage for more statuses (currently many placeholders)
 - [ ] README.md pointing to this file
+- [ ] **انشر `firestore.rules`** بعد كل تعديل (الآن: objections + teamArchives)
+- [ ] تشغيل اختبارات القواعد (`npm run test:rules`) يتطلب JDK 21+
+- [ ] (اختياري) مؤشّر «سؤال جماعي» مرئي للفرق/الجمهور في م3
 
 ---
 
@@ -783,6 +787,73 @@ All use fingerprint refs to avoid duplicate writes from multiple facilitator tab
 ```
 
 **Golden rule:** `gameFlow.status` drives all screens. Start there.
+
+---
+
+## 23. تحديثات يونيو 2026 — الدفعة الكبيرة (21 تعديل + اعتراضات + تحصين)
+
+> **اقرأ هذا القسم بعد §1–§22 لفهم الحالة الحالية.** ما يلي يُكمّل/يُعدّل الأقسام السابقة.
+
+### 23.1 الترتيب والتعادل (النقطتان 1،2)
+- **ملف جديد:** `lib/competition-rank-assignment.ts` — `assignCompetitionRanks` (مراكز مشتركة 1,1,3) + `compareFinishSpeed`.
+- كل `*-ranking.ts` + `use-final-results.ts` + `use-live-results.ts` تكسر التعادل بـ **من أنهى أسرع** (`progress.stageNFinishedAtMs`) ثم الاسم كحل أخير.
+- **حقول teamState جديدة:** `progress.stage1FinishedAtMs` … `stage4FinishedAtMs` (تُكتب في كل confirm عبر `getSyncedNowMs()`).
+
+### 23.2 المرحلة 2 (النقاط 3–7)
+- ألوان التوصيل: `pair-0` صار **teal** (لا أزرق)، والبطاقة المختارة **رمادية داكنة عالية التباين** (`globals.css`).
+- جدول الميسّر بلا scroll أفقي (`.flow-teams-table-wrap`).
+- **نقاط جزئية لصح/خطأ:** عبارة صحيحة + «صح» = +15 فوراً؛ عبارة خاطئة + «خطأ» = **تحكيم الميسّر** على 3 خطوات (5+5+5).
+  - **ملف جديد:** `features/stage2/grade-stage2-true-false-answer.ts` (`setStage2TrueFalseGradeStep`, `finalizeStage2TrueFalseGrading`).
+  - **لوحة جديدة:** `features/stage2/components/stage2-true-false-grading-panel.tsx` (داخل `stage2-facilitator-panel.tsx`).
+  - حقول answer جديدة: `facilitatorMarkedWrong`, `wrongPartIdentified`, `correctionApproved`, `needsGrading`, `gradingComplete`, `statementIsTrue`.
+
+### 23.3 جولات التوصيل + مرونة Excel (النقاط 5،18،20)
+- `MAX_MATCHING_PAIRS_PER_SCREEN = 5` في `question-bank-workbook-parser.ts` — أسئلة التوصيل >5 أزواج **تُقسَّم تلقائياً** لجولات (id يصبح `base-r1`, `base-r2`...).
+- تغيير عمود `stage` ينقل السؤال بين المراحل (m1↔m3↔m4؛ m2 منفصل بأنواعه).
+- اختبار: `features/facilitator/question-bank-workbook-parser.test.ts`.
+- **تحذيرات:** عند الاستيراد إذا حقل/مرحلة فارغة (يظهر mock) + في الإعدادات عند تجاوز displayCount حجم البنك/لوحة الـ30.
+
+### 23.4 المرحلة 3 (النقاط 8،14،15)
+- **انتهاء وقت الاختيار يظهر للفريق والجمهور** (`stage3-team-reveal-screen.tsx` يستقبل `ownerTeamName`).
+- **الأسئلة الزائدة الجماعية:** أسئلة لا تقسم على عدد الفرق تصبح جماعية بنقاط مسطّحة بلا أفضلية. منطق في `stage3-scoring.ts` (`getStage3LeftoverCount`, `isStage3CollectiveSelection`, `computeStage3PointsDelta(...collective)`)، علم `gameFlow.stage3ActiveQuestionCollective` يُضبط في `open-stage3-question.ts` ويُقرأ في `confirm-stage3-answer.ts`.
+
+### 23.5 الأتمتة والتوقيت (النقاط 9،10،16)
+- **المرحلة 4 مؤتمتة بالكامل** (مثل م3): فتح/إجابة/إغلاق/إعلان/انتقال على المؤقت. `facilitator-stage4-automation.tsx` + `features/gameflow/stage4-phase-timer.ts`؛ المؤقتات تُكتب في `start-stage4.ts`, `advance-stage4-question.ts`, `start-stage4-reveal.ts`.
+- **مدد م4 الجديدة:** `stage4Selection`, `stage4Reveal` في `facilitator-timer-settings.ts` + تبويب الإعدادات.
+- **العودة الاستثنائية تعيد المؤقت:** `features/facilitator/reset-timer-for-override.ts` (مُستدعى في `use-facilitator-controls-tab.ts`).
+
+### 23.6 دورة حياة المسابقة (النقاط 11،12،21)
+- **زر «إنهاء المسابقة»** في `final_results`/`podium` (`facilitator-flow-panel.tsx`) → `endCompetition()` في `competition-session.ts`: يؤرشف (رسمي) أو يمسح (تدريب) + يضبط `gameFlow.teamSignOutAt` لتسجيل خروج كل الفرق (`team-shell.tsx` يستمع له ويعيد لـ `/login`).
+- **«إخراج من المسابقة»** (زر ثالث) = `removeTeamFromCompetition` (لا يحذف الحساب).
+- **حوار البدء الجديد:** مسابقة رسمية / تدريب فقط (بلا نسخة/محافظة) — `facilitator-session-start-dialog.tsx`؛ `createCompetitionSession` يقبل قيماً افتراضية.
+
+### 23.7 الأرشيف لكل فريق + الخصوصية (النقطة 13)
+- **مجموعة Firestore جديدة:** `competitions/main/teamArchives/{sessionId}__{teamId}` — نسخة أرشيف لكل فريق (خصوصية). تُكتب في `saveSessionResults` عبر `writeTeamArchivesForSession` (في `use-team-archive.ts`).
+- `history` عاد **للميسّر فقط**؛ الفريق يقرأ `teamArchives` الخاصة به.
+- مكوّن `team-archive-panel.tsx` يُعرض في الميسّر/المدرب/شاشة انتظار الفريق (المستمعات **كسولة — تعمل عند الفتح فقط** لتوفير الباقة المجانية).
+
+### 23.8 ميزة الاعتراضات (المدرب)
+- **مجموعة جديدة:** `competitions/main/objections/{id}` — `features/facilitator/objections.ts` (`submitObjection`, `markObjectionReviewed`, `useObjections`, `useTeamObjections`).
+- المدرب يعترض على سؤال (أسباب شائعة: المرجع/إملائي/سؤال خاطئ + نص اختياري) من `coach-objection-form.tsx`؛ تظهر للميسّر في `facilitator-objections-panel.tsx` (تبويب التحكم) وتُحفظ في أرشيف الفريق وأرشيف المسابقة.
+
+### 23.9 الجمهور (النقطة 17)
+- وضع ملء الشاشة يوسّع كل حاويات محتوى الجمهور لتملأ 100% (`html.audience-fullscreen-mode` في `globals.css`).
+
+### 23.10 حقول/مجموعات Firestore الجديدة (ملخّص)
+- `gameFlow`: `teamSignOutAt`, `stage3ActiveQuestionCollective`, `competitionMode`, `trainingEndsAtMs`, durations `stage4Selection`/`stage4Reveal`.
+- `teamStates.progress`: `stageNFinishedAtMs`.
+- `answers` (stage2 trueFalseCorrect): حقول التحكيم الخمسة.
+- مجموعات جديدة: `teamArchives`, `objections`.
+- **`firestore.rules` مُحدّثة** (objections, teamArchives privacy, history facilitator-only) — **يجب نشرها:** `npm run firebase:deploy:rules`.
+
+### 23.11 الاختبارات والتوثيق
+- `npm test` → 108 اختبار (منطق + محاكاة `features/__sim__/competition-simulation.test.ts` بأعداد فرق 3–40).
+- `npm run test:rules` → اختبارات أمان القواعد عبر Emulator (يتطلب **JDK 21+**؛ محلي، بلا استهلاك حصة). انظر `tests/README.md`.
+- `TRAINING-MODE-TEST-CHECKLIST.md` — فحص يدوي للتدفّقات الحيّة قبل أي مسابقة رسمية.
+
+### 23.12 قرارات/قيود
+- **مسابقة واحدة في آن** (المعرّف `main` ثابت) — **مقصود ومقبول** (المالك يُقيم مسابقات متتالية لا متزامنة). لا تقترح refactor لمسابقات متزامنة.
+- اختبارات تكامل الـ Emulator هي الفجوة المتبقّية الوحيدة (تحتاج JDK 21+ لتشغيلها).
 
 ---
 
