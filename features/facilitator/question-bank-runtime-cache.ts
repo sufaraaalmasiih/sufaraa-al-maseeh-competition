@@ -152,6 +152,11 @@ export function getAuthoritativeStage2TrueFalseQuestion(
   return questions.find((question) => question.id === questionId) ?? null;
 }
 
+/** كل أسئلة المرحلة 3 المخزَّنة (للوحة الديناميكية) — البيانات الوصفية فقط تُستخدم. */
+export function getRuntimeStage3Questions(): Stage3BankQuestion[] {
+  return stage3Raw ? Object.values(stage3Raw) : [];
+}
+
 export function getRuntimeStage3Question(questionId: string): Stage3BankQuestion | null {
   if (!stage3Raw) {
     return null;

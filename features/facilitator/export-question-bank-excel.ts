@@ -142,7 +142,7 @@ function buildStage3Rows(payload: FullQuestionBankPayload): ExportRow[] {
       id: str(q.id),
       stage: "stage3",
       type: str(q.type),
-      category: str(q.fieldId),
+      category: str(q.fieldLabel) || str(q.fieldId),
       level: str(q.difficulty),
       question: str(q.prompt),
       correct: str(q.correctAnswer),

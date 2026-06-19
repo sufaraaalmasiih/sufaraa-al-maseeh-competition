@@ -206,7 +206,7 @@ export function blankItem(stage: AdminStageKey): EditorItem {
       { left: "", correctRight: "" },
     ],
     data: "",
-    category: stage === "stage3" ? STAGE3_FIELD_KEYS[0] : "",
+    category: stage === "stage3" ? STAGE3_FIELD_LABELS[STAGE3_FIELD_KEYS[0]] : "",
     level: stage === "stage3" ? STAGE3_LEVELS[0] : "",
     correctIsTrue: true,
     acceptedAnswers: [],
@@ -404,7 +404,7 @@ export function payloadToEditorItems(payload: FullQuestionBankPayload): EditorIt
       imageUrl: String(q.imageUrl ?? ""),
       options: arr(q.options).length > 0 ? arr(q.options) : ["", ""],
       parts: parts.length > 0 ? parts : ["", ""],
-      category: String(q.fieldId ?? STAGE3_FIELD_KEYS[0]),
+      category: String(q.fieldLabel ?? q.fieldId ?? STAGE3_FIELD_LABELS[STAGE3_FIELD_KEYS[0]]),
       level: String(q.difficulty ?? STAGE3_LEVELS[0]),
       points:
         typeof q.points === "number"

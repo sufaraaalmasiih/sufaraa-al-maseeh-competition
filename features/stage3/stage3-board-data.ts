@@ -79,3 +79,61 @@ export const STAGE3_BOARD_FIELDS: Stage3BoardField[] =
 
 export const STAGE3_BOARD_QUESTION_COUNT =
   STAGE3_BOARD_FIELDS.length * STAGE3_FIELD_DIFFICULTY_SEQUENCE.length;
+
+/** أقصى عدد مجالات (أعمدة) في لوحة المرحلة 3 — التصميم يتكيّف من 1 إلى 6. */
+export const STAGE3_MAX_FIELDS = 6;
+
+interface Stage3BankFieldInput {
+  id: string;
+  fieldId: string;
+  fieldLabel: string;
+  difficulty: Stage3Difficulty;
+  questionNumber: number;
+}
+
+/**
+ * يبني أعمدة اللوحة من أسئلة البنك الفعلية: يجمّعها حسب المجال (fieldId) بترتيب
+ * أول ظهور، يستخدم الاسم المخصّص (fieldLabel)، حتى 6 مجالات، وكل مجال يعرض ما له
+ * من خلايا مرتّبة برقم السؤال. هكذا تتكيّف اللوحة (تصغر/تكبر) مع محتوى البنك.
+ */
+export function buildStage3BoardFields(
+  questions: Stage3BankFieldInput[],
+): Stage3BoardField[] {
+  const order: string[] = [];
+  const byField = new Map<string, { label: string; questions: Stage3BoardQuestion[] }>();
+
+  for (const question of questions) {
+    const key = question.fieldId;
+    if (!key) {
+      continue;
+    }
+    if (!byField.has(key)) {
+      if (order.length >= STAGE3_MAX_FIELDS) {
+        continue;
+      }
+      order.push(key);
+      byField.set(key, { label: question.fieldLabel || key, questions: [] });
+    }
+    const entry = byField.get(key);
+    if (!entry) {
+      continue;
+    }
+    if (!entry.label && question.fieldLabel) {
+      entry.label = question.fieldLabel;
+    }
+    entry.questions.push({
+      id: question.id,
+      fieldKey: key,
+      number: question.questionNumber,
+      difficulty: question.difficulty,
+      difficultyLabel: STAGE3_DIFFICULTY_LABELS[question.difficulty],
+      scorePreview: STAGE3_SCORE_PREVIEW_BY_DIFFICULTY[question.difficulty],
+    });
+  }
+
+  return order.map((key) => {
+    const entry = byField.get(key);
+    const list = entry ? [...entry.questions].sort((a, b) => a.number - b.number) : [];
+    return { key, label: entry?.label || key, questions: list };
+  });
+}

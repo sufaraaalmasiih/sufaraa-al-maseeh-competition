@@ -366,19 +366,20 @@ function QuestionForm({ item, disabled, onPatch }: QuestionFormProps) {
 
       {item.stage === "stage3" ? (
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <Labeled label="المجال">
-            <select
+          <Labeled label="اسم المجال (اكتب أي اسم — حتى 6 مجالات)">
+            <input
               className={inputClass}
+              list="stage3-field-suggestions"
               disabled={disabled}
+              placeholder="مثال: شخصيات"
               value={item.category}
               onChange={(event) => onPatch({ category: event.target.value })}
-            >
+            />
+            <datalist id="stage3-field-suggestions">
               {STAGE3_FIELD_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
+                <option key={option.value} value={option.label} />
               ))}
-            </select>
+            </datalist>
           </Labeled>
           <Labeled label="المستوى">
             <select

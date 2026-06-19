@@ -5,11 +5,14 @@ import { SuccessParticles } from "@/components/ui/game-ready-button";
 import {
   STAGE3_BOARD_FIELDS,
   STAGE3_BOARD_TITLE,
+  buildStage3BoardFields,
   type Stage3BoardQuestion,
   type Stage3Difficulty,
 } from "@/features/stage3/stage3-board-data";
 import { STAGE3_NAME } from "@/features/stage3/stage3-constants";
 import { STAGE3_DIFFICULTY_LABELS } from "@/features/stage3/stage3-question-types";
+import { getRuntimeStage3Questions } from "@/features/facilitator/question-bank-runtime-cache";
+import { useQuestionBankRuntimeSync } from "@/features/facilitator/question-bank-runtime";
 
 export type Stage3BoardVariant = "team" | "audience" | "facilitator";
 
@@ -50,6 +53,13 @@ export function Stage3Board({
 }: Stage3BoardProps) {
   const isPresentation = variant === "audience";
 
+  // اللوحة تتبع البنك: المجالات وأسماؤها وعدد الخلايا من أسئلة المرحلة 3 المخزَّنة،
+  // مع رجوع آمن للوحة الافتراضية (5 مجالات) إن لم يُرفع بنك مخصّص.
+  useQuestionBankRuntimeSync();
+  const bankQuestions = getRuntimeStage3Questions();
+  const dynamicFields = buildStage3BoardFields(bankQuestions);
+  const fields = dynamicFields.length > 0 ? dynamicFields : STAGE3_BOARD_FIELDS;
+
   return (
     <div
       className={[
@@ -75,8 +85,11 @@ export function Stage3Board({
       ) : null}
 
       <div className="stage3-board-body">
-        <div className="stage3-jeopardy-board">
-        {STAGE3_BOARD_FIELDS.map((field) => (
+        <div
+          className="stage3-jeopardy-board"
+          style={{ "--stage3-cols": fields.length } as React.CSSProperties}
+        >
+        {fields.map((field) => (
           <CategoryColumn
             key={field.key}
             label={field.label}

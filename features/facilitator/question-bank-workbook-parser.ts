@@ -105,9 +105,12 @@ function unifiedRowToLegacyStage1Row(row: Record<string, unknown>): Record<strin
   };
 }
 
-function buildStage3Question(row: Record<string, unknown>): Stage3BankQuestion | null {
+function buildStage3Question(
+  row: Record<string, unknown>,
+  fieldId: string,
+  fieldLabel: string,
+): Stage3BankQuestion | null {
   const type = normalizeStage3ExcelType(row.type ?? row.typename);
-  const fieldId = normalizeStage3Field(row.category);
   const difficulty = normalizeStage3Level(row.level);
   const id = trim(row.id);
   const prompt = trim(row.question) || trim(row.prompt);
@@ -121,7 +124,6 @@ function buildStage3Question(row: Record<string, unknown>): Stage3BankQuestion |
     return null;
   }
 
-  const fieldLabel = STAGE3_FIELD_LABELS[fieldId];
   const numberMatch = id.match(/_q(\d+)$/);
   const questionNumber = numberMatch ? Number(numberMatch[1]) : 1;
 
@@ -131,6 +133,40 @@ function buildStage3Question(row: Record<string, unknown>): Stage3BankQuestion |
     fieldLabel,
     difficulty,
     questionNumber,
+  };
+}
+
+/**
+ * يخصّص مفتاحاً ثابتاً لكل اسم مجال (حتى 6 مجالات). يستخدم المفتاح المعروف إن طابق
+ * أحد المجالات الافتراضية، وإلا مفتاحاً عاماً field{n} — فيُسمح بأسماء مجالات مخصّصة.
+ */
+function buildStage3FieldKeyResolver() {
+  const STAGE3_MAX_FIELDS = 6;
+  const categoryKeys = new Map<string, string>();
+  const usedKeys = new Set<string>();
+  let extra = 0;
+
+  return function resolve(rawCategory: string): string | null {
+    const existing = categoryKeys.get(rawCategory);
+    if (existing) {
+      return existing;
+    }
+    if (categoryKeys.size >= STAGE3_MAX_FIELDS) {
+      return null;
+    }
+    const known = normalizeStage3Field(rawCategory);
+    let key: string;
+    if (known && !usedKeys.has(known)) {
+      key = known;
+    } else {
+      do {
+        extra += 1;
+        key = `field${extra}`;
+      } while (usedKeys.has(key));
+    }
+    categoryKeys.set(rawCategory, key);
+    usedKeys.add(key);
+    return key;
   };
 }
 
@@ -423,8 +459,18 @@ export function parseWorkbookRowsToBank(rows: Record<string, unknown>[]): FullQu
   const stage1 = parseStage1RowsToQuestions(stage1Rows.map(unifiedRowToLegacyStage1Row));
 
   const stage3: Record<string, Stage3BankQuestion> = {};
+  const resolveStage3FieldKey = buildStage3FieldKeyResolver();
   stage3Rows.forEach((row) => {
-    const question = buildStage3Question(row);
+    const rawCategory = trim(row.category);
+    if (!rawCategory) {
+      return;
+    }
+    const fieldKey = resolveStage3FieldKey(rawCategory);
+    if (!fieldKey) {
+      return; // تجاوز حدّ 6 مجالات
+    }
+    // الاسم المعروض = نص المجال كما كتبه المنظِّم (يدعم الأسماء المخصّصة).
+    const question = buildStage3Question(row, fieldKey, rawCategory);
     if (question) {
       stage3[question.id] = question;
     }

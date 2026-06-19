@@ -1,8 +1,6 @@
 import type { AdminStageKey } from "@/features/facilitator/facilitator-team-admin";
 import { getStageDisplayLabel } from "@/features/facilitator/question-display-settings";
 import {
-  STAGE3_FIELD_KEYS,
-  STAGE3_FIELD_LABELS,
   STAGE3_LEVEL_LABELS,
   STAGE3_LEVELS,
   getArabicLabelForExcelType,
@@ -145,21 +143,6 @@ function collectTypeWarnings(
   }
 }
 
-function normalizeStage3Field(value: unknown): (typeof STAGE3_FIELD_KEYS)[number] | null {
-  const raw = trim(value);
-  if (!raw) {
-    return null;
-  }
-  const compact = raw.replace(/\s+/g, "");
-  const byKey = STAGE3_FIELD_KEYS.find((key) => key === raw || key === compact);
-  if (byKey) {
-    return byKey;
-  }
-  const byLabel = STAGE3_FIELD_KEYS.find(
-    (key) => STAGE3_FIELD_LABELS[key] === raw || STAGE3_FIELD_LABELS[key].replace(/\s+/g, "") === compact,
-  );
-  return byLabel ?? null;
-}
 
 function normalizeStage3Level(value: unknown): (typeof STAGE3_LEVELS)[number] | null {
   const raw = trim(value);
@@ -388,6 +371,7 @@ export function validateQuestionBankRows(
     stage4: {},
   };
   const seenIds = new Map<string, number>();
+  const stage3Categories = new Set<string>();
   let validCount = 0;
 
   rows.forEach((row, index) => {
@@ -450,16 +434,27 @@ export function validateQuestionBankRows(
     }
 
     if (stage === "stage3") {
-      const field = normalizeStage3Field(row.category);
+      const categoryText = trim(row.category);
       const level = normalizeStage3Level(row.level);
-      if (!field) {
+      if (!categoryText) {
         pushError(
           errors,
           rowNumber,
           row,
           "المجال",
-          "المرحلة الثالثة تحتاج مجالاً صالحاً (شخصيات، معجزات، أمثال، زمان ومكان، أعداد).",
+          "المرحلة الثالثة تحتاج اسم مجال (أي اسم تختاره — شخصيات، معجزات...). الحد 6 مجالات.",
         );
+      } else {
+        if (!stage3Categories.has(categoryText) && stage3Categories.size >= 6) {
+          pushError(
+            errors,
+            rowNumber,
+            row,
+            "المجال",
+            `«${categoryText}» مجال سابع — الحد الأقصى 6 مجالات في لوحة المرحلة 3.`,
+          );
+        }
+        stage3Categories.add(categoryText);
       }
       if (!level) {
         pushError(

@@ -4629,7 +4629,7 @@
 
   .stage3-board-shell--featured .stage3-jeopardy-board {
     @apply min-h-0 flex-1 gap-3 p-3 sm:gap-3.5 sm:p-4;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(var(--stage3-cols, 5), minmax(0, 1fr));
   }
 
   .stage3-board-shell--featured .stage3-category-col {
@@ -4683,7 +4683,7 @@
 
   .stage3-jeopardy-board {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(var(--stage3-cols, 5), minmax(0, 1fr));
     gap: 0.75rem;
     width: 100%;
     min-width: 0;
@@ -9762,7 +9762,7 @@
     .team-player-shell.app-viewport-fill .stage3-board-shell--featured .stage3-jeopardy-board {
       gap: 0.3rem;
       padding: 0.3rem;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(var(--stage3-cols, 5), minmax(0, 1fr));
     }
 
     .team-player-shell.app-viewport-fill .stage3-board-shell--featured .stage3-category-col {
@@ -9834,7 +9834,7 @@
     }
 
     .team-player-shell.app-viewport-fill .gameplay-arrange-zone .quiz-choice-grid--five {
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(var(--stage3-cols, 5), minmax(0, 1fr));
       gap: 0.35rem;
     }
 

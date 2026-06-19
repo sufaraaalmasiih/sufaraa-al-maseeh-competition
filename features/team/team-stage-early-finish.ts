@@ -1,4 +1,5 @@
 import { STAGE3_BOARD_QUESTION_COUNT } from "@/features/stage3/stage3-board-data";
+import { getRuntimeStage3Questions } from "@/features/facilitator/question-bank-runtime-cache";
 import type { GameFlowStatus } from "@/types";
 
 const STAGE3_GAMEPLAY_STATUSES = new Set<GameFlowStatus>([
@@ -25,7 +26,11 @@ export function isStage4GameplayStatus(status: GameFlowStatus | null | undefined
 }
 
 export function isStage3BoardExhausted(usedQuestionIds: string[]): boolean {
-  return usedQuestionIds.length >= STAGE3_BOARD_QUESTION_COUNT;
+  // اللوحة الآن تتبع البنك: العدد الكلي = أسئلة المرحلة 3 المخزَّنة إن وُجدت،
+  // وإلا عدد اللوحة الافتراضي (30) — فتعمل مع البنوك المخصّصة (أقل/أكثر).
+  const bankCount = getRuntimeStage3Questions().length;
+  const total = bankCount > 0 ? bankCount : STAGE3_BOARD_QUESTION_COUNT;
+  return usedQuestionIds.length >= total;
 }
 
 export function isStage4TeamParticipationComplete(
