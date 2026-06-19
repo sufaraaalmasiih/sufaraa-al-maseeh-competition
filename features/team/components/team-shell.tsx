@@ -9,6 +9,7 @@ import { CompetitionFrozenBanner } from "@/components/layout/competition-frozen-
 import { AuthGate } from "@/features/auth/components/auth-gate";
 import { useCompetitionContentSync } from "@/features/competition-content/competition-content-runtime";
 import { useCompetitionReauthGuard } from "@/features/competition-session/use-competition-reauth-guard";
+import { useTeamRemovalGuard } from "@/features/team/use-team-removal-guard";
 import { useQuestionBankRuntimeSync } from "@/features/facilitator/question-bank-runtime";
 import { isTeamStage2FieldWaiting } from "@/features/stage2/stage2-field-waiting-state";
 import { useTeamStage2Progress } from "@/features/stage2/use-team-stage2-progress";
@@ -68,6 +69,8 @@ function TeamShellAuthenticated() {
   useQuestionBankRuntimeSync();
   useCompetitionContentSync();
   useCompetitionReauthGuard(true);
+  // أُخرج الفريق من المسابقة (حُذفت حالته) → تسجيل خروج وإعادة لصفحة الدخول.
+  useTeamRemovalGuard(true);
 
   // إنهاء المسابقة من الميسّر: يسجّل خروج كل الفرق ويعيدها لصفحة الدخول.
   const { teamSignOutAt } = useGameFlow();
