@@ -192,7 +192,9 @@ export function FacilitatorSettingsTab() {
 
       // رسالة صريحة بكل مرحلة طلب فيها الميسّر أكثر مما في البنك (#1).
       const clampMessages = STAGE_DISPLAY_KEYS.filter(
-        (stage) => questionSettings[stage].displayCount > meta.bankSizes[stage],
+        (stage) =>
+          stage !== "stage2" &&
+          questionSettings[stage].displayCount > meta.bankSizes[stage],
       ).map(
         (stage) =>
           `${getStageDisplayLabel(stage)}: طلبت ${questionSettings[stage].displayCount} والبنك فيه ${meta.bankSizes[stage]} فقط`,
@@ -402,8 +404,13 @@ export function FacilitatorSettingsTab() {
           </p>
         ) : null}
 
+        <p className="mb-3 rounded-lg bg-[#EFF6FF] px-3 py-2 text-xs font-semibold text-[#1E40AF]">
+          المرحلة الثانية لا عدد إجمالي لها — كل مجال (توصيل/ترتيب الآية/إكمال/صح-خطأ) يُحدَّد
+          بعدده الخاص في قسم «عدد أسئلة مجالات المرحلة الثانية» بالأسفل.
+        </p>
+
         <div className="space-y-5">
-          {STAGE_DISPLAY_KEYS.map((stage) => {
+          {STAGE_DISPLAY_KEYS.filter((stage) => stage !== "stage2").map((stage) => {
             const bankSize = bankMeta?.bankSizes[stage] ?? 50;
             const settings = questionSettings[stage];
             const showOrder = stage !== "stage3";

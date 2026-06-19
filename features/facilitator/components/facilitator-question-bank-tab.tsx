@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { LoadingState } from "@/components/layout/state-view";
 import {
-  downloadEasyBibleQuestionBank,
   downloadQuestionBankTemplate,
   parseQuestionBankWorkbookFile,
 } from "@/features/facilitator/question-bank-excel-import";
@@ -290,7 +289,6 @@ export function FacilitatorQuestionBankTab() {
     { kind: "success" | "error"; text: string } | null
   >(null);
   const [downloadingTemplate, setDownloadingTemplate] = useState(false);
-  const [downloadingEasyBank, setDownloadingEasyBank] = useState(false);
   const [exportingBank, setExportingBank] = useState(false);
   const [importReport, setImportReport] = useState<WorkbookValidationReport | null>(null);
   const [lastImportFileName, setLastImportFileName] = useState("");
@@ -400,22 +398,6 @@ export function FacilitatorQuestionBankTab() {
       setFeedback({ kind: "error", text: "تعذر إنشاء ملف النموذج." });
     } finally {
       setDownloadingTemplate(false);
-    }
-  }
-
-  async function handleDownloadEasyBank() {
-    setDownloadingEasyBank(true);
-    setFeedback(null);
-    try {
-      await downloadEasyBibleQuestionBank();
-      setFeedback({
-        kind: "success",
-        text: "تم تنزيل بنك الأسئلة السهل. استورده من «استيراد وفحص Excel» قبل بدء المسابقة.",
-      });
-    } catch {
-      setFeedback({ kind: "error", text: "تعذر تنزيل بنك الأسئلة السهل." });
-    } finally {
-      setDownloadingEasyBank(false);
     }
   }
 
@@ -585,15 +567,6 @@ export function FacilitatorQuestionBankTab() {
           >
             <Download className="h-4 w-4" aria-hidden />
             {downloadingTemplate ? "جارٍ التجهيز..." : "تنزيل قالب Excel الرسمي"}
-          </button>
-          <button
-            type="button"
-            className="facilitator-btn facilitator-btn--outline"
-            disabled={downloadingEasyBank}
-            onClick={() => void handleDownloadEasyBank()}
-          >
-            <Download className="h-4 w-4" aria-hidden />
-            {downloadingEasyBank ? "جارٍ التجهيز..." : "بنك سهل — الكتاب المقدس"}
           </button>
           <button
             type="button"

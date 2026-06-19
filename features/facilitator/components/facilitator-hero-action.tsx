@@ -49,10 +49,21 @@ export function FacilitatorHeroAction({
   const hero = plan.hero;
   const showHint = shouldShowHint(status, plan);
 
-  // الجاهزية معلومة إرشادية فقط — لا تحجب الميسّر عن المتابعة (لا داعٍ لانتظار موافقة الفرق).
+  // الجاهزية: لا تُحجب نهائياً (قد يغيب فريق)، لكن إن لم يجهز الجميع يطلب تأكيداً صريحاً
+  // قبل المتابعة بدل الانتقال الصامت (طلب المالك: ألّا ينتقل الميسّر والفرق غير جاهزة).
   const showReadinessInfo =
     plan.readinessKey !== null && totalTeams > 0;
   const allReady = (readyCount ?? 0) >= totalTeams;
+  const blockedByReadiness = showReadinessInfo && !allReady;
+
+  const confirmDescription = blockedByReadiness
+    ? `تنبيه: ${readyCount ?? 0} من ${totalTeams} فريق فقط ضغطوا «جاهز».${
+        notReadyTeamNames.length > 0 ? ` لم يجهز بعد: ${notReadyTeamNames.join("، ")}.` : ""
+      } هل تريد المتابعة رغم ذلك؟`
+    : `هل تريد الانتقال إلى: «${hero?.label ?? "المرحلة التالية"}»؟`;
+  const confirmLabel = blockedByReadiness
+    ? "متابعة رغم عدم الجاهزية"
+    : hero?.label ?? "تأكيد الانتقال";
 
   const Icon =
     hero?.kind === "finish"
@@ -94,8 +105,8 @@ export function FacilitatorHeroAction({
       <FacilitatorAdvanceConfirmDialog
         open={confirmOpen}
         title={hero?.label ?? "تأكيد الانتقال"}
-        description={`هل تريد الانتقال إلى: «${hero?.label ?? "المرحلة التالية"}»؟`}
-        confirmLabel={hero?.label ?? "تأكيد الانتقال"}
+        description={confirmDescription}
+        confirmLabel={confirmLabel}
         pending={pending}
         onClose={() => {
           if (!pending) {
@@ -153,10 +164,10 @@ export function FacilitatorHeroAction({
         ) : null}
       </div>
 
-      {showReadinessInfo && !allReady ? (
-        <div className="flow-action__gate flow-action__gate--info">
+      {blockedByReadiness ? (
+        <div className="flow-action__gate">
           <p>
-            الجاهزية: {readyCount ?? 0} / {totalTeams} — يمكنك المتابعة دون انتظار.
+            ⚠️ الجاهزية: {readyCount ?? 0} / {totalTeams} — المتابعة ستطلب تأكيداً صريحاً.
           </p>
           {notReadyTeamNames.length > 0 ? (
             <p className="flow-action__gate-teams">
