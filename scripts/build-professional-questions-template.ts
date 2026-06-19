@@ -2,7 +2,6 @@ import fs from "node:fs";
 import path from "node:path";
 import ExcelJS from "exceljs";
 import {
-  buildAllQuestionsCanonicalRows,
   buildStage1CanonicalRows,
   buildStage2CanonicalRows,
   buildStage3CanonicalRows,
@@ -616,45 +615,49 @@ async function buildProfessionalTemplate() {
   workbook.creator = "سفراء المسيح";
   workbook.created = new Date();
 
-  const stage1Rows = buildStage1CanonicalRows();
-  const stage2Rows = buildStage2CanonicalRows();
-  const stage3Rows = buildStage3CanonicalRows();
-  const stage4Rows = buildStage4CanonicalRows();
-  const allRows = buildAllQuestionsCanonicalRows();
+  // العيّنات تُستخدم في ورقة «أمثلة» فقط — الأوراق الرئيسية تبقى فارغة للكتابة.
+  const stage1Sample = buildStage1CanonicalRows();
+  const stage2Sample = buildStage2CanonicalRows();
+  const stage3Sample = buildStage3CanonicalRows();
+  const stage4Sample = buildStage4CanonicalRows();
+
+  // صفوف فارغة جاهزة للكتابة (مع بقاء التنسيق والقوائم المنسدلة).
+  const emptyRows = (count: number): string[][] =>
+    Array.from({ length: count }, () => new Array(ENGLISH_KEYS.length).fill(""));
 
   const lists = workbook.addWorksheet("Lists", { views: [{ rightToLeft: true }] });
   const dropdowns = buildListsSheet(lists);
 
   const all = workbook.addWorksheet("All_Questions", { views: [{ rightToLeft: true }] });
-  styleQuestionSheet(all, "كل الأسئلة — All Questions (الورقة الرئيسية)", COLORS.navy, allRows, {
+  styleQuestionSheet(all, "كل الأسئلة — All Questions (الورقة الرئيسية — اكتب أسئلتك هنا)", COLORS.navy, emptyRows(40), {
     typeRange: dropdowns.all,
     typePrompt: "اختر نوع السؤال بالعربية من القائمة",
   });
 
   const s1 = workbook.addWorksheet("Stage1", { views: [{ rightToLeft: true }] });
-  styleQuestionSheet(s1, "المرحلة الأولى — اجمعوا الكنوز", COLORS.stage1, stage1Rows, {
+  styleQuestionSheet(s1, "المرحلة الأولى — اجمعوا الكنوز (فارغة — للكتابة)", COLORS.stage1, emptyRows(25), {
     typeRange: dropdowns.stage1,
     typePrompt: "اختر نوع سؤال المرحلة الأولى",
   });
 
   const s2 = workbook.addWorksheet("Stage2", { views: [{ rightToLeft: true }] });
-  styleQuestionSheet(s2, "المرحلة الثانية — فتشوا الكتب", COLORS.stage2, stage2Rows, {
+  styleQuestionSheet(s2, "المرحلة الثانية — فتشوا الكتب (فارغة — للكتابة)", COLORS.stage2, emptyRows(25), {
     typeRange: dropdowns.stage2,
     typePrompt: "اختر نوع سؤال المرحلة الثانية",
   });
 
   const s3 = workbook.addWorksheet("Stage3", { views: [{ rightToLeft: true }] });
-  styleQuestionSheet(s3, "المرحلة الثالثة — على المحك", COLORS.stage3, stage3Rows, {
+  styleQuestionSheet(s3, "المرحلة الثالثة — على المحك (فارغة — للكتابة)", COLORS.stage3, emptyRows(25), {
     typeRange: dropdowns.stage3,
     typePrompt: "اختر نوع السؤال — كل الأنواع مسموحة",
     categoryRange: dropdowns.stage3Fields,
-    categoryPrompt: "اختر المجال (شخصيات، معجزات، …)",
+    categoryPrompt: "اختر مجالاً جاهزاً أو اكتب اسماً مخصّصاً (حتى 6 مجالات)",
     levelRange: dropdowns.stage3Levels,
     levelPrompt: "اختر المستوى (سهل، متوسط، صعب)",
   });
 
   const s4 = workbook.addWorksheet("Stage4", { views: [{ rightToLeft: true }] });
-  styleQuestionSheet(s4, "المرحلة الرابعة — اثبتوا بالحق", COLORS.stage4, stage4Rows, {
+  styleQuestionSheet(s4, "المرحلة الرابعة — اثبتوا بالحق (فارغة — للكتابة)", COLORS.stage4, emptyRows(25), {
     typeRange: dropdowns.stage4,
     typePrompt: "اختر نوع السؤال — كل الأنواع مسموحة",
   });
@@ -670,14 +673,16 @@ async function buildProfessionalTemplate() {
 
   const examples = workbook.addWorksheet("أمثلة", { views: [{ rightToLeft: true }] });
   const exampleRows = [
-    stage1Rows[0],
-    stage2Rows[0],
-    stage3Rows[0],
-    stage4Rows[0],
+    stage1Sample[0],
+    stage1Sample[1],
+    stage2Sample[0],
+    stage2Sample[1],
+    stage3Sample[0],
+    stage4Sample[0],
   ].filter(Boolean) as string[][];
   styleQuestionSheet(
     examples,
-    "أمثلة مرجعية — لا تُستورد (للاطلاع فقط)",
+    "أمثلة مرجعية — لا تُستورد (انسخ منها إلى الأوراق الرئيسية)",
     COLORS.gold,
     exampleRows,
   );

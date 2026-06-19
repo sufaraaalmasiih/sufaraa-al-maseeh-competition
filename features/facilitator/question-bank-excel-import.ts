@@ -20,6 +20,9 @@ export const QUESTION_BANK_TEMPLATE_URL = `/templates/${QUESTION_BANK_TEMPLATE_F
 export const EASY_BIBLE_QUESTION_BANK_FILENAME = "sufaraa-easy-bible-questions.xlsx";
 export const EASY_BIBLE_QUESTION_BANK_URL = `/templates/${EASY_BIBLE_QUESTION_BANK_FILENAME}`;
 
+export const BIBLE_BANK_FILENAME = "sufaraa-bible-bank.xlsx";
+export const BIBLE_BANK_URL = `/templates/${BIBLE_BANK_FILENAME}`;
+
 const EXCLUDED_SHEETS = new Set([
   "readme",
   "lists",
@@ -236,6 +239,11 @@ export async function downloadQuestionBankTemplate(): Promise<void> {
 
 export async function downloadEasyBibleQuestionBank(): Promise<void> {
   await downloadTemplateFile(EASY_BIBLE_QUESTION_BANK_URL, EASY_BIBLE_QUESTION_BANK_FILENAME);
+}
+
+/** بنك أسئلة جاهز ومملوء من الكتاب المقدس (150 سؤالاً) — جاهز للرفع مباشرة. */
+export async function downloadReadyBibleBank(): Promise<void> {
+  await downloadTemplateFile(BIBLE_BANK_URL, BIBLE_BANK_FILENAME);
 }
 
 export async function parseQuestionBankWorkbookFile(file: ArrayBuffer): Promise<{

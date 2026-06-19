@@ -49,21 +49,15 @@ export function FacilitatorHeroAction({
   const hero = plan.hero;
   const showHint = shouldShowHint(status, plan);
 
-  // الجاهزية: لا تُحجب نهائياً (قد يغيب فريق)، لكن إن لم يجهز الجميع يطلب تأكيداً صريحاً
-  // قبل المتابعة بدل الانتقال الصامت (طلب المالك: ألّا ينتقل الميسّر والفرق غير جاهزة).
+  // الجاهزية تحجب الانتقال العادي: لا ينتقل الميسّر حتى يجهز كل الفرق. للتجاوز الطارئ
+  // (غياب فريق مثلاً) يُستخدم «تحكم يدوي متقدم» فقط — وهو لا يتحقّق من الجاهزية.
   const showReadinessInfo =
     plan.readinessKey !== null && totalTeams > 0;
   const allReady = (readyCount ?? 0) >= totalTeams;
   const blockedByReadiness = showReadinessInfo && !allReady;
 
-  const confirmDescription = blockedByReadiness
-    ? `تنبيه: ${readyCount ?? 0} من ${totalTeams} فريق فقط ضغطوا «جاهز».${
-        notReadyTeamNames.length > 0 ? ` لم يجهز بعد: ${notReadyTeamNames.join("، ")}.` : ""
-      } هل تريد المتابعة رغم ذلك؟`
-    : `هل تريد الانتقال إلى: «${hero?.label ?? "المرحلة التالية"}»؟`;
-  const confirmLabel = blockedByReadiness
-    ? "متابعة رغم عدم الجاهزية"
-    : hero?.label ?? "تأكيد الانتقال";
+  const confirmDescription = `هل تريد الانتقال إلى: «${hero?.label ?? "المرحلة التالية"}»؟`;
+  const confirmLabel = hero?.label ?? "تأكيد الانتقال";
 
   const Icon =
     hero?.kind === "finish"
@@ -76,7 +70,12 @@ export function FacilitatorHeroAction({
     if (pending || !hero) {
       return;
     }
-
+    if (blockedByReadiness) {
+      setError(
+        "لا يمكن الانتقال حتى يجهز كل الفرق. للتجاوز الطارئ استخدم «تحكم يدوي متقدم» بالأسفل.",
+      );
+      return;
+    }
     setConfirmOpen(true);
   }
 
@@ -149,7 +148,7 @@ export function FacilitatorHeroAction({
               hero.kind === "finish" && "flow-action__btn--finish",
               hero.kind === "final" && "flow-action__btn--final",
             )}
-            disabled={pending}
+            disabled={pending || blockedByReadiness}
             onClick={() => void handleClick()}
           >
             {pending ? (
@@ -167,7 +166,8 @@ export function FacilitatorHeroAction({
       {blockedByReadiness ? (
         <div className="flow-action__gate">
           <p>
-            ⚠️ الجاهزية: {readyCount ?? 0} / {totalTeams} — المتابعة ستطلب تأكيداً صريحاً.
+            🔒 لا يمكن الانتقال حتى يجهز كل الفرق ({readyCount ?? 0} / {totalTeams}). للتجاوز
+            الطارئ: «تحكم يدوي متقدم» بالأسفل.
           </p>
           {notReadyTeamNames.length > 0 ? (
             <p className="flow-action__gate-teams">

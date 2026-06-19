@@ -14,6 +14,7 @@ import {
 import { LoadingState } from "@/components/layout/state-view";
 import {
   downloadQuestionBankTemplate,
+  downloadReadyBibleBank,
   parseQuestionBankWorkbookFile,
 } from "@/features/facilitator/question-bank-excel-import";
 import { assertQuestionBankImportAllowed, isQuestionBankImportAllowedStatus } from "@/features/facilitator/question-bank-lock";
@@ -289,6 +290,7 @@ export function FacilitatorQuestionBankTab() {
     { kind: "success" | "error"; text: string } | null
   >(null);
   const [downloadingTemplate, setDownloadingTemplate] = useState(false);
+  const [downloadingBibleBank, setDownloadingBibleBank] = useState(false);
   const [exportingBank, setExportingBank] = useState(false);
   const [importReport, setImportReport] = useState<WorkbookValidationReport | null>(null);
   const [lastImportFileName, setLastImportFileName] = useState("");
@@ -398,6 +400,22 @@ export function FacilitatorQuestionBankTab() {
       setFeedback({ kind: "error", text: "تعذر إنشاء ملف النموذج." });
     } finally {
       setDownloadingTemplate(false);
+    }
+  }
+
+  async function handleDownloadBibleBank() {
+    setDownloadingBibleBank(true);
+    setFeedback(null);
+    try {
+      await downloadReadyBibleBank();
+      setFeedback({
+        kind: "success",
+        text: "تم تنزيل بنك أسئلة الكتاب المقدس الجاهز (150 سؤالاً). استورده من «استيراد وفحص Excel».",
+      });
+    } catch {
+      setFeedback({ kind: "error", text: "تعذر تنزيل البنك الجاهز." });
+    } finally {
+      setDownloadingBibleBank(false);
     }
   }
 
@@ -566,7 +584,16 @@ export function FacilitatorQuestionBankTab() {
             onClick={() => void handleDownloadTemplate()}
           >
             <Download className="h-4 w-4" aria-hidden />
-            {downloadingTemplate ? "جارٍ التجهيز..." : "تنزيل قالب Excel الرسمي"}
+            {downloadingTemplate ? "جارٍ التجهيز..." : "تنزيل قالب Excel الرسمي (فارغ)"}
+          </button>
+          <button
+            type="button"
+            className="facilitator-btn facilitator-btn--outline"
+            disabled={downloadingBibleBank}
+            onClick={() => void handleDownloadBibleBank()}
+          >
+            <Download className="h-4 w-4" aria-hidden />
+            {downloadingBibleBank ? "جارٍ التجهيز..." : "تنزيل بنك جاهز (الكتاب المقدس · 150 سؤالاً)"}
           </button>
           <button
             type="button"
