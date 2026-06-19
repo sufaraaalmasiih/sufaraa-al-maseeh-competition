@@ -17,6 +17,7 @@ import {
 import {
   blankItem,
   defaultPointsForStageLevel,
+  supportsPointsOverride,
   fieldsForType,
   getTypeLabel,
   itemsToPayload,
@@ -254,6 +255,10 @@ function QuestionRow({
   const [showPreview, setShowPreview] = useState(false);
   const errors = editing ? validateItem(item) : [];
   const summary = item.type === "matching" ? `توصيل · ${item.pairs.length} أزواج` : item.question || "(بدون نص)";
+  // النقاط الظاهرة لكل سؤال: المُدخلة أو الطبيعية للمرحلة/المستوى.
+  const pointsLabel = supportsPointsOverride(item)
+    ? item.points.trim() || String(defaultPointsForStageLevel(item.stage, item.level) ?? "")
+    : "5+5+5";
 
   return (
     <div className="rounded-2xl border border-[#E2E8F0] bg-white/80 p-3">
@@ -261,6 +266,9 @@ function QuestionRow({
         <div className="min-w-0">
           <span className="rounded-full bg-[#E9F6FC] px-2 py-0.5 text-xs font-black text-[#2388C4]">
             {getTypeLabel(item.type)}
+          </span>
+          <span className="ms-2 rounded-full bg-[#ECFDF5] px-2 py-0.5 text-xs font-black text-[#047857]">
+            {pointsLabel} نقطة
           </span>
           <span className="ms-2 text-sm font-semibold text-[#143A5A]">{summary}</span>
         </div>
@@ -619,7 +627,7 @@ function QuestionForm({ item, disabled, onPatch }: QuestionFormProps) {
         </Labeled>
       ) : null}
 
-      {item.stage !== "stage2" ? (
+      {supportsPointsOverride(item) ? (
         <Labeled label="نقاط الإجابة الصحيحة (الطبيعي مكتوب — غيّره للتجاوز، حتى 100)">
           <input
             className={inputClass}

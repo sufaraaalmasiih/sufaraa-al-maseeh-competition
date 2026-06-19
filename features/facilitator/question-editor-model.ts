@@ -98,7 +98,13 @@ export function defaultPointsForStageLevel(stage: AdminStageKey, level: string):
   if (stage === "stage3") {
     return level === "hard" ? 45 : level === "medium" ? 30 : 15;
   }
-  return null; // المرحلة 2 تُدار بقواعدها الخاصة (5+5+5 وغيرها)
+  // المرحلة 2: التوصيل/ترتيب الآية/إكمال الآية = 15 (قابلة للتجاوز). «صح أو خطأ» تبقى 5+5+5.
+  return 15;
+}
+
+/** هل يُعرض حقل النقاط لهذا النوع؟ «صح أو خطأ» في م2 لها نظامها (5+5+5) فلا نقاط مفردة. */
+export function supportsPointsOverride(item: EditorItem): boolean {
+  return !(item.stage === "stage2" && item.type === "trueFalseCorrect");
 }
 
 export function defaultPointsFor(item: EditorItem): number | null {
@@ -342,6 +348,10 @@ export function payloadToEditorItems(payload: FullQuestionBankPayload): EditorIt
       reference: String(q.reference ?? ""),
       imageUrl: String(q.imageUrl ?? ""),
       pairs: pairs.length > 0 ? pairs : [{ left: "", correctRight: "" }],
+      points:
+        typeof q.points === "number"
+          ? String(q.points)
+          : String(defaultPointsForStageLevel("stage2", "")),
     });
   });
 
@@ -357,6 +367,10 @@ export function payloadToEditorItems(payload: FullQuestionBankPayload): EditorIt
       reference: String(q.reference ?? ""),
       imageUrl: String(q.imageUrl ?? ""),
       parts: parts.length > 0 ? parts : ["", ""],
+      points:
+        typeof q.points === "number"
+          ? String(q.points)
+          : String(defaultPointsForStageLevel("stage2", "")),
     });
   });
 
@@ -372,6 +386,10 @@ export function payloadToEditorItems(payload: FullQuestionBankPayload): EditorIt
       correct: String(q.correctAnswer ?? ""),
       reference: String(q.reference ?? ""),
       imageUrl: String(q.imageUrl ?? ""),
+      points:
+        typeof q.points === "number"
+          ? String(q.points)
+          : String(defaultPointsForStageLevel("stage2", "")),
     });
   });
 

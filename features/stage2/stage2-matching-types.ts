@@ -11,6 +11,8 @@ export interface Stage2MatchingQuestion {
   pairs: Stage2MatchingPair[];
   /** Right-column options (include all correct answers + distractors). */
   rightOptions: string[];
+  /** تجاوز نقاط اختياري للإجابة الصحيحة (بدل 15). */
+  points?: number;
 }
 
 export interface Stage2MatchingAnswer {

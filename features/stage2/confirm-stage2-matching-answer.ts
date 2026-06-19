@@ -113,7 +113,12 @@ export async function confirmStage2MatchingAnswer({
     const scoredQuestion =
       getAuthoritativeStage2MatchingQuestion(question.id) ?? question;
     const isCorrect = evaluateMatchingPairings(scoredQuestion, pairings);
-    const pointsDelta = isCorrect ? CORRECT_ANSWER_POINTS : 0;
+    const overridePoints = scoredQuestion.points;
+    const correctPoints =
+      typeof overridePoints === "number" && overridePoints > 0
+        ? Math.min(100, Math.floor(overridePoints))
+        : CORRECT_ANSWER_POINTS;
+    const pointsDelta = isCorrect ? correctPoints : 0;
 
     transaction.set(confirmedAnswerRef, {
       teamId,

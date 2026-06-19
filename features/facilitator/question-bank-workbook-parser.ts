@@ -371,6 +371,7 @@ function buildStage2Bank(rows: Record<string, unknown>[]): Stage2QuestionBank {
           correctOrder,
           reference,
           imageUrl: trim(row.imageurl) || trim(row.image) || undefined,
+          points: parseQuestionPoints(row.points),
         });
       }
       return;
@@ -385,6 +386,7 @@ function buildStage2Bank(rows: Record<string, unknown>[]): Stage2QuestionBank {
           correctAnswer,
           reference,
           imageUrl: trim(row.imageurl) || trim(row.image) || undefined,
+          points: parseQuestionPoints(row.points),
         });
       }
       return;
@@ -421,6 +423,16 @@ function buildStage2Bank(rows: Record<string, unknown>[]): Stage2QuestionBank {
       return;
     }
 
+    // نقاط التوصيل: من أول صف يحمل قيمة نقاط في المجموعة.
+    let groupPoints: number | undefined;
+    for (const groupRow of group.rows) {
+      const parsed = parseQuestionPoints(groupRow.points);
+      if (parsed) {
+        groupPoints = parsed;
+        break;
+      }
+    }
+
     // تقسيم تلقائي لجولات من 5 أزواج كحد أقصى لكل شاشة.
     // (مثال: 15 زوجاً من Excel ⇐ 3 جولات × 5؛ 7 أزواج ⇐ جولة 5 + جولة 2)
     const roundsCount = Math.ceil(pairs.length / MAX_MATCHING_PAIRS_PER_SCREEN);
@@ -444,6 +456,7 @@ function buildStage2Bank(rows: Record<string, unknown>[]): Stage2QuestionBank {
         imageUrl: group.imageUrl,
         pairs: chunk,
         rightOptions: uniqueRights,
+        points: groupPoints,
       });
     }
   });

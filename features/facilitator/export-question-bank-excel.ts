@@ -84,6 +84,7 @@ function buildStage2Rows(payload: FullQuestionBankPayload): ExportRow[] {
         type: "matching",
         question: str(pair.left),
         correct: str(pair.correctRight),
+        points: str(q.points),
         reference: str(q.reference),
         imageurl: str(q.imageUrl),
       });
@@ -99,6 +100,7 @@ function buildStage2Rows(payload: FullQuestionBankPayload): ExportRow[] {
       question: str(q.prompt),
       data: joinPipe(q.fragments),
       correct: joinPipe(q.correctOrder),
+      points: str(q.points),
       reference: str(q.reference),
       imageurl: str(q.imageUrl),
     });
@@ -113,6 +115,7 @@ function buildStage2Rows(payload: FullQuestionBankPayload): ExportRow[] {
       question: str(q.prompt),
       data: str(q.verseWithBlank),
       correct: str(q.correctAnswer),
+      points: str(q.points),
       reference: str(q.reference),
       imageurl: str(q.imageUrl),
     });

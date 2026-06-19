@@ -5,6 +5,8 @@ export interface Stage2ArrangeVerseQuestion {
   correctOrder: string[];
   reference: string;
   imageUrl?: string;
+  /** تجاوز نقاط اختياري للإجابة الصحيحة (بدل 15). */
+  points?: number;
 }
 
 export interface Stage2ArrangeVerseAnswer {
