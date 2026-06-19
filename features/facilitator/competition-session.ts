@@ -6,6 +6,7 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  getDocs,
   onSnapshot,
   orderBy,
   query,
@@ -13,6 +14,7 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
+  where,
   type Timestamp,
 } from "firebase/firestore";
 import { useEffect, useState } from "react";
@@ -534,6 +536,20 @@ export async function deleteSession(sessionId: string, reason: string): Promise<
   }
 
   await deleteDoc(historyDoc(sessionId));
+
+  // احذف نسخ أرشيف الفرق لهذه الجلسة حتى لا تبقى «مشاركة يتيمة» في أرشيف الفريق
+  // بعد اختفاء السجل من تبويب «السجل».
+  try {
+    const archives = await getDocs(
+      query(
+        collection(getClientFirestore(), "competitions", MAIN_COMPETITION_ID, "teamArchives"),
+        where("sessionId", "==", sessionId),
+      ),
+    );
+    await Promise.all(archives.docs.map((document) => deleteDoc(document.ref)));
+  } catch {
+    // غير حرج — لا تُفشل حذف السجل إذا تعذّر تنظيف نسخ الأرشيف.
+  }
 }
 
 /** @deprecated Use saveActiveSessionResults instead. */
