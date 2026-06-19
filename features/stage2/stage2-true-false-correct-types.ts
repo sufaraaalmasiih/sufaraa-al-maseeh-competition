@@ -5,6 +5,8 @@ export interface Stage2TrueFalseCorrectQuestion {
   statement: string;
   correctIsTrue: boolean;
   expectedCorrection?: string;
+  /** الجزء الخطأ المتوقّع في الجملة (للتحكيم التلقائي) — من عمود «الجزء المطلوب». */
+  expectedWrongPart?: string;
   reference: string;
   imageUrl?: string;
 }

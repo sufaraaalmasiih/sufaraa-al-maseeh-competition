@@ -10,6 +10,7 @@ import {
 } from "@/firebase/firestore";
 import { serializeTrueFalseCorrectAnswer } from "@/features/stage2/stage2-true-false-evaluation";
 import { getAuthoritativeStage2TrueFalseQuestion } from "@/features/facilitator/question-bank-runtime-cache";
+import { normalizeStage1AnswerText } from "@/features/stage1/stage1-answer-validation";
 import type {
   Stage2TrueFalseChoice,
   Stage2TrueFalseCorrectQuestion,
@@ -122,17 +123,50 @@ export async function confirmStage2TrueFalseCorrectAnswer({
     const scoredQuestion =
       getAuthoritativeStage2TrueFalseQuestion(question.id) ?? question;
 
-    // قواعد النقاط الجزئية (النقطة 7):
-    // - عبارة صحيحة + المتسابق ضغط «صح» ⇒ +15 مباشرة (إجابة صحيحة).
-    // - عبارة خاطئة + المتسابق ضغط «خطأ» ⇒ مسار تحكيم الميسّر التدريجي (5+5+5).
-    //   تبدأ النقاط بـ 0 ويمنحها الميسّر على ثلاث خطوات من لوحة التحكيم.
-    // - غير ذلك (لم يتعرّف على نوع العبارة) ⇒ 0.
+    // تحكيم تلقائي للنقاط الجزئية (بدل التحكيم اليدوي):
+    // - عبارة صحيحة + «صح» ⇒ +15.
+    // - عبارة خاطئة + «خطأ» ⇒ 5+5+5 آلياً: تأكيد الخطأ + تطابق الجزء الخاطئ + تطابق التصحيح.
+    // - غير ذلك ⇒ 0. (المقارنة بتطبيع عربي يتجاهل التشكيل وأل التعريف والفواصل.)
     const statementIsTrue = scoredQuestion.correctIsTrue;
-    const needsFacilitatorGrading =
-      !statementIsTrue && selectedChoice === "false";
+    const trueCorrect = statementIsTrue && selectedChoice === "true";
 
-    const isCorrect = statementIsTrue && selectedChoice === "true";
-    const pointsDelta = isCorrect ? CORRECT_ANSWER_POINTS : 0;
+    let facilitatorMarkedWrong = false;
+    let wrongPartIdentified = false;
+    let correctionApproved = false;
+    let pointsDelta = 0;
+
+    if (trueCorrect) {
+      pointsDelta = CORRECT_ANSWER_POINTS; // 15
+    } else if (!statementIsTrue && selectedChoice === "false") {
+      facilitatorMarkedWrong = true; // عرف أنها عبارة خاطئة
+
+      const expectedWrong = scoredQuestion.expectedWrongPart ?? "";
+      if (expectedWrong) {
+        wrongPartIdentified =
+          trimmedWrongPart.length > 0 &&
+          normalizeStage1AnswerText(trimmedWrongPart) === normalizeStage1AnswerText(expectedWrong);
+      } else {
+        // لا «جزء متوقّع» في السؤال: نقبل إن أشار المتسابق إلى جزء فعلي من الجملة.
+        wrongPartIdentified =
+          trimmedWrongPart.length > 0 &&
+          normalizeStage1AnswerText(scoredQuestion.statement).includes(
+            normalizeStage1AnswerText(trimmedWrongPart),
+          );
+      }
+
+      const expectedCorr = scoredQuestion.expectedCorrection ?? "";
+      correctionApproved =
+        expectedCorr.length > 0 &&
+        trimmedCorrectionText.length > 0 &&
+        normalizeStage1AnswerText(trimmedCorrectionText) === normalizeStage1AnswerText(expectedCorr);
+
+      pointsDelta =
+        (facilitatorMarkedWrong ? 5 : 0) +
+        (wrongPartIdentified ? 5 : 0) +
+        (correctionApproved ? 5 : 0);
+    }
+
+    const isCorrect = pointsDelta >= CORRECT_ANSWER_POINTS;
 
     transaction.set(confirmedAnswerRef, {
       teamId,
@@ -153,12 +187,12 @@ export async function confirmStage2TrueFalseCorrectAnswer({
       confirmedAt: serverTimestamp(),
       isCorrect,
       pointsDelta,
-      // حقول تحكيم النقاط الجزئية
-      needsGrading: needsFacilitatorGrading,
-      gradingComplete: !needsFacilitatorGrading,
-      facilitatorMarkedWrong: false,
-      wrongPartIdentified: false,
-      correctionApproved: false,
+      // التحكيم تلقائي ومكتمل — لا يحتاج الميسّر.
+      needsGrading: false,
+      gradingComplete: true,
+      facilitatorMarkedWrong,
+      wrongPartIdentified,
+      correctionApproved,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });

@@ -47,8 +47,12 @@ function arrVerse(id: string, prompt: string, parts: string[]): Row {
 function completeVerse(id: string, prompt: string, verseWithBlank: string, answer: string): Row {
   return pad({ 0: id, 1: "stage2", 2: S2, 3: "completeVerse", 4: "إكمال الآية", 7: prompt, 8: verseWithBlank, 13: answer });
 }
-function tf(id: string, statement: string, isTrue: boolean, correction = ""): Row {
-  return pad({ 0: id, 1: "stage2", 2: S2, 3: "trueFalseCorrect", 4: "صح أو خطأ", 7: statement, 8: correction, 13: isTrue ? "صح" : "خطأ" });
+function tf(id: string, statement: string, isTrue: boolean, correction = "", wrongPart = ""): Row {
+  // 8 = التصحيح (المعطيات) · 18 = الجزء الخطأ المتوقّع (للتحكيم التلقائي)
+  return pad({
+    0: id, 1: "stage2", 2: S2, 3: "trueFalseCorrect", 4: "صح أو خطأ",
+    7: statement, 8: correction, 13: isTrue ? "صح" : "خطأ", 18: wrongPart,
+  });
 }
 
 // — مولّد المرحلة 3 —
@@ -170,15 +174,15 @@ const STAGE2_COMPLETE: Row[] = [
 ];
 const STAGE2_TF: Row[] = [
   tf("s2t_01", "خلق الله العالم في ستة أيام واستراح في السابع.", true),
-  tf("s2t_02", "موسى بنى الفلك للنجاة من الطوفان.", false, "نوح"),
+  tf("s2t_02", "موسى بنى الفلك للنجاة من الطوفان.", false, "نوح", "موسى"),
   tf("s2t_03", "داود قتل جليات بحجر ومقلاع.", true),
-  tf("s2t_04", "وُلد يسوع في مدينة الناصرة.", false, "بيت لحم"),
+  tf("s2t_04", "وُلد يسوع في مدينة الناصرة.", false, "بيت لحم", "الناصرة"),
   tf("s2t_05", "يونان ابتلعه الحوت ثلاثة أيام.", true),
-  tf("s2t_06", "بطرس خان يسوع بثلاثين من الفضة.", false, "يهوذا"),
+  tf("s2t_06", "بطرس خان يسوع بثلاثين من الفضة.", false, "يهوذا", "بطرس"),
   tf("s2t_07", "أول معجزة ليسوع كانت تحويل الماء إلى خمر.", true),
-  tf("s2t_08", "إبراهيم هو أول إنسان خلقه الله.", false, "آدم"),
+  tf("s2t_08", "إبراهيم هو أول إنسان خلقه الله.", false, "آدم", "إبراهيم"),
   tf("s2t_09", "قام يسوع من الأموات في اليوم الثالث.", true),
-  tf("s2t_10", "سليمان بنى الفلك الأول في أورشليم.", false, "الهيكل"),
+  tf("s2t_10", "سليمان بنى الفلك الأول في أورشليم.", false, "الهيكل", "الفلك"),
 ];
 
 // ===== المرحلة 3 — 30 سؤالاً (5 مجالات × 6) =====

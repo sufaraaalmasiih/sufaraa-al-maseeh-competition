@@ -397,6 +397,7 @@ function buildStage2Bank(rows: Record<string, unknown>[]): Stage2QuestionBank {
         statement: prompt,
         correctIsTrue: normalized === "صح" || normalized === "true",
         expectedCorrection: trim(row.data) || undefined,
+        expectedWrongPart: trim(row.targetpart) || undefined,
         reference,
         imageUrl: trim(row.imageurl) || trim(row.image) || undefined,
       });
