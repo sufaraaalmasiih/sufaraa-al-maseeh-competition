@@ -46,6 +46,8 @@ export interface EditorItem {
   category: string;
   level: string;
   correctIsTrue: boolean;
+  /** إجابات بديلة مقبولة (المرحلة 4) — مفصولة في صف Excel بـ |. */
+  acceptedAnswers: string[];
 }
 
 export const STAGE_LABELS: Record<AdminStageKey, string> = {
@@ -182,6 +184,7 @@ export function blankItem(stage: AdminStageKey): EditorItem {
     category: stage === "stage3" ? STAGE3_FIELD_KEYS[0] : "",
     level: stage === "stage3" ? STAGE3_LEVELS[0] : "",
     correctIsTrue: true,
+    acceptedAnswers: [],
   };
 }
 
@@ -198,6 +201,10 @@ export function editorItemToRows(item: EditorItem): Record<string, string>[] {
     reference: item.reference.trim(),
     imageurl: item.imageUrl.trim(),
   };
+  const accepted = joinPipe(item.acceptedAnswers);
+  if (accepted) {
+    base.acceptedanswers = accepted;
+  }
   if (item.stage === "stage3") {
     base.category = item.category;
     base.level = item.level;
@@ -387,6 +394,7 @@ export function payloadToEditorItems(payload: FullQuestionBankPayload): EditorIt
       options: arr(q.options).length > 0 ? arr(q.options) : ["", ""],
       parts: parts.length > 0 ? parts : ["", ""],
       data,
+      acceptedAnswers: arr(q.acceptedAnswers),
     });
   });
 

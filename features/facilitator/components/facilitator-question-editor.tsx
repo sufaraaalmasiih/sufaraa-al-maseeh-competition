@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Pencil, Plus, Save, Trash2, ChevronUp, ChevronDown, X } from "lucide-react";
+import { Eye, Pencil, Plus, Save, Trash2, ChevronUp, ChevronDown, X } from "lucide-react";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
+import { QuestionPreview } from "@/features/facilitator/components/question-preview";
 import type { AdminStageKey } from "@/features/facilitator/facilitator-team-admin";
 import {
   assertQuestionBankImportAllowed,
@@ -249,6 +250,7 @@ function QuestionRow({
   onMoveDown,
   onPatch,
 }: QuestionRowProps) {
+  const [showPreview, setShowPreview] = useState(false);
   const errors = editing ? validateItem(item) : [];
   const summary = item.type === "matching" ? `توصيل · ${item.pairs.length} أزواج` : item.question || "(بدون نص)";
 
@@ -273,6 +275,14 @@ function QuestionRow({
             title="أسفل"
           >
             <ChevronDown className="h-4 w-4" aria-hidden />
+          </button>
+          <button
+            type="button"
+            className={`facilitator-btn ${showPreview ? "facilitator-btn--primary" : "facilitator-btn--outline"}`}
+            onClick={() => setShowPreview((value) => !value)}
+          >
+            <Eye className="h-4 w-4" aria-hidden />
+            معاينة
           </button>
           <button type="button" className="facilitator-btn facilitator-btn--outline" onClick={onEdit}>
             {editing ? <X className="h-4 w-4" aria-hidden /> : <Pencil className="h-4 w-4" aria-hidden />}
@@ -303,6 +313,12 @@ function QuestionRow({
           ) : (
             <p className="mt-2 text-xs font-bold text-[#047857]">✓ السؤال صالح</p>
           )}
+        </div>
+      ) : null}
+
+      {showPreview ? (
+        <div className="mt-3">
+          <QuestionPreview item={item} />
         </div>
       ) : null}
     </div>
@@ -568,6 +584,25 @@ function QuestionForm({ item, disabled, onPatch }: QuestionFormProps) {
             disabled={disabled}
             value={item.correct}
             onChange={(event) => onPatch({ correct: event.target.value })}
+          />
+        </Labeled>
+      ) : null}
+
+      {item.stage === "stage4" && config.needsCorrect ? (
+        <Labeled label="إجابات مقبولة أيضاً (افصل بـ |)">
+          <input
+            className={inputClass}
+            disabled={disabled}
+            placeholder="مثال: موسى | النبي موسى | موسى النبي"
+            value={item.acceptedAnswers.join(" | ")}
+            onChange={(event) =>
+              onPatch({
+                acceptedAnswers: event.target.value
+                  .split(/[|،,]/)
+                  .map((answer) => answer.trim())
+                  .filter(Boolean),
+              })
+            }
           />
         </Labeled>
       ) : null}
