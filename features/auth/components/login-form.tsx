@@ -12,6 +12,7 @@ import {
   logout,
 } from "@/firebase/auth";
 import { stampCompetitionReauthEpoch } from "@/features/competition-session/competition-session-controls";
+import { ensureTeamStateDoc } from "@/lib/ensure-team-profile";
 import { getClientFirebaseAuth, isFirebaseClientConfigured } from "@/firebase/firebaseClient";
 import { mapFirebaseAuthError } from "@/lib/map-firebase-auth-error";
 import { Button } from "@/components/ui/button";
@@ -71,6 +72,12 @@ export function LoginForm({
         return;
       }
       if (role === "team") {
+        // يعود الفريق للمشاركة بعد «بدء مسابقة جديدة» أو «الإخراج» بإعادة إنشاء حالته.
+        try {
+          await ensureTeamStateDoc(credential.user.uid);
+        } catch {
+          // غير حرج — يمكن إعادة المحاولة لاحقاً.
+        }
         await stampCompetitionReauthEpoch();
       }
       await getClientFirebaseAuth().authStateReady();

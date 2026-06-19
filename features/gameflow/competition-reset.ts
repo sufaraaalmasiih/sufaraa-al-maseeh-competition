@@ -127,6 +127,19 @@ async function resetAllTeamStates(competitionId: string): Promise<number> {
   return docs.length;
 }
 
+/**
+ * يحذف كل حالات الفرق (teamStates) — تُستخدم عند «بدء مسابقة جديدة» حتى لا يظهر أي
+ * فريق في السير/التحكم حتى يعيد تسجيل الدخول فعلاً (تُعاد حالته عند الدخول).
+ */
+export async function deleteAllTeamStates(
+  competitionId: string = MAIN_COMPETITION_ID,
+): Promise<number> {
+  const snapshot = await getDocs(teamStatesCollectionRef(competitionId));
+  const refs = snapshot.docs.map((docSnap) => docSnap.ref);
+  await commitBatchedDeletes(refs);
+  return refs.length;
+}
+
 async function commitBatchedDeletes(refs: DocumentReference[]): Promise<void> {
   for (let index = 0; index < refs.length; index += FIRESTORE_BATCH_LIMIT) {
     const chunk = refs.slice(index, index + FIRESTORE_BATCH_LIMIT);

@@ -1,6 +1,10 @@
 import { getDocFromServer, serverTimestamp, setDoc } from "firebase/firestore";
 import { competitionSessionRef } from "@/firebase/firestore";
-import { resetCompetition, type CompetitionResetResult } from "@/features/gameflow/competition-reset";
+import {
+  deleteAllTeamStates,
+  resetCompetition,
+  type CompetitionResetResult,
+} from "@/features/gameflow/competition-reset";
 
 export const COMPETITION_REAUTH_STORAGE_KEY = "competitionReauthEpoch";
 
@@ -58,6 +62,9 @@ export function clearLocalCompetitionReauthEpoch(): void {
  */
 export async function startNewCompetition(): Promise<CompetitionResetResult> {
   const result = await resetCompetition();
+  // الفرق لا تبقى ظاهرة في السير/التحكم بعد البدء الجديد — تُحذف حالاتها وتُعاد
+  // تلقائياً عند تسجيل الفريق الدخول من جديد.
+  await deleteAllTeamStates();
   await setDoc(
     competitionSessionRef,
     {

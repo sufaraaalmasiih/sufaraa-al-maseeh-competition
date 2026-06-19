@@ -108,25 +108,34 @@ export async function updateTeamFullProfile(input: {
 
   await runTransaction(getClientFirestore(), async (transaction) => {
     const stateSnapshot = await transaction.get(stateRef);
-    if (!stateSnapshot.exists()) {
-      throw new Error("الفريق غير موجود في المسابقة.");
+    const profileSnapshot = await transaction.get(profileRef);
+
+    // قد لا تكون حالة المسابقة موجودة (فريق لم يعد للدخول بعد بدء مسابقة جديدة) —
+    // نحدّث ملف الفريق على أي حال، والحالة فقط إن وُجدت.
+    if (!stateSnapshot.exists() && !profileSnapshot.exists()) {
+      throw new Error("الفريق غير موجود.");
     }
 
-    const stateData = stateSnapshot.data();
-    const profileSnapshot = await transaction.get(profileRef);
+    const stateData = stateSnapshot.exists() ? stateSnapshot.data() : null;
     const profileData = profileSnapshot.exists() ? profileSnapshot.data() : null;
 
     beforeValue = {
-      teamName: typeof stateData.teamName === "string" ? stateData.teamName : "",
-      governorate: typeof stateData.governorate === "string" ? stateData.governorate : "",
+      teamName:
+        (typeof stateData?.teamName === "string" ? stateData.teamName : null) ??
+        (typeof profileData?.teamName === "string" ? profileData.teamName : ""),
+      governorate:
+        (typeof stateData?.governorate === "string" ? stateData.governorate : null) ??
+        (typeof profileData?.governorate === "string" ? profileData.governorate : ""),
       email: typeof profileData?.email === "string" ? profileData.email : "",
     };
 
-    transaction.update(stateRef, {
-      teamName: input.teamName.trim(),
-      governorate: input.governorate.trim(),
-      updatedAt: serverTimestamp(),
-    });
+    if (stateSnapshot.exists()) {
+      transaction.update(stateRef, {
+        teamName: input.teamName.trim(),
+        governorate: input.governorate.trim(),
+        updatedAt: serverTimestamp(),
+      });
+    }
 
     if (profileSnapshot.exists()) {
       transaction.update(profileRef, {
