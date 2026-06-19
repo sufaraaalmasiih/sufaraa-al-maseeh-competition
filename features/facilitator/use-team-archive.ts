@@ -84,13 +84,14 @@ function str(value: unknown, fallback = ""): string {
  * أرشيف مشاركات فريق واحد. يقرأ من مجموعة teamArchives الخاصة (يراها الفريق نفسه،
  * والميسّر يرى الجميع). لا يكشف نتائج الفرق الأخرى.
  */
-export function useTeamArchive(teamId: string | null) {
+export function useTeamArchive(teamId: string | null, enabled = true) {
   const [participations, setParticipations] = useState<TeamArchiveParticipation[]>([]);
-  const [loading, setLoading] = useState(Boolean(teamId));
+  const [loading, setLoading] = useState(Boolean(teamId) && enabled);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!teamId) {
+    // لا نفتح مستمعاً إلا عند الحاجة (توفير قراءات الباقة المجانية).
+    if (!teamId || !enabled) {
       setParticipations([]);
       setLoading(false);
       return undefined;
@@ -127,7 +128,7 @@ export function useTeamArchive(teamId: string | null) {
         setLoading(false);
       },
     );
-  }, [teamId]);
+  }, [teamId, enabled]);
 
   return { participations, count: participations.length, loading, error };
 }

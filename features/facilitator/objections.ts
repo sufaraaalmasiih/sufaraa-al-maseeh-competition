@@ -157,13 +157,14 @@ export function useObjections() {
 }
 
 /** اعتراضات فريق واحد — لأرشيف الفريق (يعمل للفريق نفسه وللميسّر). */
-export function useTeamObjections(teamId: string | null) {
+export function useTeamObjections(teamId: string | null, enabled = true) {
   const [objections, setObjections] = useState<CompetitionObjection[]>([]);
-  const [loading, setLoading] = useState(Boolean(teamId));
+  const [loading, setLoading] = useState(Boolean(teamId) && enabled);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!teamId) {
+    // مستمع عند الطلب فقط (توفير قراءات الباقة المجانية).
+    if (!teamId || !enabled) {
       setObjections([]);
       setLoading(false);
       return undefined;
@@ -185,7 +186,7 @@ export function useTeamObjections(teamId: string | null) {
         setLoading(false);
       },
     );
-  }, [teamId]);
+  }, [teamId, enabled]);
 
   return { objections, loading, error };
 }
