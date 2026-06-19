@@ -23,7 +23,11 @@ import {
   isTrainingMode,
 } from "@/features/facilitator/competition-mode";
 import { resetCompetition } from "@/features/gameflow/competition-reset";
-import { deleteTrainingObjections } from "@/features/facilitator/objections";
+import {
+  deleteTrainingObjections,
+  parseArchivedObjections,
+  type CompetitionObjection,
+} from "@/features/facilitator/objections";
 import { writeTeamArchivesForSession } from "@/features/facilitator/use-team-archive";
 import type { FinalResultTeam } from "@/features/facilitator/use-final-results";
 import { subscribeFirestoreDoc } from "@/lib/firestore-listener";
@@ -54,6 +58,7 @@ export interface CompetitionSession {
   resultsSavedAtMs: number | null;
   resultsSavedMode: "manual" | "auto" | null;
   teams: ArchiveTeam[];
+  objections: CompetitionObjection[];
 }
 
 export interface SessionEditLogEntry {
@@ -172,6 +177,7 @@ function parseSession(id: string, data: Record<string, unknown>): CompetitionSes
         ? data.resultsSavedMode
         : null,
     teams: parseTeams(data.teams),
+    objections: parseArchivedObjections(data.objections),
   };
 }
 

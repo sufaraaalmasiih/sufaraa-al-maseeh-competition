@@ -15,6 +15,7 @@ import {
   timerRef,
 } from "@/firebase/firestore";
 import { clearActiveSessionLink, completeActiveSession } from "@/features/facilitator/competition-session";
+import { archiveAndClearObjections } from "@/features/facilitator/objections";
 import {
   buildInitialGameFlowPayload,
   buildInitialTimerPayload,
@@ -47,6 +48,14 @@ export async function resetCompetition(
 ): Promise<CompetitionResetResult> {
   const deletedAnswers = await deleteAllAnswers(competitionId);
   const resetTeamStates = await resetAllTeamStates(competitionId);
+
+  // أرشفة اعتراضات المدربين في سجل المسابقة ثم تصفيتها (تعود إلى صفر للمسابقة الجديدة).
+  // غير حرجة: لا تُفشل إعادة الضبط إذا تعذّرت.
+  try {
+    await archiveAndClearObjections();
+  } catch {
+    // تجاهل — استمر في إعادة الضبط.
+  }
 
   try {
     await completeActiveSession();

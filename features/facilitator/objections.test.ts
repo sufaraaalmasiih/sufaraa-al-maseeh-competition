@@ -1,5 +1,29 @@
 import { describe, expect, it } from "vitest";
-import { objectionsForActiveSession } from "@/features/facilitator/objections";
+import {
+  mergeObjectionsById,
+  objectionsForActiveSession,
+  parseArchivedObjections,
+  type CompetitionObjection,
+} from "@/features/facilitator/objections";
+
+function makeObjection(
+  overrides: Partial<CompetitionObjection> & { id: string },
+): CompetitionObjection {
+  return {
+    teamId: "team-1",
+    teamName: "فريق",
+    questionId: null,
+    questionLabel: "سؤال",
+    stage: "stage1",
+    reasons: [],
+    note: "",
+    sessionId: "session-1",
+    sessionTitle: null,
+    status: "open",
+    createdAtMs: 0,
+    ...overrides,
+  };
+}
 
 interface Row {
   id: string;
@@ -33,5 +57,31 @@ describe("objectionsForActiveSession", () => {
     expect(objectionsForActiveSession(rows, "session-2").map((row) => row.id)).toEqual([
       "c",
     ]);
+  });
+});
+
+describe("parseArchivedObjections", () => {
+  it("parses objections stored inside a session history doc", () => {
+    const parsed = parseArchivedObjections([
+      { id: "x", teamName: "ألفا", reasons: ["wrong_reference"], status: "reviewed", createdAtMs: 5 },
+    ]);
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0]).toMatchObject({ id: "x", teamName: "ألفا", status: "reviewed" });
+  });
+
+  it("ignores non-array, non-object, and id-less entries", () => {
+    expect(parseArchivedObjections(undefined)).toEqual([]);
+    expect(parseArchivedObjections([null, 3, { teamName: "no id" }])).toEqual([]);
+  });
+});
+
+describe("mergeObjectionsById", () => {
+  it("dedupes by id and sorts newest first", () => {
+    const archived = [makeObjection({ id: "a", createdAtMs: 10 })];
+    const live = [
+      makeObjection({ id: "a", createdAtMs: 10 }),
+      makeObjection({ id: "b", createdAtMs: 20 }),
+    ];
+    expect(mergeObjectionsById(archived, live).map((row) => row.id)).toEqual(["b", "a"]);
   });
 });

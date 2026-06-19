@@ -29,6 +29,7 @@ import {
 import { SessionEditLogPanel } from "@/features/facilitator/components/session-edit-log-panel";
 import { ArchiveResultsTable } from "@/features/facilitator/components/archive-results-table";
 import {
+  mergeObjectionsById,
   objectionReasonLabel,
   useObjections,
   type CompetitionObjection,
@@ -71,7 +72,11 @@ export function FacilitatorHistoryTab() {
         <SessionCard
           key={archive.id}
           archive={archive}
-          objections={objections.filter((objection) => objection.sessionId === archive.id)}
+          // المؤرشفة (داخل وثيقة السجل) + أي اعتراضات حيّة للمسابقة النشطة قبل أرشفتها.
+          objections={mergeObjectionsById(
+            archive.objections,
+            objections.filter((objection) => objection.sessionId === archive.id),
+          )}
         />
       ))}
     </div>

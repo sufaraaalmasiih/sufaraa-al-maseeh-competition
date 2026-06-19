@@ -11,8 +11,10 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  setDoc,
   updateDoc,
   where,
+  writeBatch,
 } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { getClientFirestore, firebaseAuth } from "@/firebase/firebaseClient";
@@ -144,6 +146,111 @@ export async function deleteTrainingObjections(): Promise<void> {
     query(objectionsCollection(), where("sessionId", "==", null)),
   );
   await Promise.all(snapshot.docs.map((document) => deleteDoc(document.ref)));
+}
+
+/** أقصى عدد اعتراضات مؤرشفة في وثيقة السجل الواحدة (حد حجم وثيقة Firestore = 1 ميغابايت). */
+const MAX_ARCHIVED_OBJECTIONS = 300;
+
+function objectionToArchive(objection: CompetitionObjection): Record<string, unknown> {
+  return {
+    id: objection.id,
+    teamId: objection.teamId,
+    teamName: objection.teamName,
+    questionId: objection.questionId,
+    questionLabel: objection.questionLabel,
+    stage: objection.stage,
+    reasons: objection.reasons,
+    note: objection.note,
+    sessionId: objection.sessionId,
+    sessionTitle: objection.sessionTitle,
+    status: objection.status,
+    createdAtMs: objection.createdAtMs,
+  };
+}
+
+/** يحوّل مصفوفة الاعتراضات المؤرشفة (المخزّنة داخل وثيقة السجل) إلى كائنات. */
+export function parseArchivedObjections(raw: unknown): CompetitionObjection[] {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  return raw
+    .map((entry) => {
+      if (!entry || typeof entry !== "object") {
+        return null;
+      }
+      const data = entry as Record<string, unknown>;
+      const id = typeof data.id === "string" ? data.id : "";
+      return id.length > 0 ? parseObjection(id, data) : null;
+    })
+    .filter((entry): entry is CompetitionObjection => entry !== null);
+}
+
+/** يدمج اعتراضين (مؤرشف + حيّ) ويزيل التكرار حسب المعرّف، مرتّباً من الأحدث. */
+export function mergeObjectionsById(
+  first: CompetitionObjection[],
+  second: CompetitionObjection[],
+): CompetitionObjection[] {
+  const byId = new Map<string, CompetitionObjection>();
+  for (const objection of [...first, ...second]) {
+    byId.set(objection.id, objection);
+  }
+  return [...byId.values()].sort((a, b) => b.createdAtMs - a.createdAtMs);
+}
+
+/**
+ * يحفظ كل اعتراض داخل وثيقة سجل مسابقته (تبويب «السجل») ثم يحذف كل الاعتراضات الحيّة،
+ * فيعود عدّاد «اعتراضات المدربين» إلى صفر عند إعادة الضبط أو بدء مسابقة جديدة، بينما تبقى
+ * محفوظة في الأرشيف. الاعتراضات بلا سجل مسابقة (تدريب) تُحذف دون أرشفة.
+ */
+export async function archiveAndClearObjections(): Promise<{
+  archived: number;
+  cleared: number;
+}> {
+  const snapshot = await getDocs(objectionsCollection());
+  if (snapshot.empty) {
+    return { archived: 0, cleared: 0 };
+  }
+
+  const live = snapshot.docs.map((docSnap) => ({
+    ref: docSnap.ref,
+    objection: parseObjection(docSnap.id, docSnap.data()),
+  }));
+
+  // تجميع الاعتراضات حسب سجل المسابقة (نتجاهل اعتراضات التدريب بلا sessionId).
+  const bySession = new Map<string, CompetitionObjection[]>();
+  for (const { objection } of live) {
+    if (!objection.sessionId) {
+      continue;
+    }
+    const group = bySession.get(objection.sessionId) ?? [];
+    group.push(objection);
+    bySession.set(objection.sessionId, group);
+  }
+
+  let archived = 0;
+  for (const [sessionId, group] of bySession) {
+    const sorted = [...group].sort((a, b) => b.createdAtMs - a.createdAtMs);
+    try {
+      await setDoc(
+        doc(getClientFirestore(), "competitions", MAIN_COMPETITION_ID, "history", sessionId),
+        { objections: sorted.slice(0, MAX_ARCHIVED_OBJECTIONS).map(objectionToArchive) },
+        { merge: true },
+      );
+      archived += group.length;
+    } catch {
+      // لا تُفشل إعادة الضبط إذا تعذّرت أرشفة سجل واحد.
+    }
+  }
+
+  // حذف كل الاعتراضات الحيّة على دفعات (بما فيها اعتراضات التدريب) ليعود العدّاد إلى صفر.
+  const refs = live.map((item) => item.ref);
+  for (let index = 0; index < refs.length; index += 500) {
+    const batch = writeBatch(getClientFirestore());
+    refs.slice(index, index + 500).forEach((ref) => batch.delete(ref));
+    await batch.commit();
+  }
+
+  return { archived, cleared: refs.length };
 }
 
 export async function markObjectionReviewed(id: string): Promise<void> {
