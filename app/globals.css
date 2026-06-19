@@ -7607,24 +7607,30 @@
     @apply text-center;
   }
 
+  /* بطاقة الاختيار المضغوطة عند ظهور التصحيح (لتناسق البطاقة وعدم تجاوزها). */
+  .stage2-tf-choice--compact {
+    min-height: 0 !important;
+    @apply gap-1 py-2;
+  }
+
   /* تحديد الجزء الخطأ من جملة «صح أو خطأ» (المتسابق يضغط الكلمات). */
   .stage2-wrong-part {
-    @apply w-full rounded-2xl border px-3 py-3;
+    @apply w-full rounded-2xl border px-3 py-2;
     border-color: rgba(245, 158, 11, 0.35);
     background: rgba(255, 251, 235, 0.9);
   }
 
   .stage2-wrong-part__hint {
-    @apply mb-2 text-center text-xs font-bold;
+    @apply mb-1.5 text-center text-xs font-bold;
     color: #b45309;
   }
 
   .stage2-wrong-part__tokens {
-    @apply flex flex-wrap justify-center gap-2;
+    @apply flex flex-wrap justify-center gap-1.5;
   }
 
   .stage2-wrong-part__token {
-    @apply rounded-xl border px-3 py-1.5 text-base font-bold transition;
+    @apply rounded-lg border px-2.5 py-1 text-sm font-bold transition;
     border-color: rgba(20, 58, 90, 0.18);
     background: rgba(255, 255, 255, 0.95);
     color: #143a5a;

@@ -99,7 +99,7 @@ export function Stage2TrueFalseCorrectQuestionCard({
   }
 
   return (
-    <div className="space-y-3">
+    <div className={showCorrectionInput ? "space-y-2" : "space-y-3"}>
       {hideQuestion ? null : (
         <QuestionPrompt reference={question.reference} imageUrl={question.imageUrl} size="hero">
           {question.statement}
@@ -118,9 +118,17 @@ export function Stage2TrueFalseCorrectQuestionCard({
             disabled={isLocked}
             selected={selectedChoice === choice}
             variant={variant}
+            className={showCorrectionInput ? "stage2-tf-choice--compact" : undefined}
             onClick={() => handleSelectChoice(choice)}
           >
-            <span aria-hidden className="text-4xl font-black leading-none sm:text-5xl">
+            <span
+              aria-hidden
+              className={
+                showCorrectionInput
+                  ? "text-2xl font-black leading-none sm:text-3xl"
+                  : "text-4xl font-black leading-none sm:text-5xl"
+              }
+            >
               {symbol}
             </span>
             {label}
@@ -132,7 +140,9 @@ export function Stage2TrueFalseCorrectQuestionCard({
         {showCorrectionInput ? (
           <>
             <div className="stage2-wrong-part">
-              <p className="stage2-wrong-part__hint">اضغط على الكلمة/الكلمات الخطأ في الجملة:</p>
+              <p className="stage2-wrong-part__hint">
+                اضغط على الكلمة (أو أكثر) الخطأ في الجملة:
+              </p>
               <div className="stage2-wrong-part__tokens" dir="rtl">
                 {tokens.map((word, index) => (
                   <button
@@ -154,7 +164,7 @@ export function Stage2TrueFalseCorrectQuestionCard({
             <div className="gameplay-answer-field">
               <textarea
                 id={`correction-${question.id}`}
-                className="gameplay-answer-input min-h-20 resize-none py-3 leading-8"
+                className="gameplay-answer-input min-h-14 resize-none py-2 leading-7"
                 disabled={isLocked}
                 placeholder="اكتب التصحيح"
                 value={correctionText}
