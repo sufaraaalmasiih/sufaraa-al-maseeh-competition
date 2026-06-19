@@ -14,6 +14,18 @@ describe("stage3-scoring", () => {
       expect(computeStage3PointsDelta(true, "hard", "correct")).toBe(45);
     });
 
+    it("applies a per-question points override on correct answers (owner full, others a third)", () => {
+      expect(computeStage3PointsDelta(true, "easy", "correct", false, 60)).toBe(60);
+      expect(computeStage3PointsDelta(false, "easy", "correct", false, 60)).toBe(20);
+      // collective uses the shared (other) share
+      expect(computeStage3PointsDelta(true, "hard", "correct", true, 60)).toBe(20);
+    });
+
+    it("ignores the override for non-correct outcomes (penalties stay by level)", () => {
+      expect(computeStage3PointsDelta(true, "hard", "wrong", false, 60)).toBe(-15);
+      expect(computeStage3PointsDelta(true, "easy", "no_answer", false, 60)).toBe(-5);
+    });
+
     it("penalizes owner wrong and timeout answers", () => {
       expect(computeStage3PointsDelta(true, "medium", "wrong")).toBe(-10);
       expect(computeStage3PointsDelta(true, "hard", "selection_timeout")).toBe(-15);

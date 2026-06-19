@@ -139,4 +139,32 @@ describe("in-app question editor model", () => {
     const rebuilt = itemsToPayload([item]);
     expect(rebuilt.stage1[0].points).toBeUndefined();
   });
+
+  it("omits points when equal to the stage default (no needless override)", () => {
+    const item = {
+      ...blankItem("stage1"),
+      type: "fill_blank",
+      id: "p3",
+      question: "نقاط طبيعية؟",
+      correct: "نعم",
+      points: "5", // = افتراضي المرحلة 1
+    };
+    const rebuilt = itemsToPayload([item]);
+    expect(rebuilt.stage1[0].points).toBeUndefined();
+  });
+
+  it("stage3 item keeps an override that differs from the level default", () => {
+    const item = {
+      ...blankItem("stage3"),
+      type: "fill_blank",
+      id: "s3p",
+      question: "سؤال م3؟",
+      correct: "نعم",
+      category: "characters",
+      level: "easy", // افتراضي 15
+      points: "50",
+    };
+    const rebuilt = itemsToPayload([item]);
+    expect(rebuilt.stage3["s3p"].points).toBe(50);
+  });
 });

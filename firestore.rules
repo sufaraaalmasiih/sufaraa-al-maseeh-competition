@@ -44,8 +44,9 @@ service cloud.firestore {
     }
 
     function boundedScoreDelta(oldScore, newScore) {
+      // الحد الأعلى 100: يغطّي م3 الصعب (45) وتجاوزات النقاط لكل سؤال (حتى 100).
       return (newScore - oldScore) >= -200
-        && (newScore - oldScore) <= 25;
+        && (newScore - oldScore) <= 100;
     }
 
     function teamStateScoreUpdateAllowed() {
@@ -64,7 +65,7 @@ service cloud.firestore {
         && data.isCorrect is bool
         && data.pointsDelta is number
         && data.pointsDelta >= -200
-        && data.pointsDelta <= 25;
+        && data.pointsDelta <= 100;
     }
 
     function teamAnswerCreateAllowed(competitionId) {

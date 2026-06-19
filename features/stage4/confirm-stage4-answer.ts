@@ -142,7 +142,7 @@ export async function confirmStage4Answer({
     // تجاوز نقاط لكل سؤال إن حُدِّد (بدل تصاعد السلسلة) — مع احترام سقف كتابة الفريق (≤25).
     const overridePoints =
       mockQuestion && typeof (mockQuestion as { points?: unknown }).points === "number"
-        ? Math.min(25, Math.floor((mockQuestion as { points: number }).points))
+        ? Math.min(100, Math.floor((mockQuestion as { points: number }).points))
         : 0;
     const pointsDelta = isCorrect
       ? overridePoints > 0

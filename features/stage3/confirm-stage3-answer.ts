@@ -148,11 +148,18 @@ export async function confirmStage3Answer({
         ? evaluateStage1Answer(mockQuestion, answer)
         : false;
     const outcome = resolveStage3AnswerOutcome(passed, isCorrect);
+    // تجاوز نقاط لكل سؤال إن حُدِّد (≤100 = حدّ قاعدة الأمان بعد رفعه).
+    const rawOverride = (mockQuestion as { points?: unknown } | null)?.points;
+    const overridePoints =
+      typeof rawOverride === "number" && rawOverride > 0
+        ? Math.min(100, Math.floor(rawOverride))
+        : undefined;
     const pointsDelta = computeStage3PointsDelta(
       isOwner,
       activeQuestion.difficulty,
       outcome,
       collective,
+      overridePoints,
     );
 
     const now = serverTimestamp();

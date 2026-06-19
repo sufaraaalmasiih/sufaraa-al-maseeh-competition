@@ -84,6 +84,27 @@ export const STAGE3_LEVEL_OPTIONS = STAGE3_LEVELS.map((value) => ({
   label: STAGE3_LEVEL_LABELS[value],
 }));
 
+/** أقصى نقاط مسموح بها لكل سؤال — يطابق حدّ قاعدة الأمان (boundedScoreDelta). */
+export const MAX_QUESTION_POINTS = 100;
+
+/** النقاط «الطبيعية» الافتراضية لكل مرحلة/مستوى (تُعرض في الخانة وتُحذف من البنك إن لم تتغيّر). */
+export function defaultPointsForStageLevel(stage: AdminStageKey, level: string): number | null {
+  if (stage === "stage1") {
+    return 5;
+  }
+  if (stage === "stage4") {
+    return 15;
+  }
+  if (stage === "stage3") {
+    return level === "hard" ? 45 : level === "medium" ? 30 : 15;
+  }
+  return null; // المرحلة 2 تُدار بقواعدها الخاصة (5+5+5 وغيرها)
+}
+
+export function defaultPointsFor(item: EditorItem): number | null {
+  return defaultPointsForStageLevel(item.stage, item.level);
+}
+
 /** الحقول التي يعرضها النموذج حسب النوع. */
 export interface TypeFieldConfig {
   needsQuestion: boolean;
@@ -167,6 +188,8 @@ function nextUid(): string {
 
 export function blankItem(stage: AdminStageKey): EditorItem {
   const type = typesForStage(stage)[0]?.value ?? "missing";
+  const startLevel = stage === "stage3" ? STAGE3_LEVELS[0] : "";
+  const defaultPts = defaultPointsForStageLevel(stage, startLevel);
   return {
     uid: nextUid(),
     stage,
@@ -187,7 +210,7 @@ export function blankItem(stage: AdminStageKey): EditorItem {
     level: stage === "stage3" ? STAGE3_LEVELS[0] : "",
     correctIsTrue: true,
     acceptedAnswers: [],
-    points: "",
+    points: defaultPts != null ? String(defaultPts) : "",
   };
 }
 
@@ -208,8 +231,12 @@ export function editorItemToRows(item: EditorItem): Record<string, string>[] {
   if (accepted) {
     base.acceptedanswers = accepted;
   }
-  if (item.points.trim()) {
-    base.points = item.points.trim();
+  // نكتب النقاط فقط إن أدخلها المنظِّم واختلفت عن الطبيعي — فيبقى البنك نظيفاً
+  // والسلوك الافتراضي (تصاعد م4، مستوى م3) سليماً عند عدم التغيير.
+  const defaultPts = defaultPointsFor(item);
+  const pointsNum = item.points.trim() ? Math.floor(Number(item.points)) : NaN;
+  if (Number.isFinite(pointsNum) && pointsNum > 0 && pointsNum !== defaultPts) {
+    base.points = String(Math.min(MAX_QUESTION_POINTS, pointsNum));
   }
   if (item.stage === "stage3") {
     base.category = item.category;
@@ -292,7 +319,10 @@ export function payloadToEditorItems(payload: FullQuestionBankPayload): EditorIt
       imageUrl: String(q.imageUrl ?? ""),
       options: arr(q.options).length > 0 ? arr(q.options) : ["", ""],
       parts: parts.length > 0 ? parts : ["", ""],
-      points: typeof q.points === "number" ? String(q.points) : "",
+      points:
+        typeof q.points === "number"
+          ? String(q.points)
+          : String(defaultPointsForStageLevel("stage1", "")),
     });
   });
 
@@ -376,7 +406,12 @@ export function payloadToEditorItems(payload: FullQuestionBankPayload): EditorIt
       parts: parts.length > 0 ? parts : ["", ""],
       category: String(q.fieldId ?? STAGE3_FIELD_KEYS[0]),
       level: String(q.difficulty ?? STAGE3_LEVELS[0]),
-      points: typeof q.points === "number" ? String(q.points) : "",
+      points:
+        typeof q.points === "number"
+          ? String(q.points)
+          : String(
+              defaultPointsForStageLevel("stage3", String(q.difficulty ?? STAGE3_LEVELS[0])),
+            ),
     });
   });
 
@@ -403,7 +438,10 @@ export function payloadToEditorItems(payload: FullQuestionBankPayload): EditorIt
       parts: parts.length > 0 ? parts : ["", ""],
       data,
       acceptedAnswers: arr(q.acceptedAnswers),
-      points: typeof q.points === "number" ? String(q.points) : "",
+      points:
+        typeof q.points === "number"
+          ? String(q.points)
+          : String(defaultPointsForStageLevel("stage4", "")),
     });
   });
 

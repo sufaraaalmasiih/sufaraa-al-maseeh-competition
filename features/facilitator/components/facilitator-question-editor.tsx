@@ -16,6 +16,7 @@ import {
 } from "@/features/facilitator/question-bank-store";
 import {
   blankItem,
+  defaultPointsForStageLevel,
   fieldsForType,
   getTypeLabel,
   itemsToPayload,
@@ -384,7 +385,17 @@ function QuestionForm({ item, disabled, onPatch }: QuestionFormProps) {
               className={inputClass}
               disabled={disabled}
               value={item.level}
-              onChange={(event) => onPatch({ level: event.target.value })}
+              onChange={(event) => {
+                const nextLevel = event.target.value;
+                // إن لم يُغيّر المنظِّم النقاط (تساوي افتراضي المستوى الحالي) نُحدّثها لافتراضي المستوى الجديد.
+                const oldDefault = defaultPointsForStageLevel(item.stage, item.level);
+                const wasDefault = Number(item.points) === oldDefault;
+                const nextDefault = defaultPointsForStageLevel(item.stage, nextLevel);
+                onPatch({
+                  level: nextLevel,
+                  ...(wasDefault && nextDefault != null ? { points: String(nextDefault) } : {}),
+                });
+              }}
             >
               {STAGE3_LEVEL_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -608,23 +619,26 @@ function QuestionForm({ item, disabled, onPatch }: QuestionFormProps) {
       ) : null}
 
       {item.stage !== "stage2" ? (
-        <Labeled
-          label={
-            item.stage === "stage3"
-              ? "نقاط هذا السؤال (فارغ = حسب المستوى) — تُسجَّل حالياً"
-              : "نقاط هذا السؤال (فارغ = افتراضي المرحلة، الحد الأقصى 25)"
-          }
-        >
+        <Labeled label="نقاط الإجابة الصحيحة (الطبيعي مكتوب — غيّره للتجاوز، حتى 100)">
           <input
             className={inputClass}
             type="number"
             min={1}
-            max={item.stage === "stage3" ? undefined : 25}
+            max={100}
             disabled={disabled}
-            placeholder="افتراضي"
             value={item.points}
             onChange={(event) => onPatch({ points: event.target.value })}
           />
+          {item.stage === "stage4" ? (
+            <span className="mt-1 block text-[11px] font-semibold text-[#64748B]">
+              الطبيعي تصاعدي (15 ثم +2 لكل إجابة متتالية). اكتب رقماً ثابتاً لتجاوز التصاعد.
+            </span>
+          ) : null}
+          {item.stage === "stage3" ? (
+            <span className="mt-1 block text-[11px] font-semibold text-[#64748B]">
+              تُطبَّق على صاحب الدور؛ الفرق المنافسة تأخذ ثلثها (كنسبة الافتراضي).
+            </span>
+          ) : null}
         </Labeled>
       ) : null}
 

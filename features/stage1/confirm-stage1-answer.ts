@@ -127,7 +127,7 @@ export async function confirmStage1Answer({
     const overridePoints = scoredQuestion.points;
     const correctPoints =
       typeof overridePoints === "number" && overridePoints > 0
-        ? Math.min(25, Math.floor(overridePoints))
+        ? Math.min(100, Math.floor(overridePoints))
         : CORRECT_ANSWER_POINTS;
     const pointsDelta: number = isCorrect ? correctPoints : 0;
 

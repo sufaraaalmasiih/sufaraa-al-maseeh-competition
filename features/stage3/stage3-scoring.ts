@@ -25,7 +25,19 @@ export function computeStage3PointsDelta(
   difficulty: Stage3Difficulty,
   outcome: Stage3AnswerOutcome,
   collective = false,
+  overridePoints?: number,
 ): number {
+  // تجاوز نقاط لكل سؤال (يُحدِّده المنظِّم): يُطبَّق على الإجابة الصحيحة فقط.
+  // المالك يأخذ النقاط المحدّدة، وبقية الفرق ثلثها (بنفس نسبة الافتراضي 1:3).
+  // الخصومات وعدم الإجابة والتخطّي تبقى على قيم المستوى.
+  if (typeof overridePoints === "number" && overridePoints > 0 && outcome === "correct") {
+    const otherShare = Math.max(1, Math.round(overridePoints / 3));
+    if (collective) {
+      return otherShare;
+    }
+    return isOwner ? overridePoints : otherShare;
+  }
+
   // سؤال جماعي (زائد): لا أفضلية لصاحب الدور — نقاط مسطّحة للجميع،
   // وكل الفرق تجيب أو تتخطّى بلا خصم (النقطة 15).
   if (collective) {
