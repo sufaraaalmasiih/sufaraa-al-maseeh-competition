@@ -16,6 +16,12 @@ function str(value: unknown): string {
   return typeof value === "string" ? value.trim() : value == null ? "" : String(value).trim();
 }
 
+/** نقاط تجاوز اختيارية لكل سؤال — عدد صحيح موجب أو undefined. */
+export function parseQuestionPoints(value: unknown): number | undefined {
+  const parsed = typeof value === "number" ? value : Number(String(value ?? "").trim());
+  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : undefined;
+}
+
 function splitList(value: unknown): string[] {
   if (Array.isArray(value)) {
     return value.map((item) => str(item)).filter(Boolean);
@@ -49,6 +55,8 @@ function normalizeQuestion(raw: unknown, fallbackIndex: number): Stage1MockQuest
   const id = str(entry.id) || `stage1-import-${fallbackIndex + 1}`;
   const reference = str(entry.reference) || undefined;
   const imageUrl = str(entry.imageUrl) || undefined;
+  const points = parseQuestionPoints(entry.points);
+  const pointsField = points ? { points } : {};
 
   if (type === "multiple_choice") {
     const options = splitList(entry.options);
@@ -61,6 +69,7 @@ function normalizeQuestion(raw: unknown, fallbackIndex: number): Stage1MockQuest
       prompt,
       ...(reference ? { reference } : {}),
       ...(imageUrl ? { imageUrl } : {}),
+      ...pointsField,
       correctAnswer,
       options,
     };
@@ -82,6 +91,7 @@ function normalizeQuestion(raw: unknown, fallbackIndex: number): Stage1MockQuest
       prompt,
       ...(reference ? { reference } : {}),
       ...(imageUrl ? { imageUrl } : {}),
+      ...pointsField,
       correctAnswer: orderForAnswer.join(" | "),
       parts,
       correctOrder: orderForAnswer,
@@ -97,6 +107,7 @@ function normalizeQuestion(raw: unknown, fallbackIndex: number): Stage1MockQuest
     prompt,
     ...(reference ? { reference } : {}),
     ...(imageUrl ? { imageUrl } : {}),
+    ...pointsField,
     correctAnswer,
   };
 }
@@ -132,6 +143,7 @@ export function parseStage1RowsToQuestions(
           parts: lower.parts ?? lower["الأجزاء"] ?? lower["الاجزاء"],
           correctOrder: lower.correctorder ?? lower["الترتيب"],
           imageUrl: lower.imageurl ?? lower["رابط الصورة"] ?? lower["الصورة"],
+          points: lower.points ?? lower["النقاط"],
         },
         index,
       );

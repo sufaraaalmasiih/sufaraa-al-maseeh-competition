@@ -607,6 +607,27 @@ function QuestionForm({ item, disabled, onPatch }: QuestionFormProps) {
         </Labeled>
       ) : null}
 
+      {item.stage !== "stage2" ? (
+        <Labeled
+          label={
+            item.stage === "stage3"
+              ? "نقاط هذا السؤال (فارغ = حسب المستوى) — تُسجَّل حالياً"
+              : "نقاط هذا السؤال (فارغ = افتراضي المرحلة، الحد الأقصى 25)"
+          }
+        >
+          <input
+            className={inputClass}
+            type="number"
+            min={1}
+            max={item.stage === "stage3" ? undefined : 25}
+            disabled={disabled}
+            placeholder="افتراضي"
+            value={item.points}
+            onChange={(event) => onPatch({ points: event.target.value })}
+          />
+        </Labeled>
+      ) : null}
+
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <Labeled label={config.needsImage ? "رابط الصورة (إلزامي)" : "رابط الصورة (اختياري)"}>
           <input

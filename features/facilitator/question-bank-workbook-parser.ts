@@ -1,4 +1,7 @@
-import { parseStage1RowsToQuestions } from "@/features/facilitator/stage1-question-bank-parser";
+import {
+  parseQuestionPoints,
+  parseStage1RowsToQuestions,
+} from "@/features/facilitator/stage1-question-bank-parser";
 import { deriveWorkbookBankStats } from "@/features/facilitator/question-bank-meta";
 import type {
   FullQuestionBankPayload,
@@ -98,6 +101,7 @@ function unifiedRowToLegacyStage1Row(row: Record<string, unknown>): Record<strin
         ? correctOrderParts.join("|")
         : row.correctorder ?? row.data,
     imageUrl: row.imageurl ?? row.image,
+    points: row.points,
   };
 }
 
@@ -171,6 +175,11 @@ function buildStage4Question(row: Record<string, unknown>, order: number): Stage
     question.acceptedAnswers = accepted;
   }
 
+  const points = parseQuestionPoints(row.points);
+  if (points) {
+    question.points = points;
+  }
+
   if (type === "multiple_choice") {
     const options = collectOptions(row);
     if (options.length >= 2) {
@@ -197,13 +206,15 @@ function buildFlexibleQuestion(
   const reference = trim(row.reference) || undefined;
   const imageUrl = trim(row.imageurl) || trim(row.image) || undefined;
   const correctAnswer = trim(row.correct) || trim(row.correctanswer);
+  const points = parseQuestionPoints(row.points);
+  const pointsField = points ? { points } : {};
 
   if (type === "multiple_choice") {
     const options = collectOptions(row);
     if (options.length < 2 || !correctAnswer) {
       return null;
     }
-    return { id, type: "multiple_choice", prompt, reference, imageUrl, correctAnswer, options };
+    return { id, type: "multiple_choice", prompt, reference, imageUrl, ...pointsField, correctAnswer, options };
   }
 
   if (type === "arrange" || type === "arrangeVerse") {
@@ -223,6 +234,7 @@ function buildFlexibleQuestion(
       prompt,
       reference,
       imageUrl,
+      ...pointsField,
       correctAnswer: orderForAnswer.join(" | "),
       parts: resolvedParts,
       correctOrder: orderForAnswer,
@@ -233,7 +245,7 @@ function buildFlexibleQuestion(
     if (!correctAnswer) {
       return null;
     }
-    return { id, type, prompt, reference, imageUrl, correctAnswer };
+    return { id, type, prompt, reference, imageUrl, ...pointsField, correctAnswer };
   }
 
   if (type === "matching" || type === "completeVerse" || type === "trueFalseCorrect") {
@@ -246,6 +258,7 @@ function buildFlexibleQuestion(
       prompt,
       reference,
       imageUrl,
+      ...pointsField,
       correctAnswer,
     };
   }
@@ -260,6 +273,7 @@ function buildFlexibleQuestion(
       prompt,
       reference,
       imageUrl,
+      ...pointsField,
       correctAnswer,
     };
   }

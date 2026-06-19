@@ -123,7 +123,13 @@ export async function confirmStage1Answer({
     const scoredQuestion =
       getAuthoritativeStage1Question(question.id) ?? question;
     const isCorrect = evaluateStage1Answer(scoredQuestion, answer);
-    const pointsDelta: number = isCorrect ? CORRECT_ANSWER_POINTS : 0;
+    // تجاوز نقاط لكل سؤال إن حُدِّد — مع احترام سقف كتابة الفريق لنفسه (≤25) في قواعد الأمان.
+    const overridePoints = scoredQuestion.points;
+    const correctPoints =
+      typeof overridePoints === "number" && overridePoints > 0
+        ? Math.min(25, Math.floor(overridePoints))
+        : CORRECT_ANSWER_POINTS;
+    const pointsDelta: number = isCorrect ? correctPoints : 0;
 
     const answerPayload = {
       teamId,

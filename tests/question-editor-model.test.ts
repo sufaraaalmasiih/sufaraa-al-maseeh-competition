@@ -113,4 +113,30 @@ describe("in-app question editor model", () => {
     };
     expect(validateItem(item)).toHaveLength(0);
   });
+
+  it("persists a per-question points override through items -> payload", () => {
+    const item = {
+      ...blankItem("stage1"),
+      type: "fill_blank",
+      id: "p1",
+      question: "سؤال بنقاط؟",
+      correct: "نعم",
+      points: "20",
+    };
+    const rebuilt = itemsToPayload([item]);
+    expect(rebuilt.stage1[0].points).toBe(20);
+  });
+
+  it("leaves points undefined when the field is blank", () => {
+    const item = {
+      ...blankItem("stage1"),
+      type: "fill_blank",
+      id: "p2",
+      question: "بلا نقاط؟",
+      correct: "نعم",
+      points: "",
+    };
+    const rebuilt = itemsToPayload([item]);
+    expect(rebuilt.stage1[0].points).toBeUndefined();
+  });
 });

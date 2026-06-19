@@ -11,6 +11,8 @@ export interface Stage1BaseQuestion {
   reference?: string;
   imageUrl?: string;
   correctAnswer: string;
+  /** تجاوز اختياري لنقاط الإجابة الصحيحة (بدل افتراضي المرحلة). */
+  points?: number;
 }
 
 export function isStage1QuestionType(value: string): value is Stage1QuestionType {

@@ -17,6 +17,8 @@ export interface Stage4QuestionMetadata {
   options?: string[];
   parts?: string[];
   correctOrder?: string[];
+  /** تجاوز اختياري لنقاط الإجابة الصحيحة (بدل افتراضي المرحلة). */
+  points?: number;
   order: number;
 }
 

@@ -25,6 +25,7 @@ const EXPORT_COLUMNS: ExportColumn[] = [
   { key: "option4", arabic: "خيار 4" },
   { key: "correct", arabic: "الإجابة الصحيحة" },
   { key: "acceptedanswers", arabic: "الإجابات المقبولة" },
+  { key: "points", arabic: "النقاط" },
   { key: "imageurl", arabic: "رابط الصورة" },
   { key: "reference", arabic: "المرجع" },
   { key: "notes", arabic: "ملاحظات" },
@@ -61,6 +62,7 @@ function buildStage1Rows(payload: FullQuestionBankPayload): ExportRow[] {
       question: str(q.prompt),
       correct: str(q.correctAnswer),
       data: joinPipe(q.parts),
+      points: str(q.points),
       reference: str(q.reference),
       imageurl: str(q.imageUrl),
     };
@@ -145,6 +147,7 @@ function buildStage3Rows(payload: FullQuestionBankPayload): ExportRow[] {
       question: str(q.prompt),
       correct: str(q.correctAnswer),
       data: joinPipe(q.parts),
+      points: str(q.points),
       reference: str(q.reference),
       imageurl: str(q.imageUrl),
     };
@@ -171,6 +174,7 @@ function buildStage4Rows(payload: FullQuestionBankPayload): ExportRow[] {
       correct: str(q.correctAnswer),
       data: dataValue,
       acceptedanswers: joinPipe(q.acceptedAnswers),
+      points: str(q.points),
       reference: str(q.reference),
       imageurl: str(q.imageUrl),
     };
