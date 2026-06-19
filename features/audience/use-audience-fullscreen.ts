@@ -36,6 +36,13 @@ export function useAudienceFullscreenMode(): boolean {
     }
 
     root.classList.remove("audience-fullscreen-mode");
+
+    // الإيقاف عن بُعد يعمل بالكامل: الخروج من ملء الشاشة الأصلي لا يحتاج ضغطة مستخدم (#12).
+    if (document.fullscreenElement && document.exitFullscreen) {
+      void document.exitFullscreen().catch(() => {
+        // المتصفح قد يرفض في سياقات نادرة — نتجاهل بأمان.
+      });
+    }
   }, [embedded, fullscreen]);
 
   return embedded ? false : fullscreen;

@@ -6,12 +6,30 @@ import {
   STAGE3_LEVEL_LABELS,
   STAGE3_LEVELS,
   getArabicLabelForExcelType,
+  getStage1ArabicTypeOptions,
+  getStage2ArabicTypeOptions,
+  getStage3ArabicTypeOptions,
+  getStage4ArabicTypeOptions,
   normalizeStage1ExcelType,
   normalizeStage2ExcelType,
   normalizeStage3ExcelType,
   normalizeStage4ExcelType,
   type AllGameQuestionType,
 } from "@/features/facilitator/question-type-registry";
+
+/** الأنواع العربية المسموحة لكل مرحلة — تُعرض في رسالة الخطأ لتسهيل النقل بين المراحل (#6). */
+function getAllowedArabicTypesForStage(stage: AdminStageKey): string[] {
+  if (stage === "stage1") {
+    return getStage1ArabicTypeOptions();
+  }
+  if (stage === "stage2") {
+    return getStage2ArabicTypeOptions();
+  }
+  if (stage === "stage3") {
+    return getStage3ArabicTypeOptions();
+  }
+  return getStage4ArabicTypeOptions();
+}
 
 function trim(value: unknown): string {
   return typeof value === "string" ? value.trim() : value == null ? "" : String(value).trim();
@@ -411,12 +429,22 @@ export function validateQuestionBankRows(
     const rawType = row.type ?? row.typename;
     const type = resolveTypeForStage(stage, rawType);
     if (!type) {
+      const allowed = getAllowedArabicTypesForStage(stage).join(" · ");
+      // عند نقل سؤال بين المراحل: نوضّح أن النوع نفسه يجب أن يتغيّر، ونسرد المسموح (#6).
+      const movedFromElsewhere =
+        normalizeStage1ExcelType(rawType) ||
+        normalizeStage2ExcelType(rawType) ||
+        normalizeStage3ExcelType(rawType) ||
+        normalizeStage4ExcelType(rawType);
+      const hint = movedFromElsewhere
+        ? ` — نوع «${trim(rawType)}» يخص مرحلة أخرى. عند نقل السؤال إلى ${getStageDisplayLabel(stage)} غيّر عمود «النوع» إلى أحد: ${allowed}`
+        : ` — الأنواع المسموحة في ${getStageDisplayLabel(stage)}: ${allowed}`;
       pushError(
         errors,
         rowNumber,
         row,
         "نوع السؤال",
-        `نوع «${trim(rawType)}» غير مدعوم في ${getStageDisplayLabel(stage)}.`,
+        `نوع «${trim(rawType)}» غير مدعوم في ${getStageDisplayLabel(stage)}${hint}`,
       );
       return;
     }
