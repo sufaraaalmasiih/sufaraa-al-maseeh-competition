@@ -253,7 +253,7 @@ function ArchiveRow({
               disabled={busy}
               onClick={() => onLoad(archive.id)}
             >
-              تحميل
+              اجعله البنك الحالي
             </button>
             <button
               type="button"
@@ -454,7 +454,7 @@ export function FacilitatorQuestionBankTab() {
       await assertQuestionBankImportAllowed();
       await backupCurrentQuestionBank("نسخة قبل تحميل أرشيف");
       await loadQuestionBankArchive(archiveId);
-      setFeedback({ kind: "success", text: "تم تحميل الأرشيف وتفعيل بنك الأسئلة." });
+      setFeedback({ kind: "success", text: "تم تفعيل هذا الأرشيف كبنك الأسئلة الحالي للمسابقة." });
     } catch (error) {
       setFeedback({
         kind: "error",
