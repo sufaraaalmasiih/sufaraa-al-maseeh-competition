@@ -7599,7 +7599,17 @@
   }
 
   .stage2-facilitator-table {
-    @apply w-full table-fixed border-collapse text-right text-sm;
+    /* تخطيط تلقائي ليأخذ كل عمود عرضه المناسب (أجمل من الثابت مع 9 أعمدة). */
+    @apply w-full table-auto border-collapse text-right text-sm;
+    min-width: 44rem;
+  }
+
+  /* الأعمدة الرقمية لا تلتفّ، واسم الفريق يأخذ المساحة الأكبر. */
+  .stage2-facilitator-table__num {
+    white-space: nowrap;
+  }
+  .stage2-facilitator-table__team {
+    min-width: 8rem;
   }
 
   .stage2-facilitator-table thead {
@@ -7607,13 +7617,13 @@
   }
 
   .stage2-facilitator-table th {
-    @apply border-b px-3 py-3.5 text-xs font-black uppercase tracking-wide sm:px-4 sm:text-sm sm:normal-case sm:tracking-normal;
+    @apply border-b px-2.5 py-2.5 text-xs font-black tracking-wide sm:px-3 sm:text-sm sm:tracking-normal;
     color: rgba(20, 58, 90, 0.72);
     border-bottom-color: rgba(35, 136, 196, 0.16);
   }
 
   .stage2-facilitator-table td {
-    @apply border-b px-3 py-3.5 align-middle text-[#143A5A] sm:px-4;
+    @apply border-b px-2.5 py-2.5 align-middle text-[#143A5A] sm:px-3;
     border-bottom-color: rgba(20, 58, 90, 0.08);
   }
 

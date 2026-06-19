@@ -1,13 +1,19 @@
 ﻿import { runTransaction, serverTimestamp } from "firebase/firestore";
 import { getClientFirestore } from "@/firebase/firebaseClient";
-import { gameFlowRef, timerRef } from "@/firebase/firestore";
-import { markStage3AnswersVisibleToAudience } from "@/features/stage3/mark-stage3-answers-visible";import {
+import { answerRef, gameFlowRef, teamStateRef, timerRef } from "@/firebase/firestore";
+import { markStage3AnswersVisibleToAudience } from "@/features/stage3/mark-stage3-answers-visible";
+import {
   parseStage3QuestionMetadata,
   parseStage3UsedQuestionIds,
 } from "@/features/stage3/stage3-question-metadata";
+import { buildStage3AnswerId } from "@/features/stage3/stage3-answer-id";
+import { buildStage3AnswerPayload } from "@/features/stage3/stage3-answer-payload";
+import { computeStage3PointsDelta } from "@/features/stage3/stage3-scoring";
 import { buildStage3RevealTimerPayload } from "@/features/stage3/stage3-timer-payload";
 import { parseTimerDurations } from "@/features/facilitator/facilitator-timer-settings";
 import { getSyncedNowMs } from "@/lib/server-clock-sync";
+
+const MAIN_COMPETITION_ID = "main";
 
 const SKIP_STATUSES = new Set([
   "stage3_reveal",
@@ -82,6 +88,65 @@ export async function autoCloseAndRevealStage3Question(): Promise<AutoCloseAndRe
       : [...usedQuestionIds, activeQuestion.id];
 
     const revealSeconds = parseTimerDurations(gameFlow.durations).stage3Reveal;
+
+    // إن لم يجب صاحب الدور قبل انتهاء الوقت، نُسجّل له «لم يُجب» مع الخصم،
+    // حتى يظهر للجمهور في الإعلان (يقوم به الميسّر لأنه مخوّل).
+    const ownerTeamId =
+      typeof gameFlow.stage3OwnerTeamId === "string" ? gameFlow.stage3OwnerTeamId : "";
+    const ownerTeamName =
+      typeof gameFlow.stage3OwnerTeamName === "string"
+        ? gameFlow.stage3OwnerTeamName
+        : "صاحب الدور";
+
+    if (ownerTeamId) {
+      const ownerAnswerRef = answerRef(
+        MAIN_COMPETITION_ID,
+        buildStage3AnswerId(activeQuestion.id, ownerTeamId),
+      );
+      const ownerStateRef = teamStateRef(MAIN_COMPETITION_ID, ownerTeamId);
+      const [ownerAnswerSnapshot, ownerStateSnapshot] = await Promise.all([
+        transaction.get(ownerAnswerRef),
+        transaction.get(ownerStateRef),
+      ]);
+
+      const ownerAlreadyAnswered =
+        ownerAnswerSnapshot.exists() && ownerAnswerSnapshot.data().confirmed === true;
+
+      if (!ownerAlreadyAnswered && ownerStateSnapshot.exists()) {
+        const ownerState = ownerStateSnapshot.data() ?? {};
+        const ownerStage3 =
+          typeof ownerState.stageScores?.stage3 === "number" ? ownerState.stageScores.stage3 : 0;
+        const ownerTotal =
+          typeof ownerState.totalScore === "number" ? ownerState.totalScore : 0;
+        const noAnswerDelta = computeStage3PointsDelta(true, activeQuestion.difficulty, "no_answer");
+        const stamp = serverTimestamp();
+
+        transaction.set(
+          ownerAnswerRef,
+          buildStage3AnswerPayload({
+            teamId: ownerTeamId,
+            teamName: ownerTeamName,
+            questionId: activeQuestion.id,
+            fieldId: activeQuestion.fieldId,
+            difficulty: activeQuestion.difficulty,
+            isOwner: true,
+            answer: "",
+            passed: false,
+            isCorrect: false,
+            pointsDelta: noAnswerDelta,
+            outcome: "no_answer",
+            confirmedAt: stamp,
+            createdAt: stamp,
+            updatedAt: stamp,
+          }),
+        );
+        transaction.update(ownerStateRef, {
+          "stageScores.stage3": ownerStage3 + noAnswerDelta,
+          totalScore: ownerTotal + noAnswerDelta,
+          updatedAt: serverTimestamp(),
+        });
+      }
+    }
 
     transaction.update(gameFlowRef, {
       status: "stage3_reveal",
