@@ -2958,6 +2958,24 @@
     @apply bg-[#4F8A10]/75;
   }
 
+  /* شريط تقدّم مضغوط عند كثرة الأسئلة (بدل النقاط الكثيرة). */
+  .step-journey-bar {
+    @apply mx-auto flex w-full max-w-md items-center gap-3;
+  }
+
+  .step-journey-bar__track {
+    @apply h-2.5 flex-1 overflow-hidden rounded-full bg-[#D8EAF4];
+  }
+
+  .step-journey-bar__fill {
+    @apply h-full rounded-full bg-[#4F8A10] transition-all duration-500;
+    min-width: 0.5rem;
+  }
+
+  .step-journey-bar__label {
+    @apply shrink-0 text-sm font-black text-[#2388C4];
+  }
+
   .bottom-action-bar {
     @apply flex flex-col items-center gap-2 pt-1;
   }

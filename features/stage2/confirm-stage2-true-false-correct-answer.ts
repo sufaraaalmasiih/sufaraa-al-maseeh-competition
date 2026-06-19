@@ -140,19 +140,14 @@ export async function confirmStage2TrueFalseCorrectAnswer({
     } else if (!statementIsTrue && selectedChoice === "false") {
       facilitatorMarkedWrong = true; // عرف أنها عبارة خاطئة
 
+      // مطابقة دقيقة فقط: يجب أن يطابق ما اختاره المتسابق «الجزء الخطأ المتوقّع» تماماً.
+      // اختيار كلمات زائدة (أو كل الكلمات) = خطأ، فلا ثغرة «اختر الكل تربح».
+      // إن لم يحدّد المنظِّم الجزء الخطأ في السؤال، لا تُمنح هذه النقاط آلياً.
       const expectedWrong = scoredQuestion.expectedWrongPart ?? "";
-      if (expectedWrong) {
-        wrongPartIdentified =
-          trimmedWrongPart.length > 0 &&
-          normalizeStage1AnswerText(trimmedWrongPart) === normalizeStage1AnswerText(expectedWrong);
-      } else {
-        // لا «جزء متوقّع» في السؤال: نقبل إن أشار المتسابق إلى جزء فعلي من الجملة.
-        wrongPartIdentified =
-          trimmedWrongPart.length > 0 &&
-          normalizeStage1AnswerText(scoredQuestion.statement).includes(
-            normalizeStage1AnswerText(trimmedWrongPart),
-          );
-      }
+      wrongPartIdentified =
+        expectedWrong.length > 0 &&
+        trimmedWrongPart.length > 0 &&
+        normalizeStage1AnswerText(trimmedWrongPart) === normalizeStage1AnswerText(expectedWrong);
 
       const expectedCorr = scoredQuestion.expectedCorrection ?? "";
       correctionApproved =

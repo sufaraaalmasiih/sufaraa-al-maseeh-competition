@@ -153,6 +153,21 @@ describe("in-app question editor model", () => {
     expect(rebuilt.stage1[0].points).toBeUndefined();
   });
 
+  it("round-trips the stage-2 true/false expected wrong part", () => {
+    const item = {
+      ...blankItem("stage2"),
+      type: "trueFalseCorrect",
+      id: "tf1",
+      question: "موسى بنى الفلك",
+      correctIsTrue: false,
+      data: "نوح", // التصحيح
+      expectedWrongPart: "موسى",
+    };
+    const rebuilt = itemsToPayload([item]);
+    expect(rebuilt.stage2.trueFalseCorrect[0].expectedWrongPart).toBe("موسى");
+    expect(rebuilt.stage2.trueFalseCorrect[0].expectedCorrection).toBe("نوح");
+  });
+
   it("stage3 item keeps an override that differs from the level default", () => {
     const item = {
       ...blankItem("stage3"),

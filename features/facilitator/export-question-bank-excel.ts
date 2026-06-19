@@ -26,6 +26,7 @@ const EXPORT_COLUMNS: ExportColumn[] = [
   { key: "correct", arabic: "الإجابة الصحيحة" },
   { key: "acceptedanswers", arabic: "الإجابات المقبولة" },
   { key: "points", arabic: "النقاط" },
+  { key: "targetpart", arabic: "الجزء الخطأ (صح/خطأ)" },
   { key: "imageurl", arabic: "رابط الصورة" },
   { key: "reference", arabic: "المرجع" },
   { key: "notes", arabic: "ملاحظات" },
@@ -130,6 +131,7 @@ function buildStage2Rows(payload: FullQuestionBankPayload): ExportRow[] {
       question: str(q.statement),
       correct: q.correctIsTrue === true ? "صح" : "خطأ",
       data: str(q.expectedCorrection),
+      targetpart: str(q.expectedWrongPart),
       reference: str(q.reference),
       imageurl: str(q.imageUrl),
     });

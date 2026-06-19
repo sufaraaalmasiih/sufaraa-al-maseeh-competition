@@ -15,9 +15,27 @@ export function StepJourney({ current, total, className }: StepJourneyProps) {
 
   const safeCurrent = Math.min(Math.max(current, 0), total);
 
+  // عدد كبير من الأسئلة: شريط تقدّم مضغوط بدل النقاط (حتى لا تخرج من البطاقة).
+  if (total > 14) {
+    const percent = Math.round((Math.max(safeCurrent - 1, 0) / Math.max(total - 1, 1)) * 100);
+    return (
+      <div
+        className={cn("step-journey-bar", className)}
+        aria-label={`التقدم ${safeCurrent} من ${total}`}
+      >
+        <div className="step-journey-bar__track">
+          <div className="step-journey-bar__fill" style={{ width: `${percent}%` }} />
+        </div>
+        <span className="step-journey-bar__label">
+          {safeCurrent} / {total}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div
-      className={cn("flex items-center justify-center gap-0", className)}
+      className={cn("flex flex-wrap items-center justify-center gap-0", className)}
       aria-label={`التقدم ${safeCurrent} من ${total}`}
     >
       {Array.from({ length: total }, (_, index) => {

@@ -46,6 +46,8 @@ export interface EditorItem {
   category: string;
   level: string;
   correctIsTrue: boolean;
+  /** الجزء الخطأ المتوقّع في الجملة («صح/خطأ») — للتحكيم التلقائي الدقيق. */
+  expectedWrongPart: string;
   /** إجابات بديلة مقبولة (المرحلة 4) — مفصولة في صف Excel بـ |. */
   acceptedAnswers: string[];
   /** تجاوز نقاط لكل سؤال (نص ليبقى الحقل فارغاً = افتراضي المرحلة). */
@@ -215,6 +217,7 @@ export function blankItem(stage: AdminStageKey): EditorItem {
     category: stage === "stage3" ? STAGE3_FIELD_LABELS[STAGE3_FIELD_KEYS[0]] : "",
     level: stage === "stage3" ? STAGE3_LEVELS[0] : "",
     correctIsTrue: true,
+    expectedWrongPart: "",
     acceptedAnswers: [],
     points: defaultPts != null ? String(defaultPts) : "",
   };
@@ -276,6 +279,9 @@ export function editorItemToRows(item: EditorItem): Record<string, string>[] {
   } else if (config.isTrueFalse) {
     row.correct = item.correctIsTrue ? "صح" : "خطأ";
     row.data = item.data.trim();
+    if (!item.correctIsTrue && item.expectedWrongPart.trim()) {
+      row.targetpart = item.expectedWrongPart.trim();
+    }
   } else {
     if (config.needsData) {
       row.data = item.data.trim();
@@ -403,6 +409,7 @@ export function payloadToEditorItems(payload: FullQuestionBankPayload): EditorIt
       question: String(q.statement ?? ""),
       correctIsTrue: q.correctIsTrue === true,
       data: String(q.expectedCorrection ?? ""),
+      expectedWrongPart: String(q.expectedWrongPart ?? ""),
       reference: String(q.reference ?? ""),
       imageUrl: String(q.imageUrl ?? ""),
     });

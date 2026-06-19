@@ -597,6 +597,18 @@ function QuestionForm({ item, disabled, onPatch }: QuestionFormProps) {
         </Labeled>
       ) : null}
 
+      {config.isTrueFalse && !item.correctIsTrue ? (
+        <Labeled label="الجزء الخطأ في الجملة (للتحكيم الآلي — يطابقه المتسابق تماماً)">
+          <input
+            className={inputClass}
+            disabled={disabled}
+            placeholder="مثال: موسى"
+            value={item.expectedWrongPart}
+            onChange={(event) => onPatch({ expectedWrongPart: event.target.value })}
+          />
+        </Labeled>
+      ) : null}
+
       {config.needsCorrect ? (
         <Labeled label={config.correctLabel}>
           <input
