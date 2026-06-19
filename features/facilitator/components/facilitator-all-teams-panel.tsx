@@ -1,21 +1,71 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Users } from "lucide-react";
+import { Trash2, Users } from "lucide-react";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
 import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
 import { TeamArchivePanel } from "@/features/facilitator/components/team-archive-panel";
 import { useAllRegisteredTeams } from "@/features/facilitator/use-all-teams";
+import { deleteTeamCompletely } from "@/features/facilitator/facilitator-team-admin-destructive";
 import { useTeamLogosMap } from "@/features/gameflow/team-logos-store";
 import { useTeamStatesSnapshot } from "@/features/gameflow/team-states-store";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
+import { useAuthRole } from "@/hooks/use-auth-role";
 
 export function FacilitatorAllTeamsPanel() {
   const { teams, loading, error } = useAllRegisteredTeams();
   const { docs: teamStateDocs } = useTeamStatesSnapshot("main");
   const { status } = useGameFlow();
+  const { role } = useAuthRole();
   const logos = useTeamLogosMap();
   const [expandedTeamId, setExpandedTeamId] = useState<string | null>(null);
+
+  const isSuperAdmin = role === "super_admin";
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [deleteReason, setDeleteReason] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
+
+  function startDelete(teamId: string) {
+    setPendingDeleteId(teamId);
+    setDeleteReason("");
+    setDeleteError(null);
+    setFeedback(null);
+  }
+
+  function cancelDelete() {
+    setPendingDeleteId(null);
+    setDeleteReason("");
+    setDeleteError(null);
+  }
+
+  async function confirmDelete(teamId: string, teamName: string) {
+    if (deleteReason.trim().length < 3) {
+      setDeleteError("اكتب سبب الحذف (٣ أحرف على الأقل).");
+      return;
+    }
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      const result = await deleteTeamCompletely({
+        teamId,
+        teamName,
+        reason: deleteReason.trim(),
+      });
+      setFeedback(
+        result.authDeleted
+          ? `تم حذف «${teamName}» نهائياً (البيانات وحساب الدخول).`
+          : `تم حذف بيانات «${teamName}». لحذف حساب الدخول أيضاً أضف FIREBASE_SERVICE_ACCOUNT على Vercel.`,
+      );
+      setPendingDeleteId(null);
+      setDeleteReason("");
+    } catch {
+      setDeleteError("تعذّر حذف الفريق. حاول مجدداً.");
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   // الفرق المشاركة فعلياً في المسابقة الحالية = لها مستند teamState (لم تُخرَج).
   const participatingIds = useMemo(
@@ -53,6 +103,12 @@ export function FacilitatorAllTeamsPanel() {
           مسابقة جارية — {participatingCount} من {teams.length} فريقاً مشارك حالياً.
         </p>
       )}
+
+      {feedback ? (
+        <p className="mb-4 rounded-xl bg-[#ECFDF5] px-4 py-3 text-sm font-bold text-[#047857]">
+          {feedback}
+        </p>
+      ) : null}
 
       {loading ? <LoadingState variant="inline" /> : null}
       {error ? <ErrorState title="تعذر التحميل" description={error} /> : null}
@@ -102,8 +158,61 @@ export function FacilitatorAllTeamsPanel() {
                     >
                       {open ? "إخفاء التفاصيل" : "عرض التفاصيل والأرشيف"}
                     </button>
+                    {isSuperAdmin && pendingDeleteId !== team.teamId ? (
+                      <button
+                        type="button"
+                        className="facilitator-btn facilitator-btn--danger"
+                        onClick={() => startDelete(team.teamId)}
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden />
+                        حذف نهائي
+                      </button>
+                    ) : null}
                   </div>
                 </div>
+
+                {isSuperAdmin && pendingDeleteId === team.teamId ? (
+                  <div className="mt-3 rounded-xl border border-[#FCA5A5] bg-[#FEF2F2] p-3">
+                    <p className="mb-2 text-sm font-black text-[#B91C1C]">
+                      حذف «{team.teamName}» نهائياً
+                    </p>
+                    <p className="mb-2 text-xs font-semibold text-[#7F1D1D]">
+                      يُحذف: التسجيل · الملف · الإجابات · حالة المسابقة
+                      {participating ? " (الفريق مشارك حالياً!)" : ""}. لا يمكن التراجع.
+                    </p>
+                    <textarea
+                      className="gameplay-answer-input min-h-16 w-full resize-none rounded-lg border border-[#FCA5A5] bg-white px-3 py-2 text-sm"
+                      placeholder="سبب الحذف (إلزامي)"
+                      value={deleteReason}
+                      disabled={deleting}
+                      onChange={(event) => {
+                        setDeleteReason(event.target.value);
+                        setDeleteError(null);
+                      }}
+                    />
+                    {deleteError ? (
+                      <p className="mt-1 text-xs font-bold text-[#B91C1C]">{deleteError}</p>
+                    ) : null}
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        className="facilitator-btn facilitator-btn--danger"
+                        disabled={deleting}
+                        onClick={() => void confirmDelete(team.teamId, team.teamName)}
+                      >
+                        {deleting ? "جارٍ الحذف..." : "تأكيد الحذف النهائي"}
+                      </button>
+                      <button
+                        type="button"
+                        className="facilitator-btn facilitator-btn--outline"
+                        disabled={deleting}
+                        onClick={cancelDelete}
+                      >
+                        إلغاء
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
 
                 {open ? (
                   <div className="mt-3">

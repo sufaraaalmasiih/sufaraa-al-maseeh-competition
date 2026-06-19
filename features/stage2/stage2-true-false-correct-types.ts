@@ -12,6 +12,8 @@ export interface Stage2TrueFalseCorrectQuestion {
 export interface Stage2TrueFalseCorrectAnswer {
   questionId: string;
   selectedIsTrue: boolean;
+  /** الجزء الذي حدّده المتسابق كخطأ من الجملة (عند اختيار «خطأ»). */
+  selectedWrongPart: string;
   correctionText: string;
   confirmed: boolean;
 }

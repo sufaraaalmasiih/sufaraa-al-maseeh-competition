@@ -14,6 +14,7 @@ interface PendingGradingRow {
   id: string;
   teamName: string;
   statement: string;
+  selectedWrongPart: string;
   correctionText: string;
   expectedCorrection: string;
   facilitatorMarkedWrong: boolean;
@@ -39,6 +40,8 @@ function usePendingTrueFalseAnswers(): PendingGradingRow[] {
             id: document.id,
             teamName: typeof data.teamName === "string" ? data.teamName : "فريق",
             statement: typeof data.questionText === "string" ? data.questionText : "",
+            selectedWrongPart:
+              typeof data.selectedWrongPart === "string" ? data.selectedWrongPart : "",
             correctionText:
               typeof data.correctionText === "string" ? data.correctionText : "",
             expectedCorrection:
@@ -112,6 +115,9 @@ export function Stage2TrueFalseGradingPanel() {
               </span>
             </div>
             <p className="mt-1 text-sm font-semibold text-[#143A5A]">{row.statement}</p>
+            <p className="mt-1 text-xs font-bold text-[#B45309]">
+              الجزء الذي حدّده الفريق كخطأ: {row.selectedWrongPart || "— لم يُحدِّد"}
+            </p>
             <p className="mt-1 text-xs text-[#64748B]">
               تصحيح الفريق: {row.correctionText || "—"}
               {row.expectedCorrection ? ` · المتوقع: ${row.expectedCorrection}` : ""}

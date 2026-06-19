@@ -33,7 +33,7 @@ export function CompetitionStage3Automation() {
       return;
     }
 
-    let action: (() => Promise<unknown>) | null = null;
+    let action: (() => Promise<{ skipped: boolean }>) | null = null;
 
     if (status === "stage3_board" && timer.purpose === "selection") {
       action = handleStage3SelectionTimeout;
@@ -50,11 +50,40 @@ export function CompetitionStage3Automation() {
       return;
     }
 
-    attemptedRef.current = fingerprint;
+    // إصلاح جذري: لا نقفل البصمة إلا عند نجاح فعلي (skipped === false). إن تخطّى
+    // الإجراء مؤقتاً (سباق ربع الثانية بين tick والمعاملة، أو تأخّر انتشار اللقطة)
+    // نعيد المحاولة كل ثانية بدل أن نعلق للأبد — هذا سبب عدم الانتقال التلقائي سابقاً.
+    const run = action;
+    let cancelled = false;
+    let intervalId: number | undefined;
 
-    void action().catch(() => {
-      attemptedRef.current = null;
-    });
+    const attempt = () => {
+      void run()
+        .then((result) => {
+          if (cancelled) {
+            return;
+          }
+          if (!result.skipped) {
+            attemptedRef.current = fingerprint;
+            if (intervalId !== undefined) {
+              window.clearInterval(intervalId);
+            }
+          }
+        })
+        .catch(() => {
+          // خطأ عابر (تعارض معاملة مثلاً) — نترك التكرار يعيد المحاولة.
+        });
+    };
+
+    attempt();
+    intervalId = window.setInterval(attempt, 1_000);
+
+    return () => {
+      cancelled = true;
+      if (intervalId !== undefined) {
+        window.clearInterval(intervalId);
+      }
+    };
   }, [
     status,
     currentStage,

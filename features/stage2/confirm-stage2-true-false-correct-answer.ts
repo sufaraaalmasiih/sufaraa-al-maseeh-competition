@@ -27,6 +27,7 @@ interface ConfirmStage2TrueFalseCorrectAnswerInput {
   question: Stage2TrueFalseCorrectQuestion;
   questionIndex: number;
   selectedChoice: Stage2TrueFalseChoice;
+  selectedWrongPart: string;
   correctionText: string;
 }
 
@@ -40,6 +41,7 @@ export async function confirmStage2TrueFalseCorrectAnswer({
   question,
   questionIndex,
   selectedChoice,
+  selectedWrongPart,
   correctionText,
 }: ConfirmStage2TrueFalseCorrectAnswerInput): Promise<ConfirmStage2TrueFalseCorrectAnswerResult> {
   const teamId = firebaseAuth.currentUser?.uid;
@@ -54,6 +56,7 @@ export async function confirmStage2TrueFalseCorrectAnswer({
   const currentTeamStateRef = teamStateRef(MAIN_COMPETITION_ID, teamId);
   const trimmedCorrectionText =
     selectedChoice === "false" ? correctionText.trim() : "";
+  const trimmedWrongPart = selectedChoice === "false" ? selectedWrongPart.trim() : "";
   const serializedAnswer = serializeTrueFalseCorrectAnswer(
     selectedChoice,
     trimmedCorrectionText,
@@ -142,6 +145,7 @@ export async function confirmStage2TrueFalseCorrectAnswer({
       questionText: question.statement,
       answer: serializedAnswer,
       selectedChoice,
+      selectedWrongPart: trimmedWrongPart,
       correctionText: trimmedCorrectionText,
       expectedCorrection: question.expectedCorrection ?? "",
       statementIsTrue,

@@ -85,6 +85,7 @@ export function FacilitatorSettingsTab() {
   const [questionSaving, setQuestionSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [questionError, setQuestionError] = useState<string | null>(null);
+  const [questionClampNotice, setQuestionClampNotice] = useState<string | null>(null);
   const [stage2Reference, setStage2Reference] = useState("يوحنا 15: 1-17");
   const [stage2Passage, setStage2Passage] = useState("");
   const [readingDirty, setReadingDirty] = useState(false);
@@ -182,14 +183,31 @@ export function FacilitatorSettingsTab() {
   async function persistQuestionSettings() {
     setQuestionSaving(true);
     setQuestionError(null);
+    setQuestionClampNotice(null);
     try {
-      const meta = bankMeta ?? (await fetchQuestionBankMeta());
+      // نقرأ أحجام البنك الفعلية الطازجة دائماً من آخر استيراد Excel — مصدر الحقيقة.
+      const meta = await fetchQuestionBankMeta();
       setBankMeta(meta);
       const clamped = clampSettingsToBankSizes(questionSettings, meta.bankSizes);
+
+      // رسالة صريحة بكل مرحلة طلب فيها الميسّر أكثر مما في البنك (#1).
+      const clampMessages = STAGE_DISPLAY_KEYS.filter(
+        (stage) => questionSettings[stage].displayCount > meta.bankSizes[stage],
+      ).map(
+        (stage) =>
+          `${getStageDisplayLabel(stage)}: طلبت ${questionSettings[stage].displayCount} والبنك فيه ${meta.bankSizes[stage]} فقط`,
+      );
+
       await writeQuestionDisplaySettings(clamped);
       setQuestionSettings(clamped);
       setQuestionDirty(false);
       setQuestionSaved(true);
+      if (clampMessages.length > 0) {
+        setQuestionClampNotice(
+          `حُفظت الإعدادات، لكن قُلِّصت لتطابق البنك — ${clampMessages.join(" · ")}. ` +
+            "أضف أسئلة في Excel ثم أعد الاستيراد لرفع العدد.",
+        );
+      }
     } catch {
       setQuestionError("تعذر حفظ إعدادات الأسئلة. حاول مرة أخرى.");
     } finally {
@@ -498,9 +516,14 @@ export function FacilitatorSettingsTab() {
             {questionSaving ? "جارٍ الحفظ..." : "حفظ إعدادات الأسئلة"}
           </button>
         </div>
-        {questionSaved && !questionDirty ? (
+        {questionSaved && !questionDirty && !questionClampNotice ? (
           <p className="facilitator-inline-success">
             تم حفظ إعدادات الأسئلة. تُطبَّق عند بدء كل مرحلة من لوحة التحكم.
+          </p>
+        ) : null}
+        {questionClampNotice ? (
+          <p className="mt-2 rounded-lg bg-[#FFF7ED] px-3 py-2 text-xs font-bold text-[#B45309]">
+            ⚠️ {questionClampNotice}
           </p>
         ) : null}
         {questionError ? <p className="facilitator-inline-error">{questionError}</p> : null}

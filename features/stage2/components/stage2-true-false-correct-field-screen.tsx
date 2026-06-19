@@ -25,6 +25,7 @@ export function Stage2TrueFalseCorrectFieldScreen({
 }: Stage2TrueFalseCorrectFieldScreenProps) {
   const [questionIndex, setQuestionIndex] = useState(trueFalseCorrectQuestionIndex);
   const [selectedChoice, setSelectedChoice] = useState<Stage2TrueFalseChoice | null>(null);
+  const [selectedWrongPart, setSelectedWrongPart] = useState("");
   const [correctionText, setCorrectionText] = useState("");
   const [confirmed, setConfirmed] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -43,6 +44,7 @@ export function Stage2TrueFalseCorrectFieldScreen({
   useEffect(() => {
     setQuestionIndex(trueFalseCorrectQuestionIndex);
     setSelectedChoice(null);
+    setSelectedWrongPart("");
     setCorrectionText("");
     setConfirmed(false);
     setSaveError(null);
@@ -50,6 +52,7 @@ export function Stage2TrueFalseCorrectFieldScreen({
 
   useEffect(() => {
     setSelectedChoice(null);
+    setSelectedWrongPart("");
     setCorrectionText("");
     setConfirmed(false);
     setSaveError(null);
@@ -66,7 +69,7 @@ export function Stage2TrueFalseCorrectFieldScreen({
       return;
     }
 
-    if (selectedChoice === "false" && !correctionText.trim()) {
+    if (selectedChoice === "false" && (!correctionText.trim() || !selectedWrongPart.trim())) {
       return;
     }
 
@@ -77,6 +80,7 @@ export function Stage2TrueFalseCorrectFieldScreen({
         question: currentQuestion,
         questionIndex,
         selectedChoice,
+        selectedWrongPart,
         correctionText,
       });
       setConfirmed(true);
@@ -113,6 +117,7 @@ export function Stage2TrueFalseCorrectFieldScreen({
         <Stage2TrueFalseCorrectQuestionCard
           confirmed={confirmed}
           correctionText={correctionText}
+          selectedWrongPart={selectedWrongPart}
           disabled={answeringClosed || saving}
           hideQuestion
           question={currentQuestion}
@@ -122,11 +127,13 @@ export function Stage2TrueFalseCorrectFieldScreen({
           onConfirm={() => {
             void confirmTrueFalseCorrectAnswer();
           }}
+          onWrongPartChange={setSelectedWrongPart}
           onCorrectionChange={setCorrectionText}
           onSelectChoice={(choice) => {
             setSelectedChoice(choice);
             setSaveError(null);
             if (choice === "true") {
+              setSelectedWrongPart("");
               setCorrectionText("");
             }
           }}
