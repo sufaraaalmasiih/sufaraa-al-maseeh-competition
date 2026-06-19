@@ -5560,6 +5560,52 @@
     max-width: min(96vw, 92rem);
   }
 
+  /* صور الأسئلة أكبر على شاشة الجمهور وفي وضع ملء الشاشة (مع الحفاظ على النسبة). */
+  .audience-display .question-image-el {
+    max-height: min(46vh, 34rem);
+  }
+
+  html.audience-fullscreen-mode .question-image-el {
+    max-height: min(56vh, 44rem);
+  }
+
+  /* شاشة الجمهور/الإسقاط: تكبير خطوط المنصة والترتيب لتُقرأ من بعيد. */
+  html.audience-fullscreen-mode .competition-podium__team {
+    font-size: clamp(1.6rem, 2.6vw, 3rem);
+    line-height: 1.15;
+  }
+
+  html.audience-fullscreen-mode .competition-podium__rank-label {
+    font-size: clamp(1rem, 1.4vw, 1.6rem);
+  }
+
+  html.audience-fullscreen-mode .competition-podium__score-value {
+    font-size: clamp(2.4rem, 4vw, 4.5rem);
+  }
+
+  html.audience-fullscreen-mode .competition-podium__meta {
+    font-size: clamp(0.95rem, 1.3vw, 1.5rem);
+  }
+
+  html.audience-fullscreen-mode .competition-ranking-table,
+  html.audience-fullscreen-mode .competition-ranking-row {
+    font-size: clamp(1rem, 1.5vw, 1.7rem);
+  }
+
+  /* الشاشات الكبيرة جداً (إسقاط 1920px+) حتى بدون وضع ملء الشاشة. */
+  @media (min-width: 1600px) {
+    .audience-display .competition-podium__team {
+      font-size: clamp(1.5rem, 2.3vw, 2.8rem);
+    }
+    .audience-display .competition-podium__score-value {
+      font-size: clamp(2.2rem, 3.6vw, 4.2rem);
+    }
+    .audience-display .competition-ranking-table,
+    .audience-display .competition-ranking-row {
+      font-size: clamp(1rem, 1.4vw, 1.6rem);
+    }
+  }
+
   html.audience-fullscreen-mode .competition-stage-screen--final-results .competition-stage-screen__card,
   html.audience-fullscreen-mode .competition-stage-screen--podium .competition-stage-screen__card,
   html.audience-fullscreen-mode .audience-stage-finished .competition-stage-screen__card {
@@ -10432,6 +10478,22 @@
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.55rem;
+  }
+
+  /* هواتف ضيّقة (<400px): ثلاث بطاقات تنضغط — نخفّف الحشو والخط لتبقى مقروءة. */
+  @media (max-width: 399px) {
+    .coach-stats {
+      gap: 0.4rem;
+    }
+    .coach-stat {
+      padding: 0.55rem 0.35rem;
+    }
+    .coach-stat__label {
+      font-size: 0.7rem;
+    }
+    .coach-stat__value {
+      font-size: 1.15rem;
+    }
   }
 
   .coach-stat {

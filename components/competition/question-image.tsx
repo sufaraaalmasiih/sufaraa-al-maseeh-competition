@@ -21,10 +21,12 @@ export function QuestionImage({
 
   return (
     <div className={cn("flex justify-center", className)}>
+      {/* object-contain يحافظ على النسبة (طول/عرض/مربع) بلا قصّ؛
+          والأحجام تكبر على الشاشات الأكبر وشاشة الجمهور (CSS في globals). */}
       <img
         src={trimmed}
         alt={alt}
-        className="max-h-72 max-w-full rounded-xl border border-primary/15 bg-white object-contain shadow-sm"
+        className="question-image-el max-h-72 max-w-full rounded-xl border border-primary/15 bg-white object-contain shadow-sm sm:max-h-80 md:max-h-[24rem]"
       />
     </div>
   );

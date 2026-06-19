@@ -7,6 +7,8 @@ import {
   objectionReasonLabel,
   useTeamObjections,
 } from "@/features/facilitator/objections";
+import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
+import { useTeamLogosMap } from "@/features/gameflow/team-logos-store";
 
 interface TeamArchivePanelProps {
   teamId: string | null;
@@ -38,6 +40,7 @@ export function TeamArchivePanel({
   // المستمعات تعمل فقط عند فتح اللوحة — توفير قراءات الباقة المجانية.
   const { participations, count, loading, error } = useTeamArchive(teamId, open);
   const { objections } = useTeamObjections(teamId, open);
+  const logos = useTeamLogosMap();
 
   return (
     <div className="rounded-2xl border border-[#E2E8F0] bg-white/80 p-4">
@@ -47,7 +50,15 @@ export function TeamArchivePanel({
         onClick={() => setOpen((current) => !current)}
       >
         <span className="flex items-center gap-2 text-base font-black text-[#143A5A]">
-          <Archive className="h-5 w-5 text-[#2388C4]" aria-hidden />
+          {teamId ? (
+            <TeamLogoBadge
+              logoUrl={logos.get(teamId)}
+              teamName={teamName ?? "الفريق"}
+              variant="hud"
+            />
+          ) : (
+            <Archive className="h-5 w-5 text-[#2388C4]" aria-hidden />
+          )}
           أرشيف مشاركات {teamName ? `«${teamName}»` : "الفريق"}
           {open ? (
             <span className="rounded-full bg-[#E9F6FC] px-2 py-0.5 text-sm font-bold text-[#2388C4]">

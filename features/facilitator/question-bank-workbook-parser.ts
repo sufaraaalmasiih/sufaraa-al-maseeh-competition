@@ -275,7 +275,10 @@ function matchingGroupKey(id: string): string {
 export const MAX_MATCHING_PAIRS_PER_SCREEN = 5;
 
 function buildStage2Bank(rows: Record<string, unknown>[]): Stage2QuestionBank {
-  const matchingGroups = new Map<string, { rows: Record<string, unknown>[]; reference: string }>();
+  const matchingGroups = new Map<
+    string,
+    { rows: Record<string, unknown>[]; reference: string; imageUrl?: string }
+  >();
   const arrangeVerse: Stage2ArrangeVerseQuestion[] = [];
   const completeVerse: Stage2CompleteVerseQuestion[] = [];
   const trueFalseCorrect: Stage2TrueFalseCorrectQuestion[] = [];
@@ -297,6 +300,10 @@ function buildStage2Bank(rows: Record<string, unknown>[]): Stage2QuestionBank {
       group.rows.push(row);
       if (reference) {
         group.reference = reference;
+      }
+      const rowImage = trim(row.imageurl) || trim(row.image);
+      if (rowImage && !group.imageUrl) {
+        group.imageUrl = rowImage;
       }
       matchingGroups.set(key, group);
       return;
@@ -383,6 +390,7 @@ function buildStage2Bank(rows: Record<string, unknown>[]): Stage2QuestionBank {
             ? `وصّل كل عبارة بما يناسبها (جولة ${round + 1} من ${roundsCount})`
             : "وصّل كل عبارة بما يناسبها",
         reference: group.reference,
+        imageUrl: group.imageUrl,
         pairs: chunk,
         rightOptions: uniqueRights,
       });

@@ -2,6 +2,8 @@
 
 import { STAGE_SCORE_COLUMNS } from "@/features/facilitator/facilitator-controls-copy";
 import type { ArchiveTeam } from "@/features/facilitator/competition-session";
+import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
+import { useTeamLogosMap } from "@/features/gameflow/team-logos-store";
 import { cn } from "@/lib/utils";
 
 type ScoreKey = (typeof STAGE_SCORE_COLUMNS)[number]["key"];
@@ -15,6 +17,7 @@ export function ArchiveResultsTable({
   editable?: boolean;
   onScoreChange?: (teamId: string, key: ScoreKey, value: string) => void;
 }) {
+  const logos = useTeamLogosMap();
   return (
     <div className="archive-results-table-wrap">
       <table className="archive-results-table">
@@ -44,7 +47,16 @@ export function ArchiveResultsTable({
               <td className="archive-results-table__rank">
                 <span className="archive-results-table__rank-badge">{team.rank}</span>
               </td>
-              <td className="archive-results-table__team">{team.teamName}</td>
+              <td className="archive-results-table__team">
+                <span className="flex items-center gap-2">
+                  <TeamLogoBadge
+                    logoUrl={logos.get(team.teamId)}
+                    teamName={team.teamName}
+                    variant="hud"
+                  />
+                  <span>{team.teamName}</span>
+                </span>
+              </td>
               <td className="archive-results-table__gov">{team.governorate}</td>
               {STAGE_SCORE_COLUMNS.map((stage) => (
                 <td key={stage.key} className="archive-results-table__score">

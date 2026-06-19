@@ -6,6 +6,7 @@ import type { FacilitatorReadinessKey } from "@/features/facilitator/facilitator
 import { isTeamReadyForReadiness } from "@/features/facilitator/facilitator-readiness";
 import type { LiveResultRow } from "@/features/facilitator/use-live-results";
 import type { RankedStage1Team } from "@/features/stage1/stage1-ranking";
+import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
 import { cn } from "@/lib/utils";
 
 type ScoreboardMode = "teams" | "live";
@@ -102,10 +103,17 @@ export function FacilitatorScoreboard({
                       </span>
                     </td>
                     <td className="flow-teams-table__team">
-                      {team.teamName}
-                      {isOwner ? (
-                        <span className="facilitator-owner-tag">صاحب الدور</span>
-                      ) : null}
+                      <span className="flex items-center gap-2">
+                        <TeamLogoBadge
+                          logoUrl={team.logoUrl}
+                          teamName={team.teamName}
+                          variant="hud"
+                        />
+                        <span>{team.teamName}</span>
+                        {isOwner ? (
+                          <span className="facilitator-owner-tag">صاحب الدور</span>
+                        ) : null}
+                      </span>
                     </td>
                     <td className="flow-teams-table__gov">{team.governorate}</td>
                     <td>

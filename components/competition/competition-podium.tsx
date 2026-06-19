@@ -1,6 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
+import { useTeamLogosMap } from "@/features/gameflow/team-logos-store";
 import { cn } from "@/lib/utils";
 
 export interface CompetitionPodiumTeam {
@@ -47,6 +49,7 @@ export function CompetitionPodium({
   animate = true,
 }: CompetitionPodiumProps) {
   const topThree = teams.slice(0, 3);
+  const logos = useTeamLogosMap();
 
   if (topThree.length === 0) {
     return null;
@@ -105,6 +108,13 @@ export function CompetitionPodium({
                       {meta.medal}
                     </span>
                     <p className="competition-podium__rank-label">{meta.label}</p>
+                    <div className="mb-2 flex justify-center">
+                      <TeamLogoBadge
+                        logoUrl={logos.get(team.teamId)}
+                        teamName={team.teamName}
+                        variant="ranking"
+                      />
+                    </div>
                     <p className="competition-podium__team">{team.teamName}</p>
                     {showGovernorate && team.governorate ? (
                       <p className="competition-podium__meta">{team.governorate}</p>

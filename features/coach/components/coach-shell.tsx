@@ -12,12 +12,15 @@ import { useCoachDashboard } from "@/features/coach/use-coach-dashboard";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
 import { CoachObjectionForm } from "@/features/coach/components/coach-objection-form";
 import { TeamArchivePanel } from "@/features/facilitator/components/team-archive-panel";
+import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
+import { useTeamLogosMap } from "@/features/gameflow/team-logos-store";
 import { firebaseAuth } from "@/firebase/firebaseClient";
 import { setCoachViewMode } from "@/lib/coach-view-mode";
 
 export function CoachShell() {
   const { competitionFrozen } = useGameFlow();
   const { teamId, stageName, teamSummary, history, allHistory, loading, error } = useCoachDashboard();
+  const logos = useTeamLogosMap();
   const historyListRef = useRef<HTMLUListElement | null>(null);
   const [exporting, setExporting] = useState(false);
 
@@ -99,7 +102,14 @@ export function CoachShell() {
 
       <div className="coach-shell__header">
         <CompetitionBrandHeaderCard centerLabel="لوحة المدرب" />
-        <p className="coach-shell__team-name">{teamSummary?.teamName ?? "فريق"}</p>
+        <div className="flex items-center justify-center gap-3">
+          <TeamLogoBadge
+            logoUrl={teamId ? logos.get(teamId) : null}
+            teamName={teamSummary?.teamName ?? "فريق"}
+            variant="header"
+          />
+          <p className="coach-shell__team-name">{teamSummary?.teamName ?? "فريق"}</p>
+        </div>
       </div>
 
       <section className="coach-card">
