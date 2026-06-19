@@ -30,6 +30,7 @@ import {
   updateQuestionBankArchiveMeta,
 } from "@/features/facilitator/question-bank-store";
 import { exportQuestionBankToExcel } from "@/features/facilitator/export-question-bank-excel";
+import { FacilitatorQuestionEditor } from "@/features/facilitator/components/facilitator-question-editor";
 import { useQuestionBankRuntimeSync } from "@/features/facilitator/question-bank-runtime";
 import type { FullQuestionBankPayload, QuestionBankArchiveRecord } from "@/features/facilitator/question-bank-types";
 import { useStage1BankEditor } from "@/features/facilitator/stage1-question-bank-store";
@@ -648,6 +649,8 @@ export function FacilitatorQuestionBankTab() {
           }
         />
       ) : null}
+
+      <FacilitatorQuestionEditor />
 
       <div className="facilitator-card facilitator-archive">
         <div className="facilitator-card__head">

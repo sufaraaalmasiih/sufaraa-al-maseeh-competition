@@ -1,0 +1,116 @@
+import { describe, expect, it } from "vitest";
+import {
+  blankItem,
+  editorItemToRows,
+  itemsToPayload,
+  payloadToEditorItems,
+  validateItem,
+} from "@/features/facilitator/question-editor-model";
+import type { FullQuestionBankPayload } from "@/features/facilitator/question-bank-types";
+
+const payload = {
+  stage1: [
+    {
+      id: "s1_q1",
+      type: "multiple_choice",
+      prompt: "من بنى الفلك؟",
+      correctAnswer: "نوح",
+      options: ["نوح", "موسى"],
+    },
+  ],
+  stage2: {
+    matching: [
+      {
+        id: "m1",
+        prompt: "وصّل",
+        reference: "تكوين",
+        pairs: [
+          { left: "آدم", correctRight: "أول إنسان" },
+          { left: "نوح", correctRight: "الفلك" },
+        ],
+        rightOptions: ["أول إنسان", "الفلك"],
+      },
+    ],
+    arrangeVerse: [],
+    completeVerse: [],
+    trueFalseCorrect: [
+      {
+        id: "tf1",
+        statement: "موسى بنى الفلك",
+        correctIsTrue: false,
+        expectedCorrection: "نوح",
+        reference: "تكوين",
+      },
+    ],
+  },
+  stage3: {
+    s3_q1: {
+      id: "s3_q1",
+      type: "fill_blank",
+      prompt: "من قاد الشعب؟",
+      correctAnswer: "موسى",
+      fieldId: "characters",
+      fieldLabel: "شخصيات",
+      difficulty: "easy",
+      questionNumber: 1,
+    },
+  },
+  stage4: [
+    {
+      id: "s4_q1",
+      type: "who_am_i",
+      prompt: "من أنا؟",
+      clue: "قائد الشعب",
+      correctAnswer: "موسى",
+      order: 1,
+    },
+  ],
+  meta: {
+    bankSizes: { stage1: 1, stage2: 2, stage3: 1, stage4: 1 },
+    stage2ReadingReference: "",
+    stage2ReadingPassage: "",
+  },
+} as unknown as FullQuestionBankPayload;
+
+describe("in-app question editor model", () => {
+  it("round-trips payload -> editor items -> payload with no loss", () => {
+    const items = payloadToEditorItems(payload);
+    const rebuilt = itemsToPayload(items);
+
+    expect(rebuilt.stage1).toHaveLength(1);
+    expect(rebuilt.stage2.matching.length).toBeGreaterThanOrEqual(1);
+    expect(rebuilt.stage2.trueFalseCorrect).toHaveLength(1);
+    expect(Object.keys(rebuilt.stage3)).toHaveLength(1);
+    expect(rebuilt.stage4).toHaveLength(1);
+  });
+
+  it("matching item produces one row per pair", () => {
+    const items = payloadToEditorItems(payload);
+    const matchingItem = items.find((item) => item.type === "matching");
+    expect(matchingItem).toBeTruthy();
+    expect(editorItemToRows(matchingItem!)).toHaveLength(2);
+  });
+
+  it("flags a multiple-choice item whose correct answer is not among options", () => {
+    const item = {
+      ...blankItem("stage1"),
+      type: "multiple_choice",
+      id: "x1",
+      question: "سؤال؟",
+      options: ["أ", "ب"],
+      correct: "ج",
+    };
+    expect(validateItem(item).length).toBeGreaterThan(0);
+  });
+
+  it("accepts a valid arrange item (correct order = entered parts)", () => {
+    const item = {
+      ...blankItem("stage1"),
+      type: "arrange",
+      id: "x2",
+      question: "رتّب",
+      parts: ["أ", "ب", "ج"],
+    };
+    expect(validateItem(item)).toHaveLength(0);
+  });
+});

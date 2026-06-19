@@ -7398,6 +7398,21 @@
     box-shadow: 0 8px 18px rgba(220, 74, 74, 0.26);
   }
 
+  /* زر أيقونة صغير (أعلى/أسفل/حذف) في محرّر الأسئلة. */
+  .facilitator-icon-btn {
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-lg text-[#143A5A] transition;
+    border: 1px solid rgba(35, 136, 196, 0.28);
+    background-color: rgba(255, 255, 255, 0.85);
+  }
+
+  .facilitator-icon-btn:hover:not(:disabled) {
+    border-color: rgba(35, 136, 196, 0.5);
+  }
+
+  .facilitator-icon-btn:disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
+
   .facilitator-btn--amber {
     @apply text-[#7c4a03];
     border: 1px solid rgba(207, 132, 16, 0.35);
