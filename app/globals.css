@@ -4136,6 +4136,24 @@
     background: #4f8a10;
   }
 
+  .stage4-wait-panel__icon {
+    @apply relative z-[1] mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full text-white sm:h-16 sm:w-16;
+    background: linear-gradient(180deg, #5eb8e8 0%, #2388c4 55%, #1a6fa3 100%);
+    box-shadow: 0 10px 26px rgba(35, 136, 196, 0.32);
+    animation: hourglass-breathe 2.8s ease-in-out infinite;
+  }
+
+  .stage4-wait-panel__icon svg {
+    @apply h-7 w-7 sm:h-8 sm:w-8;
+    transform-origin: center;
+    animation: hourglass-turn 2.8s ease-in-out infinite;
+  }
+
+  .stage4-wait-panel--closed .stage4-wait-panel__icon {
+    background: linear-gradient(180deg, #fbbf24 0%, #d97706 55%, #b45309 100%);
+    box-shadow: 0 10px 26px rgba(217, 119, 6, 0.34);
+  }
+
   .stage4-wait-panel__title {
     @apply text-xl font-black leading-snug text-[#0f2d45] sm:text-2xl;
   }

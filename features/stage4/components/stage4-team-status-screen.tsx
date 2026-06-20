@@ -1,5 +1,6 @@
 "use client";
 
+import { Hourglass } from "lucide-react";
 import { STAGE4_NAME } from "@/features/stage4/stage4-constants";
 import { cn } from "@/lib/utils";
 
@@ -45,6 +46,9 @@ export function Stage4TeamStatusScreen({
               )}
             >
               <span aria-hidden className="stage4-wait-panel__pulse" />
+              <span aria-hidden className="stage4-wait-panel__icon">
+                <Hourglass strokeWidth={2.4} />
+              </span>
               <p className="stage4-wait-panel__title">{panelTitle}</p>
               <p className="stage4-wait-panel__subtitle">{panelSubtitle}</p>
             </div>
