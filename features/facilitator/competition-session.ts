@@ -552,18 +552,6 @@ export async function deleteSession(sessionId: string, reason: string): Promise<
   }
 }
 
-/** @deprecated Use saveActiveSessionResults instead. */
-export async function archiveCurrentResults(
-  _title: string,
-  teams: FinalResultTeam[],
-): Promise<string> {
-  const sessionId = await saveActiveSessionResults(teams, "manual");
-  if (sessionId) {
-    return sessionId;
-  }
-  throw new Error("لا توجد مسابقة نشطة. ابدأ المسابقة من تبويب سير المسابقة أولاً.");
-}
-
 export function useCompetitionHistory() {
   const [archives, setArchives] = useState<CompetitionSession[]>([]);
   const [loading, setLoading] = useState(true);
