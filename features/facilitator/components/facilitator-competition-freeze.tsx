@@ -32,7 +32,7 @@ export function FacilitatorCompetitionFreeze({ frozen }: FacilitatorCompetitionF
   }
 
   return (
-    <div className="flow-freeze">
+    <div className={frozen ? "flow-freeze flow-freeze--active" : "flow-freeze"}>
       <button
         type="button"
         className={frozen ? "facilitator-btn facilitator-btn--primary flow-freeze__btn" : "facilitator-btn facilitator-btn--outline flow-freeze__btn"}
