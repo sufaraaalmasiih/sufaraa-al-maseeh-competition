@@ -6,18 +6,20 @@ import { cn } from "@/lib/utils";
 interface Stage2FieldWaitingScreenProps {
   title: string;
   subtitle?: string;
+  badge?: string;
   className?: string;
 }
 
 export function Stage2FieldWaitingScreen({
   title,
   subtitle = "بانتظار توجيه الميسر",
+  badge = "تم إنجاز المجال",
   className,
 }: Stage2FieldWaitingScreenProps) {
   return (
     <section className={cn("stage2-field-waiting-screen", className)}>
       <div className="stage2-field-waiting-screen__card">
-        <div className="stage2-field-waiting-screen__badge">تم إنجاز المجال</div>
+        <div className="stage2-field-waiting-screen__badge">{badge}</div>
 
         <div className="stage2-field-waiting-screen__icon" aria-hidden>
           <Hourglass className="h-8 w-8" strokeWidth={2.4} />
