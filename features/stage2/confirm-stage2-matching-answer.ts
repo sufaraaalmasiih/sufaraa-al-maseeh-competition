@@ -9,6 +9,7 @@ import {
   timerRef,
 } from "@/firebase/firestore";
 import {
+  countCorrectMatchingPairs,
   evaluateMatchingPairings,
   serializeMatchingPairings,
   type Stage2MatchingPairings,
@@ -22,7 +23,10 @@ import {
 
 const MAIN_COMPETITION_ID = "main";
 const STAGE2_MATCHING_FIELD = "matching";
-const CORRECT_ANSWER_POINTS = 15;
+/** نقاط كل زوج موصول صحيح (افتراضياً 15 لكل زوج). */
+const POINTS_PER_CORRECT_PAIR = 15;
+/** حد أقصى للنقاط في الكتابة الواحدة (يطابق سقف قواعد الأمان +100). */
+const MAX_POINTS_PER_WRITE = 100;
 
 interface ConfirmStage2MatchingAnswerInput {
   question: Stage2MatchingQuestion;
@@ -112,13 +116,16 @@ export async function confirmStage2MatchingAnswer({
       typeof teamState.totalScore === "number" ? teamState.totalScore : 0;
     const scoredQuestion =
       getAuthoritativeStage2MatchingQuestion(question.id) ?? question;
+    // نقاط لكل زوج صحيح على حدة (10 أزواج صحيحة × 15 = 150 عبر الجولات).
     const isCorrect = evaluateMatchingPairings(scoredQuestion, pairings);
+    const correctPairs = countCorrectMatchingPairs(scoredQuestion, pairings);
     const overridePoints = scoredQuestion.points;
-    const correctPoints =
+    const pointsPerPair =
       typeof overridePoints === "number" && overridePoints > 0
-        ? Math.min(100, Math.floor(overridePoints))
-        : CORRECT_ANSWER_POINTS;
-    const pointsDelta = isCorrect ? correctPoints : 0;
+        ? Math.floor(overridePoints)
+        : POINTS_PER_CORRECT_PAIR;
+    // السقف لكل كتابة يطابق قواعد الأمان؛ الجولة لا تتجاوز 5 أزواج فلا يُفقد شيء.
+    const pointsDelta = Math.min(MAX_POINTS_PER_WRITE, correctPairs * pointsPerPair);
 
     transaction.set(confirmedAnswerRef, {
       teamId,

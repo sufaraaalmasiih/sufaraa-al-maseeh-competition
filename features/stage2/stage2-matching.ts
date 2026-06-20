@@ -20,6 +20,17 @@ export function evaluateMatchingPairings(
   return question.pairs.every((pair) => pairings[pair.left] === pair.correctRight);
 }
 
+/** عدد الأزواج الموصولة بشكل صحيح — تُمنح النقاط لكل زوج صحيح على حدة. */
+export function countCorrectMatchingPairs(
+  question: Stage2MatchingQuestion,
+  pairings: Stage2MatchingPairings,
+): number {
+  return question.pairs.reduce(
+    (count, pair) => (pairings[pair.left] === pair.correctRight ? count + 1 : count),
+    0,
+  );
+}
+
 export function areAllMatchingPairsFilled(
   question: Stage2MatchingQuestion,
   pairings: Stage2MatchingPairings,
