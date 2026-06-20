@@ -12,6 +12,8 @@ import { ErrorState, LoadingState } from "@/components/layout/state-view";
 
 import { CompetitionPodium } from "@/components/competition/competition-podium";
 
+import { PodiumConfetti } from "@/components/competition/podium-confetti";
+
 import { AudienceStageResultsGate } from "@/features/audience/components/audience-stage-results-gate";
 
 import { AudienceStageScreenCard } from "@/features/audience/components/audience-stage-screen-card";
@@ -105,6 +107,8 @@ export function AudiencePodiumScreen() {
           screenClassName="competition-stage-screen--podium audience-podium-screen"
 
         >
+
+          {resultsReady && topThree.length > 0 ? <PodiumConfetti /> : null}
 
           {topThree.length === 0 ? (
 

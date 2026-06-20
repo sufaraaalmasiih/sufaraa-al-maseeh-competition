@@ -10554,6 +10554,39 @@
     }
   }
 
+  .podium-confetti {
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    z-index: 30;
+  }
+
+  .podium-confetti__piece {
+    position: absolute;
+    top: -10%;
+    border-radius: 2px;
+    opacity: 0;
+    animation-name: podium-confetti-fall;
+    animation-timing-function: ease-in;
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
+  }
+
+  @keyframes podium-confetti-fall {
+    0% {
+      opacity: 0;
+      transform: translateY(-10%) translateX(0) rotate(0deg);
+    }
+    8% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(110vh) translateX(var(--confetti-drift)) rotate(var(--confetti-spin));
+    }
+  }
+
   .flow-freeze {
     margin: 0.75rem 0 0;
     padding: 0.85rem 1rem;
