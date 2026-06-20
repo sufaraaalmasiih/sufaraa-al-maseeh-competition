@@ -1787,6 +1787,37 @@
     @apply flex h-16 w-16 items-center justify-center rounded-full text-white sm:h-[4.5rem] sm:w-[4.5rem];
     background: linear-gradient(180deg, #5eb8e8 0%, #2388c4 55%, #1a6fa3 100%);
     box-shadow: 0 10px 28px rgba(35, 136, 196, 0.3);
+    animation: hourglass-breathe 2.8s ease-in-out infinite;
+  }
+
+  .stage2-field-waiting-screen__icon svg {
+    transform-origin: center;
+    animation: hourglass-turn 2.8s ease-in-out infinite;
+  }
+
+  /* تقلب الساعة الرملية 180° ثم تنتظر ثم تُقلب من جديد (إحساس انسياب الرمل). */
+  @keyframes hourglass-turn {
+    0%,
+    32% {
+      transform: rotate(0deg);
+    }
+    50%,
+    82% {
+      transform: rotate(180deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes hourglass-breathe {
+    0%,
+    100% {
+      box-shadow: 0 10px 28px rgba(35, 136, 196, 0.3);
+    }
+    50% {
+      box-shadow: 0 14px 36px rgba(35, 136, 196, 0.5);
+    }
   }
 
   .stage2-field-waiting-screen__title {
