@@ -2,6 +2,7 @@
 
 import { getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { gameFlowRef } from "@/firebase/firestore";
+import { assertCompetitionSettingsEditable } from "@/features/facilitator/question-bank-lock";
 
 export interface FacilitatorTimerDurations {
   stage1: number;
@@ -61,6 +62,7 @@ export async function fetchTimerDurations(): Promise<FacilitatorTimerDurations> 
 export async function writeTimerDurations(
   durations: FacilitatorTimerDurations,
 ): Promise<void> {
+  await assertCompetitionSettingsEditable();
   await updateDoc(gameFlowRef, {
     durations: parseTimerDurations(durations),
     updatedAt: serverTimestamp(),

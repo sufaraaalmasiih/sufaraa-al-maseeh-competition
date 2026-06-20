@@ -37,6 +37,10 @@ import {
   type CompetitionMode,
 } from "@/features/facilitator/competition-mode";
 import { CompetitionBootstrapPanel } from "@/features/gameflow/components/competition-bootstrap-panel";
+import { isQuestionBankImportAllowedStatus } from "@/features/facilitator/question-bank-lock";
+
+const SETTINGS_LOCKED_MESSAGE =
+  "🔒 لا يمكن تغيير عدد الأسئلة أو مدد المؤقتات أثناء المسابقة (منعاً للغش). أوقف المسابقة أو أعد التعيين أولاً.";
 
 const FIELDS: { key: keyof FacilitatorTimerDurations; label: string }[] = [
   { key: "stage1", label: "المرحلة الأولى (ثانية)" },
@@ -98,6 +102,8 @@ export function FacilitatorSettingsTab() {
   const [modeSaved, setModeSaved] = useState(false);
   const [modeSaving, setModeSaving] = useState(false);
   const [modeError, setModeError] = useState<string | null>(null);
+  // أثناء المسابقة يُقفل تغيير عدد الأسئلة ومدد المؤقتات (منعاً للغش).
+  const [locked, setLocked] = useState(false);
 
   useEffect(() => {
     void fetchQuestionBankMeta().then((meta) => {
@@ -112,6 +118,7 @@ export function FacilitatorSettingsTab() {
   useEffect(() => {
     return onSnapshot(gameFlowRef, (snapshot) => {
       const data = snapshot.data();
+      setLocked(!isQuestionBankImportAllowedStatus(data?.status));
       setDurations((current) => (dirty ? current : parseTimerDurations(data?.durations)));
       if (!questionDirty) {
         setQuestionSettings(
@@ -341,6 +348,12 @@ export function FacilitatorSettingsTab() {
           </div>
         </div>
 
+        {locked ? (
+          <p className="mb-4 rounded-xl bg-[#FFF7ED] px-4 py-3 text-sm font-bold text-[#B45309]">
+            {SETTINGS_LOCKED_MESSAGE}
+          </p>
+        ) : null}
+
         <div className="grid gap-4 sm:grid-cols-2">
           {FIELDS.map((field) => (
             <label key={field.key} className="facilitator-field">
@@ -350,6 +363,7 @@ export function FacilitatorSettingsTab() {
                 min={1}
                 className="facilitator-input"
                 value={durations[field.key]}
+                disabled={locked}
                 onChange={(event) => updateField(field.key, event.target.value)}
               />
             </label>
@@ -361,7 +375,7 @@ export function FacilitatorSettingsTab() {
             type="button"
             className="facilitator-btn facilitator-btn--primary"
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || locked}
           >
             <Save className="h-4 w-4" aria-hidden />
             {saving ? "جارٍ الحفظ..." : "حفظ المدد"}
@@ -370,7 +384,7 @@ export function FacilitatorSettingsTab() {
             type="button"
             className="facilitator-btn facilitator-btn--outline"
             onClick={handleReset}
-            disabled={saving}
+            disabled={saving || locked}
           >
             استعادة الافتراضي
           </button>
@@ -392,6 +406,12 @@ export function FacilitatorSettingsTab() {
             </p>
           </div>
         </div>
+
+        {locked ? (
+          <p className="mb-4 rounded-xl bg-[#FFF7ED] px-4 py-3 text-sm font-bold text-[#B45309]">
+            {SETTINGS_LOCKED_MESSAGE}
+          </p>
+        ) : null}
 
         {bankMeta ? (
           <p className="mb-4 text-sm text-[#5A6B7D]">
@@ -437,6 +457,7 @@ export function FacilitatorSettingsTab() {
                       max={bankSize}
                       className="facilitator-input"
                       value={settings.displayCount}
+                      disabled={locked}
                       onChange={(event) =>
                         updateStageSetting(stage, {
                           displayCount: Number(event.target.value) || 1,
@@ -450,6 +471,7 @@ export function FacilitatorSettingsTab() {
                       <select
                         className="facilitator-input"
                         value={settings.orderMode}
+                        disabled={locked}
                         onChange={(event) =>
                           updateStageSetting(stage, {
                             orderMode: event.target.value as QuestionOrderMode,
@@ -503,6 +525,7 @@ export function FacilitatorSettingsTab() {
                   max={50}
                   className="facilitator-input"
                   value={questionSettings.stage2Fields[field]}
+                  disabled={locked}
                   onChange={(event) =>
                     updateStage2Field(field, Number(event.target.value) || 1)
                   }
@@ -517,7 +540,7 @@ export function FacilitatorSettingsTab() {
             type="button"
             className="facilitator-btn facilitator-btn--primary"
             onClick={() => void persistQuestionSettings()}
-            disabled={questionSaving}
+            disabled={questionSaving || locked}
           >
             <Save className="h-4 w-4" aria-hidden />
             {questionSaving ? "جارٍ الحفظ..." : "حفظ إعدادات الأسئلة"}

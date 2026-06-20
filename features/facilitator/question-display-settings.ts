@@ -1,5 +1,6 @@
 import { serverTimestamp, updateDoc } from "firebase/firestore";
 import { gameFlowRef } from "@/firebase/firestore";
+import { assertCompetitionSettingsEditable } from "@/features/facilitator/question-bank-lock";
 import { seededShuffleStage1Parts } from "@/features/stage1/stage1-arrange";
 import { STAGE_OPTIONS_LABELS } from "@/features/facilitator/facilitator-controls-copy";
 import type { AdminStageKey } from "@/features/facilitator/facilitator-team-admin";
@@ -160,6 +161,7 @@ export function parseQuestionDisplaySettings(
 }
 
 export async function writeQuestionDisplaySettings(settings: QuestionDisplaySettings): Promise<void> {
+  await assertCompetitionSettingsEditable();
   await updateDoc(gameFlowRef, {
     questionDisplaySettings: settings,
     stage4QuestionCount: settings.stage4.displayCount,
