@@ -10482,10 +10482,10 @@
     max-width: min(90vw, 36rem);
     padding: 2rem 2.5rem;
     border-radius: 1.6rem;
-    color: #fff;
-    background: linear-gradient(135deg, #1e6fa8, #2ba7c4);
-    border: 1px solid rgba(255, 255, 255, 0.28);
-    box-shadow: 0 20px 55px rgba(8, 30, 50, 0.45);
+    color: #86efac;
+    background: linear-gradient(135deg, #b91c1c, #dc2626);
+    border: 1px solid rgba(134, 239, 172, 0.4);
+    box-shadow: 0 20px 55px rgba(80, 8, 8, 0.5);
     animation: competition-frozen-pop 0.3s ease;
   }
 
