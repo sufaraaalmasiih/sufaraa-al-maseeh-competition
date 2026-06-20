@@ -10,6 +10,8 @@ import { AuthGate } from "@/features/auth/components/auth-gate";
 import { useCompetitionContentSync } from "@/features/competition-content/competition-content-runtime";
 import { useCompetitionReauthGuard } from "@/features/competition-session/use-competition-reauth-guard";
 import { useTeamRemovalGuard } from "@/features/team/use-team-removal-guard";
+import { SoundToggleButton } from "@/features/competition/components/sound-toggle-button";
+import { useCompetitionSoundCues } from "@/features/competition/use-competition-sound-cues";
 import { useQuestionBankRuntimeSync } from "@/features/facilitator/question-bank-runtime";
 import { isTeamStage2FieldWaiting } from "@/features/stage2/stage2-field-waiting-state";
 import { useTeamStage2Progress } from "@/features/stage2/use-team-stage2-progress";
@@ -71,6 +73,8 @@ function TeamShellAuthenticated() {
   useCompetitionReauthGuard(true);
   // أُخرج الفريق من المسابقة (حُذفت حالته) → تسجيل خروج وإعادة لصفحة الدخول.
   useTeamRemovalGuard(true);
+  // مؤثّرات صوتية: تكتكة آخر الوقت + انتهاء الوقت + احتفال المنصّة.
+  useCompetitionSoundCues(status);
 
   // إنهاء المسابقة من الميسّر: يسجّل خروج كل الفرق ويعيدها لصفحة الدخول.
   const { teamSignOutAt } = useGameFlow();
@@ -149,6 +153,7 @@ function TeamShellAuthenticated() {
       }
     >
       <TeamFullscreenPrompt />
+      <SoundToggleButton />
       <TeamCoachModeBanner />
       <CompetitionFrozenBanner frozen={competitionFrozen} />
       <TeamFlowContent

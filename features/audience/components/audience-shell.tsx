@@ -13,6 +13,8 @@ import { AudienceShellScreens } from "@/features/audience/components/audience-sh
 import { AudienceFullscreenPrompt } from "@/features/audience/components/audience-fullscreen-prompt";
 import { useAudienceShellData } from "@/features/audience/use-audience-shell-data";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
+import { SoundToggleButton } from "@/features/competition/components/sound-toggle-button";
+import { useCompetitionSoundCues } from "@/features/competition/use-competition-sound-cues";
 
 export function AudienceShell() {
   const embedded = isAudienceEmbeddedView();
@@ -20,6 +22,9 @@ export function AudienceShell() {
   const data = useAudienceShellData();
   const { status, loading } = data;
   const shellScrollable = shouldScrollAudienceShellContent(status, loading);
+
+  // مؤثّرات صوتية (لا تعمل في المعاينة المضمّنة داخل تبويب الميسّر).
+  useCompetitionSoundCues(status, !embedded);
 
   return (
     <CompetitionGradientShell
@@ -31,6 +36,7 @@ export function AudienceShell() {
       }
     >
       {!embedded ? <AudienceFullscreenPrompt /> : null}
+      {!embedded ? <SoundToggleButton /> : null}
       <CompetitionFrozenBanner frozen={competitionFrozen} />
       <AudienceFlowContent status={status} loading={loading} embedded={embedded}>
         <AudienceShellScreens {...data} />
