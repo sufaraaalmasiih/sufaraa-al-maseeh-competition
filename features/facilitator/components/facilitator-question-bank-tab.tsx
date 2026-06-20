@@ -17,7 +17,7 @@ import {
   downloadReadyBibleBank,
   parseQuestionBankWorkbookFile,
 } from "@/features/facilitator/question-bank-excel-import";
-import { assertQuestionBankImportAllowed, isQuestionBankImportAllowedStatus } from "@/features/facilitator/question-bank-lock";
+import { assertQuestionBankImportAllowed } from "@/features/facilitator/question-bank-lock";
 import { downloadValidationReport } from "@/features/facilitator/question-bank-report-export";
 import {
   backupCurrentQuestionBank,
@@ -37,6 +37,8 @@ import { useStage1BankEditor } from "@/features/facilitator/stage1-question-bank
 import type { WorkbookValidationReport } from "@/features/facilitator/question-bank-workbook-validation";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
 import { isTrainingMode } from "@/features/facilitator/competition-mode";
+import { useAuthRole } from "@/hooks/use-auth-role";
+import { resolveContentEditGate } from "@/features/facilitator/content-edit-permission";
 
 const EMPTY_BANK_PAYLOAD: FullQuestionBankPayload = {
   stage1: [],
@@ -285,6 +287,7 @@ export function FacilitatorQuestionBankTab() {
   useQuestionBankRuntimeSync();
   const { status, competitionMode } = useGameFlow();
   const trainingMode = isTrainingMode(competitionMode);
+  const { role } = useAuthRole();
   const { questions, loading } = useStage1BankEditor();
   const [feedback, setFeedback] = useState<
     { kind: "success" | "error"; text: string } | null
@@ -301,7 +304,11 @@ export function FacilitatorQuestionBankTab() {
   const [governorate, setGovernorate] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const importAllowed = isQuestionBankImportAllowedStatus(status);
+  const { editable: editAllowed, reason: editReason } = resolveContentEditGate({
+    role,
+    status,
+    competitionMode,
+  });
   const usingFirestore = (questions?.length ?? 0) > 0;
 
   useEffect(() => {
@@ -540,10 +547,15 @@ export function FacilitatorQuestionBankTab() {
           </span>
           <span>المرحلة 1 المحفوظة: {questions?.length ?? 0} سؤال</span>
           <span>
-            حالة الاستيراد:{" "}
-            {importAllowed ? "مسموح (قبل بدء المسابقة)" : "مقفول أثناء المسابقة"}
+            حالة الاستيراد: {editAllowed ? "مسموح" : "مقفول"}
           </span>
         </div>
+
+        {!editAllowed && editReason ? (
+          <p className="mb-3 rounded-xl bg-[#FFF7ED] px-4 py-3 text-sm font-bold text-[#B45309]">
+            🔒 {editReason}
+          </p>
+        ) : null}
 
         <div className="facilitator-archive__form">
           <label className="facilitator-archive__field">
@@ -598,9 +610,9 @@ export function FacilitatorQuestionBankTab() {
           <button
             type="button"
             className="facilitator-btn facilitator-btn--outline"
-            disabled={importing || !importAllowed}
+            disabled={importing || !editAllowed}
             onClick={() => fileInputRef.current?.click()}
-            title={importAllowed ? undefined : "أوقف المسابقة أو أعد التعيين أولاً"}
+            title={editAllowed ? undefined : editReason ?? undefined}
           >
             <Upload className="h-4 w-4" aria-hidden />
             {importing ? "جارٍ الفحص والحفظ..." : "استيراد وفحص Excel"}
@@ -618,7 +630,7 @@ export function FacilitatorQuestionBankTab() {
           <button
             type="button"
             className="facilitator-btn facilitator-btn--danger"
-            disabled={archiveBusy || !importAllowed}
+            disabled={archiveBusy || !editAllowed}
             onClick={() => void handleRestoreDefault()}
           >
             استعادة الافتراضي
@@ -672,7 +684,7 @@ export function FacilitatorQuestionBankTab() {
               <ArchiveRow
                 key={archive.id}
                 archive={archive}
-                busy={archiveBusy || !importAllowed}
+                busy={archiveBusy || !editAllowed}
                 onLoad={(id) => void handleLoadArchive(id)}
                 onDelete={(id) => void handleDeleteArchive(id)}
                 onSaveMeta={(id, name, gov) => void handleSaveArchiveMeta(id, name, gov)}

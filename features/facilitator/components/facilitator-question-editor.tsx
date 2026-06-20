@@ -3,12 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Eye, Pencil, Plus, Save, Trash2, ChevronUp, ChevronDown, X } from "lucide-react";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
+import { useAuthRole } from "@/hooks/use-auth-role";
 import { QuestionPreview } from "@/features/facilitator/components/question-preview";
 import type { AdminStageKey } from "@/features/facilitator/facilitator-team-admin";
-import {
-  assertQuestionBankImportAllowed,
-  isQuestionBankImportAllowedStatus,
-} from "@/features/facilitator/question-bank-lock";
+import { assertQuestionBankImportAllowed } from "@/features/facilitator/question-bank-lock";
+import { resolveContentEditGate } from "@/features/facilitator/content-edit-permission";
 import {
   backupCurrentQuestionBank,
   readCurrentQuestionBankPayload,
@@ -35,8 +34,13 @@ import { validateQuestionBankRows } from "@/features/facilitator/question-bank-w
 const STAGES: AdminStageKey[] = ["stage1", "stage2", "stage3", "stage4"];
 
 export function FacilitatorQuestionEditor() {
-  const { status } = useGameFlow();
-  const editable = isQuestionBankImportAllowedStatus(status);
+  const { status, competitionMode } = useGameFlow();
+  const { role } = useAuthRole();
+  const { editable, reason: lockReason } = resolveContentEditGate({
+    role,
+    status,
+    competitionMode,
+  });
 
   const [items, setItems] = useState<EditorItem[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -140,7 +144,7 @@ export function FacilitatorQuestionEditor() {
 
       {!editable ? (
         <p className="mb-3 rounded-xl bg-[#FFF7ED] px-4 py-3 text-sm font-bold text-[#B45309]">
-          التحرير متاح قبل بدء المسابقة فقط. أوقف المسابقة أو أعد التعيين للتحرير.
+          {lockReason ?? "التحرير غير متاح الآن."}
         </p>
       ) : null}
 

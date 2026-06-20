@@ -37,10 +37,9 @@ import {
   type CompetitionMode,
 } from "@/features/facilitator/competition-mode";
 import { CompetitionBootstrapPanel } from "@/features/gameflow/components/competition-bootstrap-panel";
-import { isQuestionBankImportAllowedStatus } from "@/features/facilitator/question-bank-lock";
-
-const SETTINGS_LOCKED_MESSAGE =
-  "🔒 لا يمكن تغيير عدد الأسئلة أو مدد المؤقتات أثناء المسابقة (منعاً للغش). أوقف المسابقة أو أعد التعيين أولاً.";
+import { resolveContentEditGate } from "@/features/facilitator/content-edit-permission";
+import { useAuthRole } from "@/hooks/use-auth-role";
+import type { GameFlowStatus } from "@/types";
 
 const FIELDS: { key: keyof FacilitatorTimerDurations; label: string }[] = [
   { key: "stage1", label: "المرحلة الأولى (ثانية)" },
@@ -102,8 +101,11 @@ export function FacilitatorSettingsTab() {
   const [modeSaved, setModeSaved] = useState(false);
   const [modeSaving, setModeSaving] = useState(false);
   const [modeError, setModeError] = useState<string | null>(null);
-  // أثناء المسابقة يُقفل تغيير عدد الأسئلة ومدد المؤقتات (منعاً للغش).
+  // يُقفل تعديل الإعدادات أثناء المسابقة (منعاً للغش)، وللميسّر في المسابقات الرسمية.
+  const { role } = useAuthRole();
+  const isSuperAdmin = role === "super_admin";
   const [locked, setLocked] = useState(false);
+  const [lockReason, setLockReason] = useState<string | null>(null);
 
   useEffect(() => {
     void fetchQuestionBankMeta().then((meta) => {
@@ -118,7 +120,13 @@ export function FacilitatorSettingsTab() {
   useEffect(() => {
     return onSnapshot(gameFlowRef, (snapshot) => {
       const data = snapshot.data();
-      setLocked(!isQuestionBankImportAllowedStatus(data?.status));
+      const gate = resolveContentEditGate({
+        role,
+        status: data?.status as GameFlowStatus | undefined,
+        competitionMode: parseCompetitionMode(data?.competitionMode),
+      });
+      setLocked(!gate.editable);
+      setLockReason(gate.reason);
       setDurations((current) => (dirty ? current : parseTimerDurations(data?.durations)));
       if (!questionDirty) {
         setQuestionSettings(
@@ -132,7 +140,7 @@ export function FacilitatorSettingsTab() {
         setTrainingEndsAtInput(endsAt ? msToDatetimeLocal(endsAt) : "");
       }
     });
-  }, [dirty, questionDirty, bankMeta, modeDirty]);
+  }, [dirty, questionDirty, bankMeta, modeDirty, role]);
 
   function updateField(key: keyof FacilitatorTimerDurations, value: string) {
     setSaved(false);
@@ -292,13 +300,17 @@ export function FacilitatorSettingsTab() {
             <select
               className="facilitator-input"
               value={competitionMode}
+              disabled={locked}
               onChange={(event) => {
                 setModeSaved(false);
                 setModeDirty(true);
                 setCompetitionMode(event.target.value as CompetitionMode);
               }}
             >
-              <option value="official">مسابقة رسمية</option>
+              {/* المسابقة الرسمية للمشرف العام فقط — الميسّر يبدأ تدريباً. */}
+              <option value="official" disabled={!isSuperAdmin}>
+                مسابقة رسمية
+              </option>
               <option value="training">تدريب</option>
             </select>
           </label>
@@ -310,6 +322,7 @@ export function FacilitatorSettingsTab() {
                 type="datetime-local"
                 className="facilitator-input"
                 value={trainingEndsAtInput}
+                disabled={locked}
                 onChange={(event) => {
                   setModeSaved(false);
                   setModeDirty(true);
@@ -325,7 +338,7 @@ export function FacilitatorSettingsTab() {
             type="button"
             className="facilitator-btn facilitator-btn--primary"
             onClick={() => void persistCompetitionMode()}
-            disabled={modeSaving}
+            disabled={modeSaving || locked}
           >
             <Save className="h-4 w-4" aria-hidden />
             {modeSaving ? "جارٍ الحفظ..." : "حفظ وضع المسابقة"}
@@ -350,7 +363,7 @@ export function FacilitatorSettingsTab() {
 
         {locked ? (
           <p className="mb-4 rounded-xl bg-[#FFF7ED] px-4 py-3 text-sm font-bold text-[#B45309]">
-            {SETTINGS_LOCKED_MESSAGE}
+            🔒 {lockReason}
           </p>
         ) : null}
 
@@ -409,7 +422,7 @@ export function FacilitatorSettingsTab() {
 
         {locked ? (
           <p className="mb-4 rounded-xl bg-[#FFF7ED] px-4 py-3 text-sm font-bold text-[#B45309]">
-            {SETTINGS_LOCKED_MESSAGE}
+            🔒 {lockReason}
           </p>
         ) : null}
 
@@ -577,6 +590,7 @@ export function FacilitatorSettingsTab() {
               type="text"
               className="facilitator-input"
               value={stage2Reference}
+              disabled={locked}
               onChange={(event) => {
                 setReadingSaved(false);
                 setReadingDirty(true);
@@ -590,6 +604,7 @@ export function FacilitatorSettingsTab() {
             <textarea
               className="facilitator-input min-h-[120px] resize-y"
               value={stage2Passage}
+              disabled={locked}
               onChange={(event) => {
                 setReadingSaved(false);
                 setReadingDirty(true);
@@ -605,7 +620,7 @@ export function FacilitatorSettingsTab() {
             type="button"
             className="facilitator-btn facilitator-btn--primary"
             onClick={() => void persistStage2Reading()}
-            disabled={readingSaving}
+            disabled={readingSaving || locked}
           >
             <Save className="h-4 w-4" aria-hidden />
             {readingSaving ? "جارٍ الحفظ..." : "حفظ نص القراءة"}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ClipboardList, GraduationCap, MapPin, Trophy, X } from "lucide-react";
 import { createCompetitionSession } from "@/features/facilitator/competition-session";
 import { writeCompetitionMode, type CompetitionMode } from "@/features/facilitator/competition-mode";
@@ -9,6 +9,8 @@ interface FacilitatorSessionStartDialogProps {
   open: boolean;
   onClose: () => void;
   onStarted: () => Promise<void>;
+  /** المسابقة الرسمية للمشرف العام فقط — الميسّر يبدأ تدريباً فقط. */
+  canStartOfficial: boolean;
 }
 
 function toEndsAtMs(value: string): number | null {
@@ -23,8 +25,17 @@ export function FacilitatorSessionStartDialog({
   open,
   onClose,
   onStarted,
+  canStartOfficial,
 }: FacilitatorSessionStartDialogProps) {
-  const [mode, setMode] = useState<CompetitionMode>("official");
+  const [mode, setMode] = useState<CompetitionMode>(
+    canStartOfficial ? "official" : "training",
+  );
+
+  useEffect(() => {
+    if (!canStartOfficial) {
+      setMode("training");
+    }
+  }, [canStartOfficial]);
   const [version, setVersion] = useState("");
   const [hostGovernorate, setHostGovernorate] = useState("");
   const [trainingEndsAt, setTrainingEndsAt] = useState("");
@@ -95,9 +106,11 @@ export function FacilitatorSessionStartDialog({
               <ClipboardList className="h-5 w-5" aria-hidden />
             </div>
             <div>
-              <p className="facilitator-controls-confirm__kicker">بدء مسابقة جديدة</p>
+              <p className="facilitator-controls-confirm__kicker">
+                {canStartOfficial ? "بدء مسابقة جديدة" : "بدء جلسة تدريب"}
+              </p>
               <h3 id="facilitator-session-start-title" className="facilitator-controls-confirm__title">
-                اختر نوع الجلسة
+                {canStartOfficial ? "اختر نوع الجلسة" : "جلسة تدريب"}
               </h3>
             </div>
           </div>
@@ -114,22 +127,24 @@ export function FacilitatorSessionStartDialog({
 
         <div className="facilitator-controls-confirm__reason-wrap space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
-            <button
-              type="button"
-              className={`flex flex-col items-center gap-2 rounded-2xl border-2 p-4 text-center transition ${
-                mode === "official"
-                  ? "border-[#2388C4] bg-[#E9F6FC] text-[#143A5A]"
-                  : "border-[#E2E8F0] bg-white text-[#5A6B7D] hover:border-[#2388C4]/40"
-              }`}
-              onClick={() => setMode("official")}
-              disabled={pending}
-            >
-              <Trophy className="h-6 w-6" aria-hidden />
-              <span className="text-base font-black">مسابقة رسمية</span>
-              <span className="text-xs font-semibold opacity-80">
-                تُحفظ النتائج النهائية في السجل
-              </span>
-            </button>
+            {canStartOfficial ? (
+              <button
+                type="button"
+                className={`flex flex-col items-center gap-2 rounded-2xl border-2 p-4 text-center transition ${
+                  mode === "official"
+                    ? "border-[#2388C4] bg-[#E9F6FC] text-[#143A5A]"
+                    : "border-[#E2E8F0] bg-white text-[#5A6B7D] hover:border-[#2388C4]/40"
+                }`}
+                onClick={() => setMode("official")}
+                disabled={pending}
+              >
+                <Trophy className="h-6 w-6" aria-hidden />
+                <span className="text-base font-black">مسابقة رسمية</span>
+                <span className="text-xs font-semibold opacity-80">
+                  تُحفظ النتائج النهائية في السجل
+                </span>
+              </button>
+            ) : null}
             <button
               type="button"
               className={`flex flex-col items-center gap-2 rounded-2xl border-2 p-4 text-center transition ${

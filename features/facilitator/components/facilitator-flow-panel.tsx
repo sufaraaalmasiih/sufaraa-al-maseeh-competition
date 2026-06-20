@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
 import { useCompetitionTimer } from "@/features/gameflow/use-competition-timer";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
+import { useAuthRole } from "@/hooks/use-auth-role";
 import { useStage1Ranking } from "@/features/stage1/use-stage1-ranking";
 import { isTeamReadyForReadiness } from "@/features/facilitator/facilitator-readiness";
 import {
@@ -48,6 +49,8 @@ export function FacilitatorFlowPanel() {
   } = useGameFlow();
   const { timer, remainingSeconds, isExpired } = useCompetitionTimer();
   const { teams, loading: teamsLoading, error: teamsError } = useStage1Ranking();
+  const { role } = useAuthRole();
+  const isSuperAdmin = role === "super_admin";
 
   const liveContext = useMemo(
     () => ({
@@ -170,6 +173,7 @@ export function FacilitatorFlowPanel() {
       <FacilitatorSessionStartDialog
         open={sessionDialogOpen}
         onClose={() => setSessionDialogOpen(false)}
+        canStartOfficial={isSuperAdmin}
         onStarted={async () => {
           await runAdvance(plan);
         }}
