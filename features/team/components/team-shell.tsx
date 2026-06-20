@@ -30,7 +30,7 @@ import { useTeamGameFlow } from "@/features/team/use-team-game-flow";
 import { useTeamStageEarlyFinish } from "@/features/team/use-team-stage-early-finish";
 import { firebaseAuth } from "@/firebase/firebaseClient";
 import { isCoachDashboardPreferred, setCoachViewMode } from "@/lib/coach-view-mode";
-import { ensureTeamProfileDoc } from "@/lib/ensure-team-profile";
+import { ensureTeamProfileDoc, ensureTeamStateDoc } from "@/lib/ensure-team-profile";
 import { cn } from "@/lib/utils";
 
 function TeamShellAuthenticated() {
@@ -97,7 +97,10 @@ function TeamShellAuthenticated() {
       if (!user) {
         return;
       }
+      // يضمن وجود ملف الفريق وحالته (قد تُحذف الحالة ببدء مسابقة جديدة) عند فتح الشاشة
+      // بجلسة قائمة دون إعادة دخول — فلا يفشل زر «جاهز» ولا الإجابات.
       void ensureTeamProfileDoc(user.uid);
+      void ensureTeamStateDoc(user.uid);
     });
   }, []);
 
