@@ -2,7 +2,6 @@
 
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
 import { mergeNoAnswerRows } from "@/features/competition/merge-no-answer-rows";
-import { Stage4RankingTable } from "@/features/stage4/components/stage4-ranking-table";
 import { Stage4RevealResultsTable } from "@/features/stage4/components/stage4-reveal-results-table";
 import { getStage4MockQuestion } from "@/features/stage4/stage4-mock-questions";
 import { useStage4ActiveAnswers } from "@/features/stage4/use-stage4-active-answers";
@@ -11,11 +10,7 @@ import { useStage4Ranking } from "@/features/stage4/use-stage4-ranking";
 export function Stage4AudienceRevealScreen() {
   const { stage4ActiveQuestion } = useGameFlow();
   const { answers, loading } = useStage4ActiveAnswers(stage4ActiveQuestion?.id ?? null);
-  const {
-    teams: rankingTeams,
-    loading: rankingLoading,
-    error: rankingError,
-  } = useStage4Ranking();
+  const { teams: rankingTeams } = useStage4Ranking();
   const mockQuestion = stage4ActiveQuestion
     ? getStage4MockQuestion(stage4ActiveQuestion.id)
     : null;
@@ -32,17 +27,6 @@ export function Stage4AudienceRevealScreen() {
         loading={loading}
         variant="audience"
         animate
-        rankingSection={
-          <Stage4RankingTable
-            teams={rankingTeams}
-            loading={rankingLoading}
-            error={rankingError}
-            variant="audience"
-            embedded
-            animate
-            revealAscending
-          />
-        }
       />
     </div>
   );

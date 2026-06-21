@@ -107,17 +107,6 @@ export function Stage3AudienceRevealScreen({
         variant="audience"
         revealStage="stage3"
         animate
-        rankingSection={
-          <Stage3RankingTable
-            teams={rankingTeams}
-            loading={rankingLoading}
-            error={rankingError}
-            variant="audience"
-            embedded
-            animate
-            revealAscending
-          />
-        }
       />
     </div>
   );

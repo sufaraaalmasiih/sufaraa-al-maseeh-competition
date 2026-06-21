@@ -147,18 +147,19 @@ export function CompetitionRankingBoard({
     </div>
   );
 
-  // شاشة الجمهور فقط: لفّ اللوحة بإطار يتمرّر تلقائياً عند الامتلاء (الأعداد القليلة
-  // تتّسع كاملة فلا يُطبَّق أيّ تمرير ولا تتغيّر).
-  const boardNode =
-    autoFit && isAudience ? (
-      <div ref={viewportRef} className="competition-ranking-autofit">
-        <div ref={contentRef} className="competition-ranking-autofit__inner">
-          {board}
-        </div>
+  // شاشة الجمهور (البروجكتر لا يتمرّر): لفّ كل لوحات ترتيب الجمهور بإطار يتحجّم
+  // تلقائياً ليملأ الارتفاع المتاح ويُظهر كل الفرق. الأعداد القليلة تبقى بحجمها
+  // الطبيعي (بلا تحجيم) فلا تتأثّر التجربة المعتادة. (`autoFit` يبقى للتوضيح.)
+  const useAutoFit = autoFit || isAudience;
+  const boardNode = useAutoFit ? (
+    <div ref={viewportRef} className="competition-ranking-autofit">
+      <div ref={contentRef} className="competition-ranking-autofit__inner">
+        {board}
       </div>
-    ) : (
-      board
-    );
+    </div>
+  ) : (
+    board
+  );
 
   if (bare) {
     return boardNode;
