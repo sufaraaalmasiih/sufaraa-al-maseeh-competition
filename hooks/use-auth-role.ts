@@ -119,8 +119,10 @@ function scheduleFailsafe(): void {
     return;
   }
 
-  failsafeArmed = true;
+  // clearFailsafe() resets failsafeArmed, so arm AFTER clearing — otherwise the
+  // re-entrancy guard above is dead and every call reschedules the failsafe.
   clearFailsafe();
+  failsafeArmed = true;
 
   failsafeTimerId = window.setTimeout(() => {
     failsafeTimerId = undefined;

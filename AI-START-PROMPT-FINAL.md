@@ -19,12 +19,12 @@
 ## المستودع
 
 ```
-https://github.com/raffinazarian021-maker/sufaraa-al-maseeh-Final
+https://github.com/sufaraaalmasiih/sufaraa-al-maseeh-competition
 ```
 
 ```bash
-git clone https://github.com/raffinazarian021-maker/sufaraa-al-maseeh-Final.git
-cd sufaraa-al-maseeh-Final
+git clone https://github.com/sufaraaalmasiih/sufaraa-al-maseeh-competition.git
+cd sufaraa-al-maseeh-competition
 cp .env.example .env.local   # أضف مفاتيح Firebase
 npm install
 npm run dev
@@ -33,8 +33,8 @@ npm run typecheck
 
 ## قبل أي تعديل — اقرأ
 
-1. **`AI-PROJECT-HANDOFF.md`** — المصدر الرئيسي (~95% coverage)
-2. **`AI-MISSING-PLAN.md`** — خطة الأشياء الناقصة (P0–P3)
+1. **`AI-PROJECT-HANDOFF.md`** — المصدر الرئيسي (~95% coverage) — ابدأ بقسم «0) أحدث التغييرات»
+2. **«خطة العمل المتبقية»** أسفل هذا الملف (P0–P3)
 3. عند التعارض: **الكود > HANDOFF > docs/ > _knowledge/**
 
 ## الأدوار والمسارات
@@ -50,7 +50,7 @@ npm run typecheck
 
 ## ما تم إنجازه (يونيو 2026) — لا تكسره
 
-- **8 تبويبات ميسر:** flow · controls · results · audience · **السجل** · questions · about · settings
+- **9 تبويبات ميسر:** flow · controls · results · audience · **السجل** · questions · about · settings · **الإدارة** (للمشرف العام: طاقم + كل الفرق + إدارة فريق + **حسابات المدربين** + إعادة الضبط)
 - **التحكم:** فريق واحد، قفل مراحل، override، تأكيد + سبب (`FacilitatorControlsConfirmCard`)
 - **السجل:** `competition-session.ts` — جلسة + `editLogEntries[]` داخل `history/{sessionId}`
 - **بدء مسابقة:** dialog (نسخة + محافظة) → `activeSessionId`
@@ -98,9 +98,10 @@ activeSessionId     → السجل النشط للتعديلات (editLogEntries
 
 ### P1 — ميزات ناقصة
 - [ ] دور `viewer` — login واضح أو إزالة من types/UI
-- [ ] تغيير كلمة مرور الفريق (Firebase Admin SDK)
+- [x] تغيير كلمة مرور الفريق/المدرب (Firebase Admin SDK) — `/api/admin/update-team-credentials` + `update-coach-credentials`
 - [ ] تصدير Excel للنتائج النهائية
-- [ ] README.md يشير إلى HANDOFF
+- [x] README.md يشير إلى HANDOFF
+- [ ] (جذري) قراءة الجمهور المجهول لإجابات الإعلان — راجع section 0 في HANDOFF
 
 ### P2 — تحسين تجربة
 - [ ] شاشة الجمهور: statuses كثيرة ما زالت `GameFlowPlaceholder`

@@ -146,6 +146,8 @@ function ArrangeVersePiece({
       value={item}
       dragListener={!locked}
       dragControls={dragControls}
+      // touch-action: none فقط أثناء السماح بالسحب — بعد القفل يعود اللمس للتمرير.
+      style={{ touchAction: locked ? undefined : "none" }}
       className={cn("puzzle-piece puzzle-piece--reorder", confirmed && "opacity-90")}
       // العنصر الممسوك يبقى مرئياً بالكامل ويرتفع قليلاً مع ظلّ — لا يصبح شفافاً.
       whileDrag={{

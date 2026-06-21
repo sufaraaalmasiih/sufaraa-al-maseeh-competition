@@ -106,8 +106,11 @@ Two equivalent paths, both validated by the SAME validator + parser:
    minimize Firestore listeners/writes).
 3. **Verify before finishing:**
    - `npm run typecheck` (tsc --noEmit) — must be clean.
-   - `npx vitest run` — all tests must pass (currently 131 across ~27 files). Add a test for new
+   - `npx vitest run` — all tests must pass (currently ~149 across ~28 files). Add a test for new
      pure logic.
+   - After deploying admin-SDK changes, `npm run smoke` checks `/api/admin/*` return 401 (not
+     500) on production — catches runtime-only crashes (e.g. firebase-admin ESM) that tsc/vitest
+     can't see.
    - Do NOT rely on a local `next build` on Windows (SWC native binary fails locally; Vercel Linux
      builds fine). `npm run dev` works locally via a WASM workaround.
 4. Commit with a clear message and **push to `main`** (Vercel auto-deploys). Branch first if asked.
@@ -138,6 +141,15 @@ Two equivalent paths, both validated by the SAME validator + parser:
 - The audience screen has its own local "ملء الشاشة" button (native fullscreen must be triggered on
   the display device — a browser limitation; it can't be forced remotely).
 - "وضع الاستعداد / شاشة الانتظار" (standby) resets ALL scores to zero (full clean reset).
+- **Audience answer reveal needs an authed session:** `/audience` is public, but the reveal's
+  answers query isn't constrained to `visibleToAudience` and Firestore rules are not filters, so an
+  anonymous device shows every team as "لم يجيب". Run the audience as a TAB in the logged-in
+  facilitator/super_admin browser (same origin = shared session). A separate anonymous device needs
+  the proper fix (visibleToAudience flag on all stages + constrained query + composite index).
+- **`accountPasswordPlain`** on `teams`/`coaches` stores a readable password copy for the admin
+  (deliberate owner-requested tradeoff; rules restrict it to owner/facilitator). Coach accounts are
+  managed in the admin tab (`facilitator-all-coaches-panel.tsx`); per-team detailed score editing is
+  in the control tab (`setTeamStageScores`).
 - The stage-progress indicator (`components/competition/step-journey.tsx`) is responsive: ≤14
   questions render as dots, >14 collapse to a compact progress bar so a 40-question bank never
   overflows the card.

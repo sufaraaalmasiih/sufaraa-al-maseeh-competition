@@ -2893,16 +2893,17 @@
   }
 
   /* نسخة السحب عبر framer-motion (رتّب الآية): framer يتحكّم بالـtransform إنلاين،
-     فنُسقط انتقال الـtransform من CSS حتى لا يتعارض/يتأخّر، ونلغي إزاحة الـhover. */
+     فنُسقط انتقال الـtransform من CSS حتى لا يتعارض/يتأخّر، ونلغي إزاحة الـhover.
+     ملاحظة: `touch-action` يُضبط إنلاين في المكوّن (none عند السماح بالسحب فقط) كي
+     لا يُعطّل تمرير اللمس بعد قفل القائمة. */
   .puzzle-piece.puzzle-piece--reorder {
-    touch-action: none;
     transition:
       box-shadow var(--motion-drag) ease-out,
       border-color var(--motion-drag) ease-out,
       background-color var(--motion-drag) ease-out;
   }
 
-  .puzzle-piece.puzzle-piece--reorder:hover:not(.puzzle-piece-dragging) {
+  .puzzle-piece.puzzle-piece--reorder:hover {
     transform: none;
   }
 

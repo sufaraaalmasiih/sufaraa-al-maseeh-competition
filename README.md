@@ -28,6 +28,7 @@ npm run dev        # http://localhost:3000  (يستخدم WASM للـ SWC على
 | `npm run dev` | خادم التطوير |
 | `npm run typecheck` | فحص الأنواع (tsc --noEmit) — يجب أن يكون نظيفاً |
 | `npx vitest run` | الاختبارات (وحدة + round-trip) |
+| `npm run smoke` | اختبار دخان بعد النشر — يتأكّد أنّ `/api/admin/*` ترجع 401 لا 500 |
 | `npm run firebase:deploy:rules` | نشر `firestore.rules` (يدوي) |
 
 > **ملاحظة ويندوز:** البناء المحلي عبر `next build` قد يفشل (SWC الأصلي)؛ نشر Vercel على Linux يعمل بلا مشاكل.
@@ -74,7 +75,8 @@ tests/ + *.test.ts  اختبارات vitest
 ## ملاحظات تشغيلية
 
 - أبقِ **نافذة الميسّر مفتوحة** أثناء المسابقة (تقود الأتمتة).
-- بعض الميزات الإدارية (حذف حساب فريق / تغيير بيانات دخوله) تحتاج **`FIREBASE_SERVICE_ACCOUNT`** مضبوطاً على Vercel (Production) — وإلا تُحفظ بيانات Firestore فقط.
+- **شغّل شاشة الجمهور كتبويب على نفس متصفّح الميسّر/المشرف المسجَّل دخوله** (ووصّله بالبروجكتر). على جهاز منفصل مجهول لا تظهر إجابات الإعلان (قيد قواعد Firestore). لا تُسجّل دخول فريق في متصفّح العرض.
+- بعض الميزات الإدارية (حذف حساب فريق/مدرب أو تغيير كلمة مروره) تحتاج **`FIREBASE_SERVICE_ACCOUNT`** مضبوطاً على Vercel (Production) — وإلا تُحفظ بيانات Firestore فقط.
 - بعد تعديل `firestore.rules` يجب نشرها يدوياً (Firebase Console → Rules → Publish).
 
 ---
