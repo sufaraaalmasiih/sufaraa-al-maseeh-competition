@@ -7,6 +7,7 @@ import {
   type CompetitionRankingTableEntry,
 } from "@/components/competition/competition-ranking-table";
 import { useTeamLogosMap } from "@/features/gameflow/team-logos-store";
+import { useAutoScrollFit } from "@/hooks/use-auto-scroll-fit";
 import { resolveTeamLogoUrl } from "@/lib/resolve-team-logo-url";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +43,11 @@ interface CompetitionRankingBoardProps {
   dualColumnMinTeams?: number;
   /** Skip outer panel wrapper when parent already provides layout chrome. */
   bare?: boolean;
+  /**
+   * شاشة الجمهور فقط: عند تجاوز عدد الفرق للمساحة المتاحة، تمرّر اللوحة تلقائياً
+   * ببطء لإظهار كل الفرق (لا تتأثّر الأعداد القليلة). تُفعَّل في النتائج النهائية.
+   */
+  autoFit?: boolean;
 }
 
 function toTableEntries(
@@ -80,8 +86,10 @@ export function CompetitionRankingBoard({
   showTotalScore = true,
   dualColumnMinTeams = 8,
   bare = false,
+  autoFit = false,
 }: CompetitionRankingBoardProps) {
   const logosMap = useTeamLogosMap();
+  const { viewportRef, contentRef } = useAutoScrollFit(teams.length);
 
   if (loading) {
     return <LoadingState variant="inline" />;
@@ -133,12 +141,27 @@ export function CompetitionRankingBoard({
     densityClass,
   );
 
-  if (bare) {
-    return (
-      <div className={scrollClass} role="list" aria-label="ترتيب الفرق">
-        {table}
+  const board = (
+    <div className={scrollClass} role="list" aria-label="ترتيب الفرق">
+      {table}
+    </div>
+  );
+
+  // شاشة الجمهور فقط: لفّ اللوحة بإطار يتمرّر تلقائياً عند الامتلاء (الأعداد القليلة
+  // تتّسع كاملة فلا يُطبَّق أيّ تمرير ولا تتغيّر).
+  const boardNode =
+    autoFit && isAudience ? (
+      <div ref={viewportRef} className="competition-ranking-autofit">
+        <div ref={contentRef} className="competition-ranking-autofit__inner">
+          {board}
+        </div>
       </div>
+    ) : (
+      board
     );
+
+  if (bare) {
+    return boardNode;
   }
 
   return (
@@ -150,9 +173,7 @@ export function CompetitionRankingBoard({
         className,
       )}
     >
-      <div className={scrollClass} role="list" aria-label="ترتيب الفرق">
-        {table}
-      </div>
+      {boardNode}
     </div>
   );
 }

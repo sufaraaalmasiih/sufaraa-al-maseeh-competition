@@ -30,6 +30,7 @@ export function FinalResultsRankingPanel({
         animate={animate && !revealAscending}
         revealAscending={revealAscending}
         bare
+        autoFit={variant === "audience"}
         scoreLabel="المجموع"
         teams={teams.map((team) => ({
           teamId: team.teamId,

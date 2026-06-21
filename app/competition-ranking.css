@@ -549,6 +549,20 @@
     padding: 0;
   }
 
+  /* إطار التمرير التلقائي لشاشة الجمهور (النتائج النهائية): يحدّ الارتفاع المتاح
+     ويُخفي الفائض، ثم يمرّره hook ببطء. الأعداد القليلة لا تتجاوزه فتبقى ثابتة. */
+  .competition-ranking-autofit {
+    position: relative;
+    width: 100%;
+    max-height: 64vh;
+    overflow: hidden;
+  }
+
+  .competition-ranking-autofit__inner {
+    width: 100%;
+    will-change: transform;
+  }
+
   .competition-ranking-panel--audience.competition-ranking-panel--table {
     @apply mt-0 bg-transparent p-0 shadow-none;
   }
