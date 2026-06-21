@@ -6,6 +6,7 @@ import { CompetitionResetPanel } from "@/features/gameflow/components/competitio
 import { FacilitatorStaffPanel } from "@/features/facilitator/components/facilitator-staff-panel";
 import { FacilitatorAllTeamsPanel } from "@/features/facilitator/components/facilitator-all-teams-panel";
 import { FacilitatorAdminTeamManagementPanel } from "@/features/facilitator/components/facilitator-admin-team-management-panel";
+import { FacilitatorAllCoachesPanel } from "@/features/facilitator/components/facilitator-all-coaches-panel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -33,6 +34,8 @@ export function FacilitatorAdminTab() {
       <FacilitatorAllTeamsPanel />
 
       <FacilitatorAdminTeamManagementPanel />
+
+      <FacilitatorAllCoachesPanel />
 
       <CompetitionResetPanel />
     </div>

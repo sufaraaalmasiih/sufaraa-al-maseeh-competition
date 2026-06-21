@@ -7,9 +7,11 @@ import {
   type ControlsConfirmRequest,
 } from "@/features/facilitator/components/facilitator-controls-confirm-card";
 import { FacilitatorControlsTeamProfilePanel } from "@/features/facilitator/components/facilitator-controls-team-profile-panel";
+import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
 import { updateTeamFullProfile } from "@/features/facilitator/facilitator-team-admin";
 import { callAdminApiOptional } from "@/lib/admin-api-client";
 import { useAllRegisteredTeams } from "@/features/facilitator/use-all-teams";
+import { useTeamLogosMap } from "@/features/gameflow/team-logos-store";
 import { useTeamProfile } from "@/features/facilitator/use-team-profile";
 import type { TeamPlayer } from "@/types";
 
@@ -19,15 +21,20 @@ import type { TeamPlayer } from "@/types";
  */
 export function FacilitatorAdminTeamManagementPanel() {
   const { teams, loading, error } = useAllRegisteredTeams();
+  const logos = useTeamLogosMap();
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const selectedTeam = useMemo(
     () => teams.find((team) => team.teamId === selectedTeamId) ?? null,
     [teams, selectedTeamId],
   );
 
-  const { email, players, loading: profileLoading, error: profileError } = useTeamProfile(
-    selectedTeamId || null,
-  );
+  const {
+    email,
+    passwordPlain,
+    players,
+    loading: profileLoading,
+    error: profileError,
+  } = useTeamProfile(selectedTeamId || null);
 
   const [teamName, setTeamName] = useState("");
   const [governorate, setGovernorate] = useState("");
@@ -61,6 +68,12 @@ export function FacilitatorAdminTeamManagementPanel() {
       setToast("اسم الفريق مطلوب.");
       return;
     }
+    // كلمة المرور إمّا فارغة (لا تغيير) أو ٦ أحرف فأكثر — تجنّب «حفظ صامت» يوهم
+    // المشرف أنّ كلمة المرور تغيّرت بينما هي أقصر من الحد.
+    if (accountPassword.trim().length > 0 && accountPassword.trim().length < 6) {
+      setToast("كلمة المرور الجديدة يجب أن تكون ٦ أحرف على الأقل (أو اتركها فارغة).");
+      return;
+    }
 
     const nextPlayers: TeamPlayer[] = playerNames.map((name, index) => ({
       name: name.trim(),
@@ -80,6 +93,11 @@ export function FacilitatorAdminTeamManagementPanel() {
       ],
       confirmLabel: "حفظ بيانات الفريق",
       onConfirm: async (reason) => {
+        // تغيير بريد/كلمة مرور تسجيل الدخول الحقيقية يحتاج Admin SDK (خادم).
+        const emailChanged =
+          accountEmail.trim().length > 0 && accountEmail.trim() !== email.trim();
+        const passwordSet = accountPassword.trim().length >= 6;
+
         await updateTeamFullProfile({
           teamId: selectedTeam.teamId,
           teamName: teamName.trim(),
@@ -89,11 +107,8 @@ export function FacilitatorAdminTeamManagementPanel() {
           reason,
         });
 
-        // تغيير بريد/كلمة مرور تسجيل الدخول الحقيقية يحتاج Admin SDK (خادم).
-        const emailChanged =
-          accountEmail.trim().length > 0 && accountEmail.trim() !== email.trim();
-        const passwordSet = accountPassword.trim().length >= 6;
-
+        // النسخة النصّية لكلمة المرور تُحفظ في الخادم بعد نجاح تحديث Auth فقط،
+        // فلا نُظهر كلمة مرور لا تعمل فعلاً (راجع update-team-credentials).
         if (emailChanged || passwordSet) {
           const result = await callAdminApiOptional("/api/admin/update-team-credentials", {
             teamId: selectedTeam.teamId,
@@ -134,22 +149,39 @@ export function FacilitatorAdminTeamManagementPanel() {
         {error ? (
           <p className="text-sm font-bold text-[#B45309]">{error}</p>
         ) : (
-          <label className="facilitator-field">
-            <span className="facilitator-field__label">الفريق</span>
-            <select
-              className="facilitator-input"
-              value={selectedTeamId}
-              onChange={(event) => setSelectedTeamId(event.target.value)}
-              disabled={loading}
-            >
-              <option value="">— اختر فريقاً —</option>
-              {teams.map((team) => (
-                <option key={team.teamId} value={team.teamId}>
-                  {team.teamName} — {team.governorate}
-                </option>
-              ))}
-            </select>
-          </label>
+          <>
+            <label className="facilitator-field">
+              <span className="facilitator-field__label">الفريق</span>
+              <select
+                className="facilitator-input"
+                value={selectedTeamId}
+                onChange={(event) => setSelectedTeamId(event.target.value)}
+                disabled={loading}
+              >
+                <option value="">— اختر فريقاً —</option>
+                {teams.map((team) => (
+                  <option key={team.teamId} value={team.teamId}>
+                    {team.teamName} — {team.governorate}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {selectedTeam ? (
+              <div className="mt-3 flex items-center gap-3">
+                <TeamLogoBadge
+                  logoUrl={logos.get(selectedTeam.teamId)}
+                  teamName={selectedTeam.teamName}
+                  variant="header"
+                />
+                <div>
+                  <p className="text-sm font-black text-[#143A5A]">{selectedTeam.teamName}</p>
+                  <p className="text-xs font-semibold text-[#64748B]">
+                    {logos.get(selectedTeam.teamId) ? "شعار الفريق" : "لا يوجد شعار محفوظ"}
+                  </p>
+                </div>
+              </div>
+            ) : null}
+          </>
         )}
       </div>
 
@@ -166,6 +198,7 @@ export function FacilitatorAdminTeamManagementPanel() {
           onAccountEmailChange={setAccountEmail}
           accountPassword={accountPassword}
           onAccountPasswordChange={setAccountPassword}
+          storedPassword={passwordPlain}
           playerNames={playerNames}
           onPlayerNamesChange={setPlayerNames}
           confirmRequest={confirmRequest}

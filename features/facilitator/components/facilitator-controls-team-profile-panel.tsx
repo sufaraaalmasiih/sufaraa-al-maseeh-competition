@@ -1,6 +1,7 @@
 "use client";
 
-import { Save } from "lucide-react";
+import { Eye, EyeOff, Save } from "lucide-react";
+import { useState } from "react";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
 import { PLAYER_LABELS } from "@/features/facilitator/components/facilitator-controls-constants";
 import type { ControlsConfirmRequest } from "@/features/facilitator/components/facilitator-controls-confirm-card";
@@ -17,6 +18,8 @@ interface FacilitatorControlsTeamProfilePanelProps {
   onAccountEmailChange: (value: string) => void;
   accountPassword: string;
   onAccountPasswordChange: (value: string) => void;
+  /** كلمة المرور النصّية المخزّنة حالياً لعرضها (إن وُجدت). */
+  storedPassword?: string;
   playerNames: string[];
   onPlayerNamesChange: (updater: (current: string[]) => string[]) => void;
   confirmRequest: ControlsConfirmRequest | null;
@@ -35,11 +38,13 @@ export function FacilitatorControlsTeamProfilePanel({
   onAccountEmailChange,
   accountPassword,
   onAccountPasswordChange,
+  storedPassword,
   playerNames,
   onPlayerNamesChange,
   confirmRequest,
   onSaveProfile,
 }: FacilitatorControlsTeamProfilePanelProps) {
+  const [showStored, setShowStored] = useState(false);
   return (
     <div className="facilitator-card">
       <div className="facilitator-card__head">
@@ -92,6 +97,22 @@ export function FacilitatorControlsTeamProfilePanel({
             onChange={(event) => onAccountPasswordChange(event.target.value)}
             placeholder="6 أحرف على الأقل (اختياري)"
           />
+          <span className="mt-1 flex items-center gap-2 text-xs font-bold text-[#475569]">
+            كلمة المرور الحالية:
+            <code dir="ltr" className="rounded bg-[#F1F5F9] px-1.5 py-0.5 text-[#143A5A]">
+              {storedPassword ? (showStored ? storedPassword : "••••••••") : "غير محفوظة"}
+            </code>
+            {storedPassword ? (
+              <button
+                type="button"
+                className="inline-flex items-center text-[#2388C4]"
+                onClick={() => setShowStored((value) => !value)}
+                aria-label={showStored ? "إخفاء" : "إظهار"}
+              >
+                {showStored ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            ) : null}
+          </span>
         </label>
       </div>
 

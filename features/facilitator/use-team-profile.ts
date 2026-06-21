@@ -7,6 +7,8 @@ import type { TeamPlayer } from "@/types";
 
 interface TeamProfileState {
   email: string;
+  /** كلمة المرور النصّية المخزّنة لعرضها للمشرف (إن وُجدت). */
+  passwordPlain: string;
   players: TeamPlayer[];
   loading: boolean;
   error: string | null;
@@ -22,6 +24,7 @@ const EMPTY_PLAYERS: TeamPlayer[] = [
 
 export function useTeamProfile(teamId: string | null): TeamProfileState {
   const [email, setEmail] = useState("");
+  const [passwordPlain, setPasswordPlain] = useState("");
   const [players, setPlayers] = useState<TeamPlayer[]>(EMPTY_PLAYERS);
   const [loading, setLoading] = useState(Boolean(teamId));
   const [error, setError] = useState<string | null>(null);
@@ -29,6 +32,7 @@ export function useTeamProfile(teamId: string | null): TeamProfileState {
   useEffect(() => {
     if (!teamId) {
       setEmail("");
+      setPasswordPlain("");
       setPlayers(EMPTY_PLAYERS);
       setLoading(false);
       setError(null);
@@ -41,6 +45,9 @@ export function useTeamProfile(teamId: string | null): TeamProfileState {
       (snapshot) => {
         const data = snapshot.data();
         setEmail(typeof data?.email === "string" ? data.email : "");
+        setPasswordPlain(
+          typeof data?.accountPasswordPlain === "string" ? data.accountPasswordPlain : "",
+        );
         if (Array.isArray(data?.players) && data.players.length > 0) {
           const next = [...EMPTY_PLAYERS];
           data.players.forEach((player, index) => {
@@ -65,5 +72,5 @@ export function useTeamProfile(teamId: string | null): TeamProfileState {
     );
   }, [teamId]);
 
-  return { email, players, loading, error };
+  return { email, passwordPlain, players, loading, error };
 }

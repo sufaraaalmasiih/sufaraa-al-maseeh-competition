@@ -206,13 +206,19 @@ service cloud.firestore {
       }
 
       // Coach/team objections on questions.
-      // Create: a signed-in team for itself. Read: facilitators (all) + the owning team.
+      // Create: a team for itself, OR a linked coach on behalf of its team
+      //   (coach uid != team uid, so allow teamId == coach's linkedTeamId).
+      // Read: facilitators (all) + the owning team + the team's linked coach.
       // Update/delete: facilitators only (mark reviewed / cleanup).
       match /objections/{objectionId} {
         allow read: if isFacilitator()
-          || (isSignedIn() && resource.data.teamId == request.auth.uid);
+          || (isSignedIn() && resource.data.teamId == request.auth.uid)
+          || (isCoach() && resource.data.teamId == coachLinkedTeamId());
         allow create: if isSignedIn()
-          && request.resource.data.teamId == request.auth.uid;
+          && (
+            request.resource.data.teamId == request.auth.uid
+            || (isCoach() && request.resource.data.teamId == coachLinkedTeamId())
+          );
         allow update, delete: if isFacilitator();
       }
 

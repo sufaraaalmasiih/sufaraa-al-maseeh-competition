@@ -1,4 +1,7 @@
-export { adjustTeamScore } from "@/features/facilitator/facilitator-team-admin-score";
+export {
+  adjustTeamScore,
+  setTeamStageScores,
+} from "@/features/facilitator/facilitator-team-admin-score";
 export {
   resetTeamStageProgress,
   resetAllTeamScores,

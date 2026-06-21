@@ -56,7 +56,9 @@ export function FacilitatorAllTeamsPanel() {
       setFeedback(
         result.authDeleted
           ? `تم حذف «${teamName}» نهائياً (البيانات وحساب الدخول).`
-          : `تم حذف بيانات «${teamName}». لحذف حساب الدخول أيضاً أضف FIREBASE_SERVICE_ACCOUNT على Vercel.`,
+          : `تم حذف بيانات «${teamName}»، لكن لم يُحذف حساب الدخول من Authentication${
+              result.authError ? ` (السبب: ${result.authError})` : ""
+            }.`,
       );
       setPendingDeleteId(null);
       setDeleteReason("");

@@ -2892,6 +2892,20 @@
     transition-duration: 120ms;
   }
 
+  /* نسخة السحب عبر framer-motion (رتّب الآية): framer يتحكّم بالـtransform إنلاين،
+     فنُسقط انتقال الـtransform من CSS حتى لا يتعارض/يتأخّر، ونلغي إزاحة الـhover. */
+  .puzzle-piece.puzzle-piece--reorder {
+    touch-action: none;
+    transition:
+      box-shadow var(--motion-drag) ease-out,
+      border-color var(--motion-drag) ease-out,
+      background-color var(--motion-drag) ease-out;
+  }
+
+  .puzzle-piece.puzzle-piece--reorder:hover:not(.puzzle-piece-dragging) {
+    transform: none;
+  }
+
   .puzzle-piece-index {
     @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#8CD62E] to-[#4F8A10] text-sm font-black text-white shadow-[0_2px_8px_rgba(79,138,16,0.3)];
   }

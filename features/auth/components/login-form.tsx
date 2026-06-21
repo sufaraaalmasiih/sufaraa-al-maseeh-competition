@@ -12,6 +12,7 @@ import {
   logout,
 } from "@/firebase/auth";
 import { stampCompetitionReauthEpoch } from "@/features/competition-session/competition-session-controls";
+import { primeAuthRole } from "@/hooks/use-auth-role";
 import { ensureTeamStateDoc } from "@/lib/ensure-team-profile";
 import { getClientFirebaseAuth, isFirebaseClientConfigured } from "@/firebase/firebaseClient";
 import { mapFirebaseAuthError } from "@/lib/map-firebase-auth-error";
@@ -71,6 +72,9 @@ export function LoginForm({
         setFormError(roleErrorMessage);
         return;
       }
+      // Role already resolved here — seed it so the destination AuthGate does
+      // not re-race the lookup against a slow network.
+      primeAuthRole(credential.user.uid, role);
       if (role === "team") {
         // يعود الفريق للمشاركة بعد «بدء مسابقة جديدة» أو «الإخراج» بإعادة إنشاء حالته.
         try {

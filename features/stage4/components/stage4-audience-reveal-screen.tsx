@@ -1,6 +1,7 @@
 "use client";
 
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
+import { mergeNoAnswerRows } from "@/features/competition/merge-no-answer-rows";
 import { Stage4RankingTable } from "@/features/stage4/components/stage4-ranking-table";
 import { Stage4RevealResultsTable } from "@/features/stage4/components/stage4-reveal-results-table";
 import { getStage4MockQuestion } from "@/features/stage4/stage4-mock-questions";
@@ -18,11 +19,13 @@ export function Stage4AudienceRevealScreen() {
   const mockQuestion = stage4ActiveQuestion
     ? getStage4MockQuestion(stage4ActiveQuestion.id)
     : null;
+  // كل الفرق تظهر للجمهور: من لم يُجِب يظهر كصف «لم يجيب» (#9/#10).
+  const mergedAnswers = mergeNoAnswerRows(answers, rankingTeams);
 
   return (
     <div className="audience-reveal-results-page">
       <Stage4RevealResultsTable
-        answers={answers}
+        answers={mergedAnswers}
         correctAnswer={
           mockQuestion?.correctAnswer ?? stage4ActiveQuestion?.correctAnswer ?? "—"
         }

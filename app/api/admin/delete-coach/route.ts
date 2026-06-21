@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { deleteTeamCompletelyOnServer } from "@/lib/admin-delete-team-server";
+import { deleteCoachCompletelyOnServer } from "@/lib/admin-delete-team-server";
 import { isFirebaseAdminConfigured } from "@/lib/firebase-admin-server";
 import { verifySuperAdminRequest } from "@/lib/verify-super-admin-request";
 
@@ -19,29 +19,28 @@ export async function POST(request: Request) {
     );
   }
 
-  let body: { teamId?: string };
+  let body: { coachId?: string };
   try {
-    body = (await request.json()) as { teamId?: string };
+    body = (await request.json()) as { coachId?: string };
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const teamId = typeof body.teamId === "string" ? body.teamId.trim() : "";
-  if (!teamId) {
-    return NextResponse.json({ error: "Missing teamId." }, { status: 400 });
+  const coachId = typeof body.coachId === "string" ? body.coachId.trim() : "";
+  if (!coachId) {
+    return NextResponse.json({ error: "Missing coachId." }, { status: 400 });
   }
 
   try {
-    const result = await deleteTeamCompletelyOnServer(teamId);
+    const result = await deleteCoachCompletelyOnServer(coachId);
     return NextResponse.json({
       firestoreDeleted: true,
-      deletedAnswers: result.deletedAnswers,
       authDeleted: result.authDeleted,
       authError: result.authError,
     });
   } catch {
     return NextResponse.json(
-      { error: "تعذر حذف بيانات الفريق من Firestore." },
+      { error: "تعذر حذف حساب المدرب من Firestore." },
       { status: 500 },
     );
   }

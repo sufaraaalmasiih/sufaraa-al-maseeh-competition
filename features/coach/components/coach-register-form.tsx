@@ -7,6 +7,7 @@ import { onSnapshot } from "firebase/firestore";
 import { FirebaseError } from "firebase/app";
 import { teamStatesCollectionRef } from "@/firebase/firestore";
 import { registerCoach } from "@/firebase/auth";
+import { primeAuthRole } from "@/hooks/use-auth-role";
 
 interface TeamOption {
   id: string;
@@ -63,13 +64,15 @@ export function CoachRegisterForm() {
     setError(null);
     try {
       const team = teams.find((entry) => entry.id === teamId);
-      await registerCoach({
+      const { uid } = await registerCoach({
         name: name.trim(),
         email: email.trim(),
         password,
         linkedTeamId: teamId,
         linkedTeamName: team?.name ?? "",
       });
+      // Seed the coach role so /coach does not race the just-written doc (#5).
+      primeAuthRole(uid, "coach");
       router.push("/coach");
     } catch (submitError) {
       setError(errorMessage(submitError));

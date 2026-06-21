@@ -38,11 +38,15 @@ function stage4OutcomeLabel(answer: RevealResultsAnswerRow): string {
     return "تخطي";
   }
 
+  if (answer.outcome === "no_answer") {
+    return "لم يجيب";
+  }
+
   return answer.isCorrect ? "صحيح" : "خطأ";
 }
 
 function stage4OutcomeClassName(answer: RevealResultsAnswerRow): string {
-  if (answer.passed) {
+  if (answer.passed || answer.outcome === "no_answer") {
     return "reveal-results-outcome reveal-results-outcome--pass";
   }
 

@@ -33,6 +33,7 @@ export class InvalidLoginCredentialError extends Error {
 }
 
 export interface RegisterTeamResult {
+  uid: string;
   logoUploadFailed: boolean;
 }
 
@@ -175,6 +176,8 @@ export async function registerTeam(input: RegisterTeamInput): Promise<RegisterTe
     governorate: input.governorate,
     email: input.email,
     role: "team",
+    // نسخة قابلة للعرض للمشرف (بطلب المالك) — راجع TeamDocument.accountPasswordPlain.
+    accountPasswordPlain: input.password,
     ...(logoUrl ? { logoUrl } : {}),
     players: [
       { name: input.player1, type: "main" },
@@ -219,7 +222,7 @@ export async function registerTeam(input: RegisterTeamInput): Promise<RegisterTe
     throw new TeamStateCreateError();
   }
 
-  return { logoUploadFailed };
+  return { uid, logoUploadFailed };
 }
 
 export interface RegisterCoachInput {
@@ -234,7 +237,7 @@ export interface RegisterCoachInput {
  * ينشئ حساب مدرب منفصلاً (هوية مختلفة عن الفريق) مرتبطاً بفريق. لا يكتب حالة فريق
  * ولا إجابات — وقواعد الأمان تمنعه من تسجيل أي إجابة، فلا يستطيع اللعب.
  */
-export async function registerCoach(input: RegisterCoachInput): Promise<void> {
+export async function registerCoach(input: RegisterCoachInput): Promise<{ uid: string }> {
   const credential = await createUserWithEmailAndPassword(
     getClientFirebaseAuth(),
     input.email,
@@ -249,10 +252,14 @@ export async function registerCoach(input: RegisterCoachInput): Promise<void> {
     linkedTeamId: input.linkedTeamId,
     linkedTeamName: input.linkedTeamName,
     active: true,
+    // نسخة قابلة للعرض للمشرف (بطلب المالك) — راجع CoachDocument.accountPasswordPlain.
+    accountPasswordPlain: input.password,
     createdAt: serverTimestamp(),
   };
 
   await setDoc(coachRef(uid), coachDocument);
+
+  return { uid };
 }
 
 async function uploadTeamLogo(uid: string, file: File): Promise<string> {

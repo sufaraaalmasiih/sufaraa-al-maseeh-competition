@@ -162,7 +162,7 @@ export async function deleteTeamCompletely(input: {
   teamId: string;
   teamName: string;
   reason: string;
-}): Promise<{ authDeleted: boolean }> {
+}): Promise<{ authDeleted: boolean; authError: string | null }> {
   const stateRef = teamStateRef(MAIN_COMPETITION_ID, input.teamId);
   const stateSnapshot = await getDoc(stateRef);
   const beforeValue = stateSnapshot.exists()
@@ -186,6 +186,7 @@ export async function deleteTeamCompletely(input: {
     firestoreDeleted?: boolean;
     deletedAnswers?: number;
     authDeleted?: boolean;
+    authError?: string | null;
   }>("/api/admin/delete-team", { teamId: input.teamId });
 
   if (apiResult.ok && apiResult.data.firestoreDeleted) {
@@ -195,7 +196,10 @@ export async function deleteTeamCompletely(input: {
       deletedAnswers: apiResult.data.deletedAnswers ?? 0,
       authDeleted: apiResult.data.authDeleted ?? false,
     });
-    return { authDeleted: apiResult.data.authDeleted ?? false };
+    return {
+      authDeleted: apiResult.data.authDeleted ?? false,
+      authError: apiResult.data.authError ?? null,
+    };
   }
 
   const deletedAnswers = await deleteTeamFirestoreOnClient(input);
@@ -211,8 +215,13 @@ export async function deleteTeamCompletely(input: {
   }
 
   let authDeleted = false;
+  let authError: string | null = null;
   if (apiResult.ok) {
     authDeleted = apiResult.data.authDeleted ?? false;
+    authError = apiResult.data.authError ?? null;
+  } else {
+    // الـAPI نفسه فشل (غالباً FIREBASE_SERVICE_ACCOUNT غير مضبوط) — احتفظ بالسبب.
+    authError = apiResult.error;
   }
 
   await appendDeleteTeamCompletelyAudit({
@@ -222,5 +231,5 @@ export async function deleteTeamCompletely(input: {
     authDeleted,
   });
 
-  return { authDeleted };
+  return { authDeleted, authError };
 }

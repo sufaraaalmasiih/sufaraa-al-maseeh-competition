@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { stampCompetitionReauthEpoch } from "@/features/competition-session/competition-session-controls";
 import { registerTeam, TeamStateCreateError } from "@/firebase/auth";
+import { primeAuthRole } from "@/hooks/use-auth-role";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,10 +42,13 @@ export function RegisterForm() {
     setFormError(null);
     setIsRegistering(true);
     try {
-      const { logoUploadFailed } = await registerTeam(values);
+      const { uid, logoUploadFailed } = await registerTeam(values);
       if (logoUploadFailed) {
         console.warn("Team registration continued without the optional logo.");
       }
+      // We just wrote teams/{uid}; seed the role so the AuthGate on /team does
+      // not race the not-yet-propagated doc and show "ليست لديك صلاحية" (#5).
+      primeAuthRole(uid, "team");
       await stampCompetitionReauthEpoch();
       router.push("/team");
     } catch (error) {

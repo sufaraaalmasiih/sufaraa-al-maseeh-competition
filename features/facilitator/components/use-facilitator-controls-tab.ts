@@ -13,6 +13,7 @@ import {
   removeTeamFromCompetition,
   resetTeamCompetitionData,
   setTeamFacilitatorOverride,
+  setTeamStageScores,
   toggleTeamStageLock,
   updateTeamFullProfile,
   type AdminStageKey,
@@ -28,7 +29,9 @@ import { useActiveSessionEditLog } from "@/features/facilitator/competition-sess
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
 import { useAllTeamStageLocksSummary } from "@/features/facilitator/use-all-team-stage-locks";
 import { useAnswersLog } from "@/features/facilitator/use-answers-log";
+import { useTeamStatesSnapshot } from "@/features/gameflow/team-states-store";
 import { useTeamAdminState } from "@/features/facilitator/use-team-admin-state";
+import type { ScoreEditValues } from "@/features/facilitator/components/facilitator-controls-score-edit-panel";
 import { useTeamProfile } from "@/features/facilitator/use-team-profile";
 import { useStage1Ranking } from "@/features/stage1/use-stage1-ranking";
 import type { GameFlowStatus } from "@/types";
@@ -54,6 +57,27 @@ export function useFacilitatorControlsTab() {
   const { locks: globalLocks, mixed: globalLocksMixed, loading: globalLocksLoading } =
     useAllTeamStageLocksSummary();
   const { rows: answerRows, loading: answersLoading } = useAnswersLog();
+  const { docs: teamStateDocs } = useTeamStatesSnapshot("main");
+
+  const currentScores = useMemo(() => {
+    const doc = teamStateDocs.find((entry) => entry.id === selectedTeamId);
+    const stages = (doc?.data.stageScores as Record<string, number> | undefined) ?? {};
+    const toNum = (value: unknown) => (typeof value === "number" && Number.isFinite(value) ? value : 0);
+    return {
+      stage1: toNum(stages.stage1),
+      stage2: toNum(stages.stage2),
+      stage3: toNum(stages.stage3),
+      stage4: toNum(stages.stage4),
+      total: toNum(doc?.data.totalScore),
+    };
+  }, [teamStateDocs, selectedTeamId]);
+
+  const [scoreInputs, setScoreInputs] = useState<ScoreEditValues>({
+    stage1: "0",
+    stage2: "0",
+    stage3: "0",
+    stage4: "0",
+  });
 
   const [teamName, setTeamName] = useState("");
   const [governorate, setGovernorate] = useState("");
@@ -121,6 +145,18 @@ export function useFacilitatorControlsTab() {
     );
   }, [email, players]);
 
+  // القيم الافتراضية = النقاط الحالية. تُعاد التهيئة عند تغيير الفريق أو بعد حفظ
+  // (يتغيّر المجموع المحفوظ)، فلا تُكتب فوق ما يكتبه المشرف أثناء التعديل.
+  useEffect(() => {
+    setScoreInputs({
+      stage1: String(currentScores.stage1),
+      stage2: String(currentScores.stage2),
+      stage3: String(currentScores.stage3),
+      stage4: String(currentScores.stage4),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTeamId, currentScores.total]);
+
   function openConfirm(request: ControlsConfirmRequest) {
     setConfirmRequest(request);
   }
@@ -171,6 +207,67 @@ export function useFacilitatorControlsTab() {
         });
         setAccountPassword("");
         setToast("تم حفظ بيانات الفريق.");
+      },
+    });
+  }
+
+  function resetScoreInputsToCurrent() {
+    setScoreInputs({
+      stage1: String(currentScores.stage1),
+      stage2: String(currentScores.stage2),
+      stage3: String(currentScores.stage3),
+      stage4: String(currentScores.stage4),
+    });
+  }
+
+  function requestSaveScores() {
+    if (!selectedTeam) {
+      setToast("اختر فريقاً أولاً.");
+      return;
+    }
+
+    const parsed: Record<AdminStageKey, number> = {
+      stage1: Math.max(0, Math.round(Number(scoreInputs.stage1))),
+      stage2: Math.max(0, Math.round(Number(scoreInputs.stage2))),
+      stage3: Math.max(0, Math.round(Number(scoreInputs.stage3))),
+      stage4: Math.max(0, Math.round(Number(scoreInputs.stage4))),
+    };
+
+    const invalid = (["stage1", "stage2", "stage3", "stage4"] as AdminStageKey[]).some(
+      (stage) => !Number.isFinite(Number(scoreInputs[stage])),
+    );
+    if (invalid) {
+      setToast("أدخل أرقاماً صحيحة لكل مرحلة.");
+      return;
+    }
+
+    const stageLabels: Record<AdminStageKey, string> = {
+      stage1: "المرحلة 1",
+      stage2: "المرحلة 2",
+      stage3: "المرحلة 3",
+      stage4: "المرحلة 4",
+    };
+    const nextTotal = parsed.stage1 + parsed.stage2 + parsed.stage3 + parsed.stage4;
+
+    openConfirm({
+      title: "تعديل نقاط الفريق",
+      details: [
+        { label: "الفريق", value: selectedTeam.teamName },
+        ...(["stage1", "stage2", "stage3", "stage4"] as AdminStageKey[]).map((stage) => ({
+          label: stageLabels[stage],
+          value: `${currentScores[stage]} ← ${parsed[stage]}`,
+        })),
+        { label: "المجموع", value: `${currentScores.total} ← ${nextTotal}` },
+      ],
+      confirmLabel: "حفظ النقاط",
+      onConfirm: async (reason) => {
+        await setTeamStageScores({
+          teamId: selectedTeam.teamId,
+          teamName: selectedTeam.teamName,
+          stageScores: parsed,
+          reason,
+        });
+        setToast("تم تعديل نقاط الفريق وحفظه في الأرشيف.");
       },
     });
   }
@@ -444,6 +541,11 @@ export function useFacilitatorControlsTab() {
     setAccountPassword,
     playerNames,
     setPlayerNames,
+    currentScores,
+    scoreInputs,
+    setScoreInputs,
+    resetScoreInputsToCurrent,
+    requestSaveScores,
     globalLocks,
     globalLocksMixed,
     globalLocksLoading,

@@ -5,6 +5,7 @@ import { ErrorState, LoadingState } from "@/components/layout/state-view";
 import { FacilitatorControlsConfirmCard } from "@/features/facilitator/components/facilitator-controls-confirm-card";
 import { FacilitatorControlsGlobalLocksPanel } from "@/features/facilitator/components/facilitator-controls-global-locks-panel";
 import { FacilitatorControlsSessionLogPanel } from "@/features/facilitator/components/facilitator-controls-session-log-panel";
+import { FacilitatorControlsScoreEditPanel } from "@/features/facilitator/components/facilitator-controls-score-edit-panel";
 import { FacilitatorControlsTeamActionsPanel } from "@/features/facilitator/components/facilitator-controls-team-actions-panel";
 import { FacilitatorControlsTeamPicker } from "@/features/facilitator/components/facilitator-controls-team-picker";
 import { FacilitatorObjectionsPanel } from "@/features/facilitator/components/facilitator-objections-panel";
@@ -79,6 +80,16 @@ export function FacilitatorControlsTab() {
             onDeleteAnswers={controls.requestDeleteAnswers}
             onResetTeamData={controls.requestResetTeamData}
             onRemoveTeamFromCompetition={controls.requestRemoveTeamFromCompetition}
+          />
+
+          <FacilitatorControlsScoreEditPanel
+            teamName={controls.selectedTeam.teamName}
+            currentScores={controls.currentScores}
+            values={controls.scoreInputs}
+            onValuesChange={controls.setScoreInputs}
+            onResetToCurrent={controls.resetScoreInputsToCurrent}
+            onSave={controls.requestSaveScores}
+            disabled={controls.confirmRequest !== null}
           />
 
           <TeamArchivePanel

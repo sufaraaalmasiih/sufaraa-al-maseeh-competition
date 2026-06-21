@@ -11,6 +11,13 @@ export interface CoachDocument {
   linkedTeamId: string;
   linkedTeamName: string;
   active: true;
+  /**
+   * نسخة نصّية من كلمة المرور لعرضها للمشرف العام في تبويب الإدارة (بطلب المالك).
+   * ⚠️ تنازل أمني مقصود: كلمات مرور Firebase Auth مشفّرة ولا تُسترجَع، فنحفظ نسخة
+   * هنا ليتمكّن المشرف من مشاركتها. قواعد Firestore تقصر قراءة المستند على المالك
+   * والميسّر فقط.
+   */
+  accountPasswordPlain?: string;
   createdAt: Timestamp | FieldValue;
 }
 
@@ -86,6 +93,13 @@ export interface TeamDocument {
   logoUrl?: string;
   players: TeamPlayer[];
   active: true;
+  /**
+   * نسخة نصّية من كلمة المرور لعرضها للمشرف العام في تبويب الإدارة (بطلب المالك).
+   * ⚠️ تنازل أمني مقصود: كلمات مرور Firebase Auth مشفّرة ولا تُسترجَع، فنحفظ نسخة
+   * هنا ليتمكّن المشرف من مشاركتها. قواعد Firestore تقصر قراءة المستند على المالك
+   * والميسّر فقط.
+   */
+  accountPasswordPlain?: string;
   createdAt: Timestamp | FieldValue;
 }
 

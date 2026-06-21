@@ -24,7 +24,7 @@ import {
   fetchCompetitionMode,
   isTrainingMode,
 } from "@/features/facilitator/competition-mode";
-import { resetCompetition } from "@/features/gameflow/competition-reset";
+import { deleteAllTeamStates, resetCompetition } from "@/features/gameflow/competition-reset";
 import {
   deleteTrainingObjections,
   parseArchivedObjections,
@@ -464,6 +464,11 @@ export async function endCompetition(teams: FinalResultTeam[]): Promise<void> {
   // بداية نظيفة كاملة كأن مسابقة جديدة: حذف الإجابات، تصفير الفرق،
   // إرجاع gameFlow إلى waiting_players، وفصل السجل النشط.
   await resetCompetition();
+
+  // مطابقة «بدء مسابقة جديدة»: حذف حالات الفرق نهائياً حتى لا يظهر أيّ فريق في
+  // السير/التحكم، فيجب على كل فريق إعادة التسجيل/الدخول قبل المشاركة من جديد.
+  // (الأرشيف والنتائج النهائية حُفظت أعلاه من `teams`، فالحذف آمن.)
+  await deleteAllTeamStates();
 
   // تسجيل خروج كل الفرق (آليتان: teamSignOutAt + reauthEpoch) — يصبحون غير مشاركين
   // حتى يعودوا ويسجّلوا الدخول من جديد.

@@ -8,6 +8,7 @@ export const FIRESTORE_BATCH_LIMIT = 500;
 /** Maps audit log `type` to canonical edit-log action ids. */
 const AUDIT_ACTION_ALIASES: Record<string, string> = {
   score_adjust: "adjust_team_score",
+  score_set: "set_team_scores",
   progress_reset: "reset_team_stage_progress",
   remove_team: "remove_team_from_competition",
   set_stage_locks: "toggle_team_stage_lock",

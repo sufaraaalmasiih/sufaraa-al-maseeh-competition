@@ -146,7 +146,14 @@ function scheduleFailsafe(): void {
 }
 
 function finishResolved(next: AuthRoleState): void {
-  if (!next.loading && next.user) {
+  // Only cache a *successful, non-null* role. Caching a null/errored result
+  // (e.g. a role lookup that timed out, or that raced ahead of a freshly
+  // written teams/{uid} doc during registration) used to poison the session:
+  // every later auth tick hit the cache and kept role=null, which surfaces as
+  // "ليست لديك صلاحية" right after registration (#5) or a phantom logout for a
+  // staff tab after a transient network blip (#6). Keeping only last-known-good
+  // means the watchdog/failsafe fall back to a real role instead of nuking it.
+  if (!next.loading && next.user && next.role && !next.error) {
     resolvedAuthCache = { uid: next.user.uid, role: next.role };
   }
 
@@ -181,7 +188,7 @@ async function resolveSignedInUser(user: User, source: string): Promise<void> {
   authHardTrace("role lookup start", { uid: user.uid, source });
 
   try {
-    const role = await withTimeout(getUserRole(user.uid), ROLE_LOOKUP_TIMEOUT_MS, "getUserRole");
+    const role = await lookupRoleWithRetry(user.uid);
 
     if (lookupUid !== user.uid) {
       return;
@@ -196,13 +203,57 @@ async function resolveSignedInUser(user: User, source: string): Promise<void> {
     }
 
     authHardTraceError("role lookup failed", error);
+    // Keep the last-known-good role for this uid (if any) instead of forcing
+    // null — a transient timeout must not eject an already-authorized user.
+    const fallbackRole = resolvedAuthCache?.uid === user.uid ? resolvedAuthCache.role : null;
     finishResolved({
       user,
-      role: null,
+      role: fallbackRole,
       loading: false,
-      error: "تعذر تحميل صلاحيات المستخدم.",
+      error: fallbackRole ? null : "تعذر تحميل صلاحيات المستخدم.",
     });
   }
+}
+
+const ROLE_LOOKUP_RETRIES = 2;
+
+async function lookupRoleWithRetry(uid: string): Promise<AppRole | null> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= ROLE_LOOKUP_RETRIES; attempt += 1) {
+    try {
+      return await withTimeout(getUserRole(uid), ROLE_LOOKUP_TIMEOUT_MS, "getUserRole");
+    } catch (error) {
+      lastError = error;
+      if (lookupUid !== uid) {
+        throw error;
+      }
+    }
+  }
+  throw lastError;
+}
+
+/**
+ * Seed the resolved role immediately after a successful registration or login,
+ * when the role is already known from the write we just performed. This avoids
+ * the AuthGate race where getUserRole reads teams/{uid} before that doc has
+ * propagated and the user lands on "ليست لديك صلاحية" (#5).
+ */
+export function primeAuthRole(uid: string, role: AppRole): void {
+  resolvedAuthCache = { uid, role };
+  const auth = getClientFirebaseAuth();
+  const user = auth.currentUser;
+  // Cancel any in-flight lookup for this uid so it cannot overwrite the primed
+  // role with a stale null result.
+  if (lookupUid === uid) {
+    lookupUid = null;
+    clearLookupWatchdog();
+  }
+  finishResolved({
+    user: user && user.uid === uid ? user : auth.currentUser,
+    role,
+    loading: false,
+    error: null,
+  });
 }
 
 function handleAuthUser(user: User | null, source: string): void {

@@ -17,7 +17,7 @@ export function formatStage3RevealOutcome(source: Stage3RevealAnswerSource): str
   }
 
   if (source.outcome === "no_answer") {
-    return "بدون إجابة";
+    return "لم يجيب";
   }
 
   return source.isCorrect ? "صحيحة" : "خاطئة";
@@ -34,6 +34,10 @@ export function formatStage3RevealAnswerDisplay(
 
   if (outcome === "selection_timeout") {
     return "لم يُختر سؤال";
+  }
+
+  if (outcome === "no_answer") {
+    return "لم يجيب";
   }
 
   return answer.length > 0 ? answer : "—";
