@@ -7,6 +7,7 @@ export interface AudienceShellStage3Context {
   activeQuestion: Stage3QuestionMetadata | null;
   openedQuestionIds: string[];
   usedQuestionIds: string[];
+  ownerTeamId: string | null;
   ownerTeamName: string | null;
   selectionTimeoutNotice: Stage3SelectionTimeoutNotice | null;
   rankingTeams: RankedStage3Team[];

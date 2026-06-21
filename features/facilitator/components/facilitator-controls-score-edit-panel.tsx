@@ -17,7 +17,7 @@ interface FacilitatorControlsScoreEditPanelProps {
   currentScores: { stage1: number; stage2: number; stage3: number; stage4: number; total: number };
   values: ScoreEditValues;
   onValuesChange: (updater: (current: ScoreEditValues) => ScoreEditValues) => void;
-  onResetToCurrent: () => void;
+  onResetToAutomatic: () => void;
   onSave: () => void;
   disabled: boolean;
 }
@@ -29,7 +29,7 @@ export function FacilitatorControlsScoreEditPanel({
   currentScores,
   values,
   onValuesChange,
-  onResetToCurrent,
+  onResetToAutomatic,
   onSave,
   disabled,
 }: FacilitatorControlsScoreEditPanelProps) {
@@ -45,8 +45,8 @@ export function FacilitatorControlsScoreEditPanel({
         <div>
           <h3 className="facilitator-card__title">تعديل نقاط الفريق تفصيلياً</h3>
           <p className="facilitator-card__desc">
-            عدّل نقاط «{teamName}» لكل مرحلة. القيم مبدئياً = النقاط الحالية (كأنها لم تُعدّل).
-            يتطلّب الحفظ كتابة سبب، ويُسجَّل في الأرشيف.
+            عدّل نقاط «{teamName}» لكل مرحلة. زر «إرجاع للقيم المحسوبة تلقائياً» يعيد احتساب
+            النقاط من الإجابات (يتجاهل أي تعديل يدوي سابق). يتطلّب الحفظ كتابة سبب، ويُسجَّل في الأرشيف.
           </p>
         </div>
       </div>
@@ -92,9 +92,9 @@ export function FacilitatorControlsScoreEditPanel({
           type="button"
           className="facilitator-btn facilitator-btn--outline"
           disabled={disabled}
-          onClick={onResetToCurrent}
+          onClick={onResetToAutomatic}
         >
-          إرجاع للقيم الحالية
+          إرجاع للقيم المحسوبة تلقائياً
         </button>
       </div>
     </div>

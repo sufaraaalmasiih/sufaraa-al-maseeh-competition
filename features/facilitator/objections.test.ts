@@ -63,10 +63,17 @@ describe("objectionsForActiveSession", () => {
 describe("parseArchivedObjections", () => {
   it("parses objections stored inside a session history doc", () => {
     const parsed = parseArchivedObjections([
-      { id: "x", teamName: "ألفا", reasons: ["wrong_reference"], status: "reviewed", createdAtMs: 5 },
+      { id: "x", teamName: "ألفا", reasons: ["wrong_reference"], status: "accepted", createdAtMs: 5 },
     ]);
     expect(parsed).toHaveLength(1);
-    expect(parsed[0]).toMatchObject({ id: "x", teamName: "ألفا", status: "reviewed" });
+    expect(parsed[0]).toMatchObject({ id: "x", teamName: "ألفا", status: "accepted" });
+  });
+
+  it("maps the legacy «reviewed» status to «seen» for backward compatibility", () => {
+    const parsed = parseArchivedObjections([
+      { id: "y", teamName: "بيتا", status: "reviewed", createdAtMs: 1 },
+    ]);
+    expect(parsed[0]).toMatchObject({ id: "y", status: "seen" });
   });
 
   it("ignores non-array, non-object, and id-less entries", () => {

@@ -14,9 +14,12 @@ import {
   useStage3TeamProgressList,
   type Stage3TeamProgressRow,
 } from "@/features/stage3/use-stage3-team-progress-list";
+import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
+import { useTeamLogosMap } from "@/features/gameflow/team-logos-store";
 
 export function Stage3ProgressTable() {
   const { teams, loading, error } = useStage3TeamProgressList();
+  const logos = useTeamLogosMap();
 
   return (
     <Card>
@@ -50,7 +53,11 @@ export function Stage3ProgressTable() {
               </thead>
               <tbody className="divide-y divide-primary/10 bg-white">
                 {teams.map((team) => (
-                  <Stage3ProgressRow key={team.teamId} team={team} />
+                  <Stage3ProgressRow
+                    key={team.teamId}
+                    team={team}
+                    logoUrl={logos.get(team.teamId)}
+                  />
                 ))}
               </tbody>
             </table>
@@ -61,10 +68,21 @@ export function Stage3ProgressTable() {
   );
 }
 
-function Stage3ProgressRow({ team }: { team: Stage3TeamProgressRow }) {
+function Stage3ProgressRow({
+  team,
+  logoUrl,
+}: {
+  team: Stage3TeamProgressRow;
+  logoUrl?: string | null;
+}) {
   return (
     <tr>
-      <td className="px-4 py-3 font-bold text-[#143A5A]">{team.teamName}</td>
+      <td className="px-4 py-3 font-bold text-[#143A5A]">
+        <span className="flex items-center gap-2">
+          <TeamLogoBadge logoUrl={logoUrl} teamName={team.teamName} variant="hud" />
+          <span>{team.teamName}</span>
+        </span>
+      </td>
       <td className="px-4 py-3 font-mono text-xs" dir="ltr">
         {team.stage3SelectedQuestionId}
       </td>

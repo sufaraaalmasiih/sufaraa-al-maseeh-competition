@@ -68,6 +68,7 @@ export const AUDIENCE_SCREEN_REGISTRY: GameFlowScreenRegistry<AudienceShellScree
   stage3_reveal: ({ stage3 }) => (
     <Stage3AudienceRevealScreen
       question={stage3.activeQuestion}
+      ownerTeamId={stage3.ownerTeamId}
       ownerTeamName={stage3.ownerTeamName}
       rankingTeams={stage3.rankingTeams}
       rankingLoading={stage3.rankingLoading}

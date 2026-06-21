@@ -6,6 +6,7 @@ import {
   OBJECTION_REASONS,
   objectionReasonLabel,
   objectionsForActiveSession,
+  objectionStatusLabel,
   submitObjection,
   useTeamObjections,
 } from "@/features/facilitator/objections";
@@ -194,12 +195,15 @@ export function CoachObjectionForm({ teamId, teamName, questions }: CoachObjecti
                   </span>
                   <span
                     className={`rounded-full px-2 py-0.5 text-xs font-black ${
-                      objection.status === "reviewed"
+                      objection.status === "accepted"
                         ? "bg-[#ECFDF5] text-[#047857]"
-                        : "bg-[#FEF3C7] text-[#B45309]"
+                        : objection.status === "rejected"
+                          ? "bg-[#FEE2E2] text-[#B91C1C]"
+                          : "bg-[#FEF3C7] text-[#B45309]"
                     }`}
                   >
-                    {objection.status === "reviewed" ? "تمت المراجعة ✓" : "قيد المراجعة"}
+                    {objectionStatusLabel(objection.status)}
+                    {objection.status === "accepted" ? " ✓" : ""}
                   </span>
                 </div>
                 {objection.reasons.length > 0 ? (

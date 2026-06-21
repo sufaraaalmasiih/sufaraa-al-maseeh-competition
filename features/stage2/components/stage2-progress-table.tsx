@@ -14,9 +14,12 @@ import {
   useStage2TeamProgressList,
   type Stage2TeamProgressRow,
 } from "@/features/stage2/use-stage2-team-progress-list";
+import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
+import { useTeamLogosMap } from "@/features/gameflow/team-logos-store";
 
 export function Stage2ProgressTable() {
   const { teams, loading, error } = useStage2TeamProgressList();
+  const logos = useTeamLogosMap();
 
   return (
     <Card>
@@ -49,7 +52,11 @@ export function Stage2ProgressTable() {
               </thead>
               <tbody className="divide-y divide-primary/10 bg-white">
                 {teams.map((team) => (
-                  <Stage2ProgressRow key={team.teamId} team={team} />
+                  <Stage2ProgressRow
+                    key={team.teamId}
+                    team={team}
+                    logoUrl={logos.get(team.teamId)}
+                  />
                 ))}
               </tbody>
             </table>
@@ -60,10 +67,21 @@ export function Stage2ProgressTable() {
   );
 }
 
-function Stage2ProgressRow({ team }: { team: Stage2TeamProgressRow }) {
+function Stage2ProgressRow({
+  team,
+  logoUrl,
+}: {
+  team: Stage2TeamProgressRow;
+  logoUrl?: string | null;
+}) {
   return (
     <tr>
-      <td className="px-4 py-3 font-bold text-[#143A5A]">{team.teamName}</td>
+      <td className="px-4 py-3 font-bold text-[#143A5A]">
+        <span className="flex items-center gap-2">
+          <TeamLogoBadge logoUrl={logoUrl} teamName={team.teamName} variant="hud" />
+          <span>{team.teamName}</span>
+        </span>
+      </td>
       <td className="px-4 py-3">{team.currentFieldLabel}</td>
       <td className="px-4 py-3">
         {team.isComplete

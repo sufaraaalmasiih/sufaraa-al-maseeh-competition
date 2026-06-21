@@ -44,6 +44,52 @@ let lookupWatchdogId: number | undefined;
 let failsafeArmed = false;
 let bootstrapDone = false;
 
+// آخر دور صحيح معروف — يُحفظ في localStorage ليبقى بعد إعادة تحميل الصفحة (مثل
+// إعادة التحميل عند خطأ تحميل chunk). الهدف: ألا يُخرَج موظّفٌ مُصرَّح له (ميسّر/مشرف)
+// برسالة «ليست لديك صلاحية» بسبب فشل قراءة دور عابر عند بداية المرحلة.
+const PERSISTED_ROLE_KEY = "sufaraa.auth.lastRole.v1";
+const PERSISTABLE_ROLES: AppRole[] = ["team", "coach", "viewer", "facilitator", "super_admin"];
+
+function loadPersistedAuthRole(): ResolvedAuthCache | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  try {
+    const raw = window.localStorage.getItem(PERSISTED_ROLE_KEY);
+    if (!raw) {
+      return null;
+    }
+    const parsed = JSON.parse(raw) as { uid?: unknown; role?: unknown };
+    if (typeof parsed.uid !== "string" || parsed.uid.length === 0) {
+      return null;
+    }
+    if (typeof parsed.role !== "string" || !PERSISTABLE_ROLES.includes(parsed.role as AppRole)) {
+      return null;
+    }
+    return { uid: parsed.uid, role: parsed.role as AppRole };
+  } catch {
+    return null;
+  }
+}
+
+function savePersistedAuthRole(cache: ResolvedAuthCache | null): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    if (cache && cache.role) {
+      window.localStorage.setItem(
+        PERSISTED_ROLE_KEY,
+        JSON.stringify({ uid: cache.uid, role: cache.role }),
+      );
+    } else {
+      window.localStorage.removeItem(PERSISTED_ROLE_KEY);
+    }
+  } catch {
+    // الوضع الخاص/امتلاء التخزين قد يرمي — تجاهل.
+  }
+}
+
 function syncLoadingDebug(partial: Parameters<typeof patchLoadingDebug>[0]): void {
   if (isLoadingDebugPanelEnabled()) {
     patchLoadingDebug(partial);
@@ -157,10 +203,12 @@ function finishResolved(next: AuthRoleState): void {
   // means the watchdog/failsafe fall back to a real role instead of nuking it.
   if (!next.loading && next.user && next.role && !next.error) {
     resolvedAuthCache = { uid: next.user.uid, role: next.role };
+    savePersistedAuthRole(resolvedAuthCache);
   }
 
   if (!next.loading && !next.user) {
     resolvedAuthCache = null;
+    savePersistedAuthRole(null);
   }
 
   lookupUid = null;
@@ -173,7 +221,7 @@ function finishResolved(next: AuthRoleState): void {
 }
 
 async function resolveSignedInUser(user: User, source: string): Promise<void> {
-  if (resolvedAuthCache?.uid === user.uid) {
+  if (resolvedAuthCache?.uid === user.uid && resolvedAuthCache.role) {
     authDebug("role lookup skipped — cache hit", { uid: user.uid, source });
     finishResolved({ user, role: resolvedAuthCache.role, loading: false, error: null });
     return;
@@ -183,6 +231,14 @@ async function resolveSignedInUser(user: User, source: string): Promise<void> {
     authDebug("role lookup skipped — already in flight", { uid: user.uid, source });
     return;
   }
+
+  // آخر دور صحيح معروف لهذا المستخدم (من الذاكرة أو من localStorage بعد إعادة تحميل).
+  // يُستخدم كشبكة أمان: قراءة دور عابرة ترجع null أو تفشل يجب ألا تُسقط جلسة موظّف مُصرَّح
+  // له إلى «ليست لديك صلاحية» عند بداية المرحلة.
+  const persisted = loadPersistedAuthRole();
+  const knownGoodRole =
+    (resolvedAuthCache?.uid === user.uid ? resolvedAuthCache.role : null) ??
+    (persisted?.uid === user.uid ? persisted.role : null);
 
   lookupUid = user.uid;
   scheduleLookupWatchdog(user.uid);
@@ -196,9 +252,11 @@ async function resolveSignedInUser(user: User, source: string): Promise<void> {
       return;
     }
 
-    authDebug("loading false", { uid: user.uid, role });
-    authHardTrace("loading false — role resolved", { uid: user.uid, role });
-    finishResolved({ user, role, loading: false, error: null });
+    // لا تُنزِل دوراً معروفاً صحيحاً إلى null بسبب قراءة جزئية/عابرة.
+    const effectiveRole = role ?? knownGoodRole;
+    authDebug("loading false", { uid: user.uid, role: effectiveRole });
+    authHardTrace("loading false — role resolved", { uid: user.uid, role: effectiveRole });
+    finishResolved({ user, role: effectiveRole, loading: false, error: null });
   } catch (error) {
     if (lookupUid !== user.uid) {
       return;
@@ -207,12 +265,11 @@ async function resolveSignedInUser(user: User, source: string): Promise<void> {
     authHardTraceError("role lookup failed", error);
     // Keep the last-known-good role for this uid (if any) instead of forcing
     // null — a transient timeout must not eject an already-authorized user.
-    const fallbackRole = resolvedAuthCache?.uid === user.uid ? resolvedAuthCache.role : null;
     finishResolved({
       user,
-      role: fallbackRole,
+      role: knownGoodRole,
       loading: false,
-      error: fallbackRole ? null : "تعذر تحميل صلاحيات المستخدم.",
+      error: knownGoodRole ? null : "تعذر تحميل صلاحيات المستخدم.",
     });
   }
 }

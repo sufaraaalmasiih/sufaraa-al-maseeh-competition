@@ -2,6 +2,8 @@
 
 import { EmptyState } from "@/components/layout/empty-state";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
+import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
+import { useTeamLogosMap } from "@/features/gameflow/team-logos-store";
 import type { RankedStage1Team } from "@/features/stage1/stage1-ranking";
 import type { FacilitatorReadinessKey } from "@/features/facilitator/facilitator-flow-plan";
 import { isTeamReadyForReadiness } from "@/features/facilitator/facilitator-readiness";
@@ -22,6 +24,7 @@ export function FacilitatorTeamsTable({
   readinessKey,
   ownerTeamId,
 }: FacilitatorTeamsTableProps) {
+  const logos = useTeamLogosMap();
   return (
     <div className="facilitator-card">
       <div className="facilitator-card__head">
@@ -62,10 +65,17 @@ export function FacilitatorTeamsTable({
                     className={cn(isOwner && "facilitator-table__row--owner")}
                   >
                     <td className="font-bold text-[#143A5A]">
-                      {team.teamName}
-                      {isOwner ? (
-                        <span className="facilitator-owner-tag">صاحب الدور</span>
-                      ) : null}
+                      <span className="flex items-center gap-2">
+                        <TeamLogoBadge
+                          logoUrl={logos.get(team.teamId)}
+                          teamName={team.teamName}
+                          variant="hud"
+                        />
+                        <span>{team.teamName}</span>
+                        {isOwner ? (
+                          <span className="facilitator-owner-tag">صاحب الدور</span>
+                        ) : null}
+                      </span>
                     </td>
                     <td>{team.governorate}</td>
                     <td>

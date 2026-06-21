@@ -9107,23 +9107,34 @@
     font-size: clamp(1.05rem, 2.1vw, 1.4rem);
   }
 
-  .audience-display .audience-stage3-timeout-card__ranking {
+  .audience-display .audience-stage3-timeout-card__team {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(0.6rem, 1.4vh, 1rem);
     width: 100%;
     border-top: 1px solid rgba(20, 58, 90, 0.1);
-    padding-top: clamp(0.75rem, 1.5vh, 1rem);
+    padding-top: clamp(1rem, 2vh, 1.5rem);
   }
 
-  .audience-display .audience-stage3-timeout-card__ranking .competition-ranking-panel--embedded {
-    margin-top: 0;
-    border: 0;
-    background: transparent;
-    box-shadow: none;
+  .audience-display .audience-stage3-timeout-card__team .team-logo-badge,
+  .audience-display .audience-stage3-timeout-card__team > div {
+    width: clamp(4.5rem, 9vw, 6.5rem);
+    height: clamp(4.5rem, 9vw, 6.5rem);
   }
 
-  .audience-display .audience-stage3-timeout-card__ranking .competition-ranking-scroll--cards {
-    max-height: min(32vh, 16rem);
-    overflow-y: auto;
-    overscroll-behavior: contain;
+  .audience-display .audience-stage3-timeout-card__team-name {
+    color: #071f31;
+    font-weight: 900;
+    font-size: clamp(1.5rem, 3.4vw, 2.6rem);
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .audience-display .audience-stage3-timeout-card__team-note {
+    color: #9a3412;
+    font-weight: 800;
+    font-size: clamp(1rem, 2vw, 1.35rem);
   }
 
   .audience-display .stage3-question-hero__audience-note {

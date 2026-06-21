@@ -87,7 +87,7 @@ export function FacilitatorControlsTab() {
             currentScores={controls.currentScores}
             values={controls.scoreInputs}
             onValuesChange={controls.setScoreInputs}
-            onResetToCurrent={controls.resetScoreInputsToCurrent}
+            onResetToAutomatic={controls.resetScoreInputsToAutomatic}
             onSave={controls.requestSaveScores}
             disabled={controls.confirmRequest !== null}
           />

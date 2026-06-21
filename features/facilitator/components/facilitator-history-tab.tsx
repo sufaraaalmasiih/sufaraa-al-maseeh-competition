@@ -28,9 +28,12 @@ import {
 } from "@/features/facilitator/competition-session";
 import { SessionEditLogPanel } from "@/features/facilitator/components/session-edit-log-panel";
 import { ArchiveResultsTable } from "@/features/facilitator/components/archive-results-table";
+import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
+import { useTeamLogosMap } from "@/features/gameflow/team-logos-store";
 import {
   mergeObjectionsById,
   objectionReasonLabel,
+  objectionStatusLabel,
   useObjections,
   type CompetitionObjection,
 } from "@/features/facilitator/objections";
@@ -99,6 +102,7 @@ function SessionCard({
   const [showEditLog, setShowEditLog] = useState(false);
   const [confirmRequest, setConfirmRequest] = useState<ControlsConfirmRequest | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const logos = useTeamLogosMap();
   const { entries, loading: logLoading, error: logError } = useSessionEditLog(
     showEditLog ? archive.id : null,
   );
@@ -316,11 +320,16 @@ function SessionCard({
                   className="rounded-lg border border-[#FDE68A] bg-white/80 px-3 py-2"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-sm font-bold text-[#143A5A]">
+                    <span className="flex items-center gap-2 text-sm font-bold text-[#143A5A]">
+                      <TeamLogoBadge
+                        logoUrl={logos.get(objection.teamId)}
+                        teamName={objection.teamName}
+                        variant="hud"
+                      />
                       {objection.teamName} — {objection.questionLabel}
                     </span>
                     <span className="text-xs font-bold text-[#92400E]">
-                      {objection.status === "reviewed" ? "تمت المراجعة" : "جديد"}
+                      {objectionStatusLabel(objection.status)}
                     </span>
                   </div>
                   {objection.reasons.length > 0 ? (

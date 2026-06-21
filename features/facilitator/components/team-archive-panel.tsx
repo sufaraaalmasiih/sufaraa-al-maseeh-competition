@@ -5,6 +5,7 @@ import { Archive, ChevronDown, ChevronUp } from "lucide-react";
 import { useTeamArchive } from "@/features/facilitator/use-team-archive";
 import {
   objectionReasonLabel,
+  objectionStatusLabel,
   useTeamObjections,
 } from "@/features/facilitator/objections";
 import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
@@ -150,7 +151,7 @@ export function TeamArchivePanel({
                         {objection.questionLabel}
                       </span>
                       <span className="text-xs font-bold text-[#92400E]">
-                        {objection.status === "reviewed" ? "تمت المراجعة" : "جديد"}
+                        {objectionStatusLabel(objection.status)}
                       </span>
                     </div>
                     {objection.reasons.length > 0 ? (

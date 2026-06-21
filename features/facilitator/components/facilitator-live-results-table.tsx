@@ -2,6 +2,8 @@
 
 import { EmptyState } from "@/components/layout/empty-state";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
+import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
+import { useTeamLogosMap } from "@/features/gameflow/team-logos-store";
 import type { LiveResultRow } from "@/features/facilitator/use-live-results";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +22,7 @@ export function FacilitatorLiveResultsTable({
   error,
   ownerTeamId,
 }: FacilitatorLiveResultsTableProps) {
+  const logos = useTeamLogosMap();
   return (
     <div className="facilitator-card">
       <div className="facilitator-card__head">
@@ -60,10 +63,17 @@ export function FacilitatorLiveResultsTable({
                   >
                     <td className="text-[#2388C4] font-semibold">{stageName}</td>
                     <td className="font-bold text-[#143A5A]">
-                      {team.teamName}
-                      {isOwner ? (
-                        <span className="facilitator-owner-tag">صاحب الدور</span>
-                      ) : null}
+                      <span className="flex items-center gap-2">
+                        <TeamLogoBadge
+                          logoUrl={logos.get(team.teamId)}
+                          teamName={team.teamName}
+                          variant="hud"
+                        />
+                        <span>{team.teamName}</span>
+                        {isOwner ? (
+                          <span className="facilitator-owner-tag">صاحب الدور</span>
+                        ) : null}
+                      </span>
                     </td>
                     <td>{team.questionLabel}</td>
                     <td className="font-bold text-[#4F8A10]">{team.stageScore}</td>

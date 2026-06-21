@@ -18,6 +18,7 @@ import {
   updateTeamFullProfile,
   type AdminStageKey,
 } from "@/features/facilitator/facilitator-team-admin";
+import { recomputeStageScoresFromAnswers } from "@/features/facilitator/recompute-team-scores-from-answers";
 import { resetTimerForExceptionalReturn } from "@/features/facilitator/reset-timer-for-override";
 import {
   validateOverrideQuestionNumber,
@@ -211,13 +212,21 @@ export function useFacilitatorControlsTab() {
     });
   }
 
-  function resetScoreInputsToCurrent() {
+  // يعيد القيم إلى النقاط المحسوبة تلقائياً من الإجابات (الوضع الافتراضي)، متجاهلاً
+  // أي تعديلات يدوية سابقة. تُملأ الحقول فقط؛ يراجع المشرف ثم يضغط «حفظ النقاط» للتطبيق.
+  function resetScoreInputsToAutomatic() {
+    if (!selectedTeamId) {
+      setToast("اختر فريقاً أولاً.");
+      return;
+    }
+    const auto = recomputeStageScoresFromAnswers(answerRows, selectedTeamId);
     setScoreInputs({
-      stage1: String(currentScores.stage1),
-      stage2: String(currentScores.stage2),
-      stage3: String(currentScores.stage3),
-      stage4: String(currentScores.stage4),
+      stage1: String(auto.stage1),
+      stage2: String(auto.stage2),
+      stage3: String(auto.stage3),
+      stage4: String(auto.stage4),
     });
+    setToast("تم احتساب النقاط تلقائياً من الإجابات. راجعها ثم اضغط «حفظ النقاط».");
   }
 
   function requestSaveScores() {
@@ -544,7 +553,7 @@ export function useFacilitatorControlsTab() {
     currentScores,
     scoreInputs,
     setScoreInputs,
-    resetScoreInputsToCurrent,
+    resetScoreInputsToAutomatic,
     requestSaveScores,
     globalLocks,
     globalLocksMixed,

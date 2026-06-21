@@ -1,14 +1,18 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, MessageSquareWarning } from "lucide-react";
+import { Check, Eye, MessageSquareWarning, ThumbsDown, ThumbsUp } from "lucide-react";
 import {
-  markObjectionReviewed,
+  isObjectionDecided,
+  markObjectionSeen,
   objectionReasonLabel,
   objectionsForActiveSession,
+  setObjectionDecision,
   useObjections,
 } from "@/features/facilitator/objections";
 import { useActiveSessionId } from "@/features/facilitator/competition-session";
+import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
+import { useTeamLogosMap } from "@/features/gameflow/team-logos-store";
 
 function formatTime(ms: number): string {
   if (!ms) {
@@ -24,8 +28,9 @@ function formatTime(ms: number): string {
 export function FacilitatorObjectionsPanel() {
   const { objections: allObjections, loading } = useObjections();
   const activeSessionId = useActiveSessionId();
+  const logos = useTeamLogosMap();
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [showReviewed, setShowReviewed] = useState(false);
+  const [showDecided, setShowDecided] = useState(false);
 
   // المسابقة النشطة فقط — اعتراضات المسابقات السابقة تبقى في تبويب «السجل».
   const objections = useMemo(
@@ -37,8 +42,12 @@ export function FacilitatorObjectionsPanel() {
     () => objections.filter((objection) => objection.status === "open"),
     [objections],
   );
-  const reviewed = useMemo(
-    () => objections.filter((objection) => objection.status === "reviewed"),
+  const pending = useMemo(
+    () => objections.filter((objection) => !isObjectionDecided(objection.status)),
+    [objections],
+  );
+  const decided = useMemo(
+    () => objections.filter((objection) => isObjectionDecided(objection.status)),
     [objections],
   );
 
@@ -50,16 +59,16 @@ export function FacilitatorObjectionsPanel() {
     return null;
   }
 
-  async function handleReviewed(id: string) {
+  async function runAction(id: string, action: () => Promise<void>) {
     setBusyId(id);
     try {
-      await markObjectionReviewed(id);
+      await action();
     } finally {
       setBusyId(null);
     }
   }
 
-  const visible = showReviewed ? objections : open;
+  const visible = showDecided ? objections : pending;
 
   return (
     <div className="facilitator-card">
@@ -80,31 +89,38 @@ export function FacilitatorObjectionsPanel() {
         </div>
       </div>
 
-      {reviewed.length > 0 ? (
+      {decided.length > 0 ? (
         <button
           type="button"
           className="facilitator-btn facilitator-btn--outline mb-3"
-          onClick={() => setShowReviewed((value) => !value)}
+          onClick={() => setShowDecided((value) => !value)}
         >
-          {showReviewed ? "إظهار الجديدة فقط" : `إظهار المُراجَعة (${reviewed.length})`}
+          {showDecided ? "إظهار قيد المعالجة فقط" : `إظهار المعالَجة (${decided.length})`}
         </button>
       ) : null}
 
       <div className="max-h-[55vh] space-y-3 overflow-y-auto pr-1">
         {visible.length === 0 ? (
-          <p className="text-sm font-semibold text-[#64748B]">لا توجد اعتراضات جديدة.</p>
+          <p className="text-sm font-semibold text-[#64748B]">لا توجد اعتراضات قيد المعالجة.</p>
         ) : null}
         {visible.map((objection) => (
           <div
             key={objection.id}
             className={`rounded-xl border p-3 ${
-              objection.status === "open"
-                ? "border-[#FDE68A] bg-[#FFFBEB]"
-                : "border-[#E2E8F0] bg-white/70 opacity-80"
+              isObjectionDecided(objection.status)
+                ? "border-[#E2E8F0] bg-white/70 opacity-80"
+                : "border-[#FDE68A] bg-[#FFFBEB]"
             }`}
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-sm font-black text-[#143A5A]">{objection.teamName}</span>
+              <span className="flex items-center gap-2 text-sm font-black text-[#143A5A]">
+                <TeamLogoBadge
+                  logoUrl={logos.get(objection.teamId)}
+                  teamName={objection.teamName}
+                  variant="hud"
+                />
+                {objection.teamName}
+              </span>
               <span className="text-xs text-[#64748B]">
                 {objection.stage ? `${objection.stage} · ` : ""}
                 {formatTime(objection.createdAtMs)}
@@ -134,13 +150,56 @@ export function FacilitatorObjectionsPanel() {
                 type="button"
                 disabled={busyId === objection.id}
                 className="facilitator-btn facilitator-btn--outline mt-2"
-                onClick={() => void handleReviewed(objection.id)}
+                onClick={() => void runAction(objection.id, () => markObjectionSeen(objection.id))}
               >
-                <Check className="h-4 w-4" aria-hidden />
-                تمت المراجعة
+                <Eye className="h-4 w-4" aria-hidden />
+                تم مشاهدة الاعتراض
               </button>
+            ) : objection.status === "seen" ? (
+              <div className="mt-2 space-y-2">
+                <p className="text-xs font-bold text-[#B45309]">
+                  <Check className="ml-1 inline h-4 w-4" aria-hidden />
+                  تم مشاهدة الاعتراض — اتّخذ قراراً:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={busyId === objection.id}
+                    className="facilitator-btn facilitator-btn--primary"
+                    onClick={() =>
+                      void runAction(objection.id, () =>
+                        setObjectionDecision(objection.id, "accepted"),
+                      )
+                    }
+                  >
+                    <ThumbsUp className="h-4 w-4" aria-hidden />
+                    قبول الاعتراض
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busyId === objection.id}
+                    className="facilitator-btn facilitator-btn--outline"
+                    onClick={() =>
+                      void runAction(objection.id, () =>
+                        setObjectionDecision(objection.id, "rejected"),
+                      )
+                    }
+                  >
+                    <ThumbsDown className="h-4 w-4" aria-hidden />
+                    رفض الاعتراض
+                  </button>
+                </div>
+              </div>
+            ) : objection.status === "accepted" ? (
+              <p className="mt-2 text-xs font-bold text-[#4F8A10]">
+                <ThumbsUp className="ml-1 inline h-4 w-4" aria-hidden />
+                مقبول — عدّل نقاط الفريق يدوياً من تبويب «التحكم».
+              </p>
             ) : (
-              <p className="mt-2 text-xs font-bold text-[#4F8A10]">تمت المراجعة</p>
+              <p className="mt-2 text-xs font-bold text-[#B91C1C]">
+                <ThumbsDown className="ml-1 inline h-4 w-4" aria-hidden />
+                مرفوض
+              </p>
             )}
           </div>
         ))}

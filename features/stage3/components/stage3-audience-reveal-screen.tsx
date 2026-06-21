@@ -1,7 +1,7 @@
 "use client";
 
 import { Stage3GameplayHeader } from "@/features/stage3/components/stage3-gameplay-header";
-import { Stage3RankingTable } from "@/features/stage3/components/stage3-ranking-table";
+import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
 import { getStage3MockQuestion } from "@/features/stage3/stage3-mock-questions";
 import { STAGE3_SELECTION_TIMEOUT_PENALTY } from "@/features/stage3/stage3-official-constants";
 import { isStage3SelectionTimeoutQuestion } from "@/features/stage3/stage3-selection-timeout-question";
@@ -16,6 +16,7 @@ import type { RevealResultsAnswerRow } from "@/features/stage4/reveal-results-an
 
 interface Stage3AudienceRevealScreenProps {
   question: Stage3QuestionMetadata | null;
+  ownerTeamId: string | null;
   ownerTeamName: string | null;
   rankingTeams: RankedStage3Team[];
   rankingLoading: boolean;
@@ -42,10 +43,9 @@ function mapStage3AnswersToRevealRows(answers: Stage3ActiveAnswerRow[]): RevealR
 
 export function Stage3AudienceRevealScreen({
   question,
+  ownerTeamId,
   ownerTeamName,
   rankingTeams,
-  rankingLoading,
-  rankingError,
 }: Stage3AudienceRevealScreenProps) {
   const { answers, loading } = useStage3ActiveAnswers(question?.id ?? null);
   const isSelectionTimeout = question ? isStage3SelectionTimeoutQuestion(question) : false;
@@ -55,6 +55,11 @@ export function Stage3AudienceRevealScreen({
 
   if (isSelectionTimeout) {
     const penaltyPoints = Math.abs(STAGE3_SELECTION_TIMEOUT_PENALTY);
+    const ownerTeam = ownerTeamId
+      ? rankingTeams.find((team) => team.teamId === ownerTeamId)
+      : null;
+    const ownerLogoUrl = ownerTeam?.logoUrl ?? null;
+    const ownerDisplayName = ownerTeam?.teamName ?? ownerTeamName ?? "صاحب الدور";
 
     return (
       <div className="audience-reveal-results-page audience-reveal-results-page--timeout audience-stage3-timeout-layout">
@@ -81,16 +86,14 @@ export function Stage3AudienceRevealScreen({
               </p>
             </div>
 
-            <div className="audience-stage3-timeout-card__ranking">
-              <Stage3RankingTable
-                teams={rankingTeams}
-                loading={rankingLoading}
-                error={rankingError}
-                variant="audience"
-                embedded
-                animate
-                revealAscending
+            <div className="audience-stage3-timeout-card__team">
+              <TeamLogoBadge
+                logoUrl={ownerLogoUrl}
+                teamName={ownerDisplayName}
+                variant="ranking"
               />
+              <p className="audience-stage3-timeout-card__team-name">{ownerDisplayName}</p>
+              <p className="audience-stage3-timeout-card__team-note">لم يختر سؤالاً</p>
             </div>
           </div>
         </div>

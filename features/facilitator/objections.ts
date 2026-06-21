@@ -33,7 +33,46 @@ export function objectionReasonLabel(id: string): string {
   return OBJECTION_REASONS.find((reason) => reason.id === id)?.label ?? id;
 }
 
-export type ObjectionStatus = "open" | "reviewed";
+/**
+ * دورة حياة الاعتراض:
+ * - `open`: جديد، لم يطّلع عليه الميسّر بعد.
+ * - `seen`: شاهده الميسّر (يستبدل «تمت المراجعة» القديمة)، بانتظار قرار.
+ * - `accepted`: قَبِله الميسّر (يعدّل النقاط يدوياً من تبويب التحكم).
+ * - `rejected`: رفضه الميسّر.
+ */
+export type ObjectionStatus = "open" | "seen" | "accepted" | "rejected";
+
+/** الحالات التي اتُّخذ فيها قرار نهائي (لا تحتاج إجراءً من الميسّر). */
+export function isObjectionDecided(status: ObjectionStatus): boolean {
+  return status === "accepted" || status === "rejected";
+}
+
+export function objectionStatusLabel(status: ObjectionStatus): string {
+  switch (status) {
+    case "seen":
+      return "تمت المشاهدة";
+    case "accepted":
+      return "مقبول";
+    case "rejected":
+      return "مرفوض";
+    default:
+      return "قيد المراجعة";
+  }
+}
+
+function parseObjectionStatus(value: unknown): ObjectionStatus {
+  // «reviewed» حالة قديمة قبل تقسيم القرار — تُعامَل كـ«تمت المشاهدة».
+  if (value === "seen" || value === "reviewed") {
+    return "seen";
+  }
+  if (value === "accepted") {
+    return "accepted";
+  }
+  if (value === "rejected") {
+    return "rejected";
+  }
+  return "open";
+}
 
 /**
  * يحصر الاعتراضات على المسابقة النشطة فقط — فعند بدء مسابقة جديدة أو إعادة الضبط
@@ -92,7 +131,7 @@ function parseObjection(id: string, data: Record<string, unknown>): CompetitionO
     note: str(data.note),
     sessionId: typeof data.sessionId === "string" ? data.sessionId : null,
     sessionTitle: typeof data.sessionTitle === "string" ? data.sessionTitle : null,
-    status: data.status === "reviewed" ? "reviewed" : "open",
+    status: parseObjectionStatus(data.status),
     createdAtMs: num(data.createdAtMs),
   };
 }
@@ -253,11 +292,24 @@ export async function archiveAndClearObjections(): Promise<{
   return { archived, cleared: refs.length };
 }
 
-export async function markObjectionReviewed(id: string): Promise<void> {
+/** يضع الاعتراض في حالة «تمت المشاهدة» — يطّلع عليه الميسّر قبل اتخاذ القرار. */
+export async function markObjectionSeen(id: string): Promise<void> {
   await updateDoc(objectionDoc(id), {
-    status: "reviewed",
-    reviewedAt: serverTimestamp(),
-    reviewedByUid: firebaseAuth.currentUser?.uid ?? null,
+    status: "seen",
+    seenAt: serverTimestamp(),
+    seenByUid: firebaseAuth.currentUser?.uid ?? null,
+  });
+}
+
+/** قرار الميسّر النهائي على الاعتراض: قبول أو رفض. */
+export async function setObjectionDecision(
+  id: string,
+  decision: "accepted" | "rejected",
+): Promise<void> {
+  await updateDoc(objectionDoc(id), {
+    status: decision,
+    decidedAt: serverTimestamp(),
+    decidedByUid: firebaseAuth.currentUser?.uid ?? null,
   });
 }
 
