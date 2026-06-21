@@ -10,3 +10,5 @@ dist
 *.log
 sufaraa-al-maseeh/
 sufaraa-al-maseeh-Final/
+
+.vercel
