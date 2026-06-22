@@ -1,7 +1,7 @@
 # سفراء المسيح — دليل المشروع الكامل لأي AI
 
 > **الغرض:** مصدر handoff شامل لفهم المشروع والمتابعة دون سياق سابق.  
-> **آخر تحديث:** 2026-06-21 — مُحقَّق مقابل الكود في `codex-master-prompt-v1-sufaraa-al`  
+> **آخر تحديث:** 2026-06-22 — مُحقَّق مقابل الكود في `codex-master-prompt-v1-sufaraa-al`  
 > **اللغة:** واجهة عربية RTL — الكود والمسارات بالإنجليزية.  
 > **تنبيه صادق:** لا يوجد توثيق «100% مطلق» بدون قراءة الكود. هذا الملف يغطي **~95%** من ما يحتاجه AI. عند التعارض: **الكود wins**.
 
@@ -9,7 +9,16 @@
 
 ## 0) أحدث التغييرات — اقرأها أولاً
 
-### 2026‑06‑21 (هذه الجلسة — كلها مدفوعة على `main`)
+### 2026‑06‑22 (هذه الجلسة — كلها مدفوعة على `main`)
+
+- **اعتراض المدرب — قبول/رفض:** بدّلنا «تمت المراجعة» بدورة قرار: `open → seen → accepted/rejected`. الميسّر يضغط **«تم مشاهدة الاعتراض»** ثم **«قبول»/«رفض»**؛ القبول يذكّره بتعديل النقاط يدوياً من تبويب التحكم. دوال جديدة في `features/facilitator/objections.ts` (`markObjectionSeen`, `setObjectionDecision`, `objectionStatusLabel`, `isObjectionDecided`) مع توافق رجعي: حالة `reviewed` القديمة تُقرأ كـ«تمت المشاهدة». تحديث العرض عند المدرب والسجل وأرشيف الفريق. **لا تحتاج نشر قواعد** (القواعد تسمح للميسّر بأي تحديث على الاعتراض).
+- **تعديل النقاط — إرجاع لما قبل التعديل:** زر «إرجاع للقيم الحالية» صار **«إرجاع نقاط ما قبل التعديل»**. عند أوّل تعديل يدوي تُلتقط لقطة `scoreBaselineBeforeManual` في حالة الفريق (في `setTeamStageScores`)، والزر يستعيدها؛ وإن لم توجد لقطة يُعاد الحساب من الإجابات (`recompute-team-scores-from-answers.ts` + اختبارات) **دون تصفير** فريق له نقاط بلا إجابات. تُملأ الحقول فقط ثم يحفظ الميسّر.
+- **المرحلة 3 — عند عدم اختيار سؤال:** في شاشة إعلان الجمهور أُزيل جدول الترتيب واستُبدل بـ**شعار الفريق + اسمه + «لم يختر سؤالاً»** مع إبقاء الخصم (مُرِّر `ownerTeamId` عبر `use-audience-shell-data.ts` + احتياط من خريطة الشعارات).
+- **صور الفرق (تظهر للجميع):** كان `team-logos-store.ts` يقرأ من مجموعة `teams` المقيّدة بالميسّر فقط → خارج لوحة الميسّر تظهر أيقونة البديل. الآن المصدر **`teamStates` العامة**، مع: (أ) الحفاظ على `logoUrl` في حالة الفريق عبر إعادة الضبط/الاستعداد وإعادة الإنشاء/الدخول (`buildInitialTeamStateDocument` يقبل `logoUrl`، `competition-reset.ts` و`ensure-team-profile.ts` يمرّرانه/يعيدان ملأه)، (ب) **مزامنة من جهة الميسّر** (`use-facilitator-team-logo-sync.ts` مُركَّبة في `facilitator-shell.tsx`) تنسخ `logoUrl` من `teams` إلى `teamStates` لكل الفرق عند فتح اللوحة — فتظهر الشعارات حتى للفرق التي مُسح شعارها سابقاً دون إعادة دخولها. أُضيف `TeamLogoBadge` في لوحة الاعتراضات وجداول الفرق/النتائج وصفوف اعتراضات السجل وجدولَي تقدّم المرحلتين 2 و3.
+- **المصادقة (الميسّر/المشرف):** حفظ آخر دور صحيح في `localStorage` وعدم إسقاط جلسة موظّف مُصرَّح له إلى `null` عند قراءة دور عابرة (`use-auth-role.ts`)؛ وطبقة bootstrap لم تعد تُعلن «غير مسجّل» إن لم يتوفّر مستخدم بعد (يحسمها `onAuthStateChanged`) — يمنعان ظهور «ليست لديك صلاحية»/«يلزم تسجيل الدخول» للميسّر/المشرف خطأً عند بداية المرحلة الأولى تحت الضغط.
+- **بدء المسابقة يتطلّب جاهزية الفرق:** مرحلة `waiting_players` صارت مبوَّبة بمفتاح جاهزية `"ready"` — زر «بدء مقدمة المسابقة» مقفل حتى تضغط **كل** الفرق «جاهز» (`facilitator-flow-plan.ts` + `facilitator-readiness.ts`). التجاوز الطارئ عبر «تحكم يدوي متقدم» كبقية المراحل.
+
+### 2026‑06‑21 (مدفوعة على `main`)
 
 - **البنية التحتية (الأهم):** كانت كل مسارات `/api/admin/*` تنهار وقت التشغيل على Vercel بخطأ `ERR_REQUIRE_ESM` (سلسلة `firebase-admin` → `jwks-rsa@4` → `jose@6` نسخة ESM لا تقبل `require`) — وهو **السبب الحقيقي** لعدم عمل تغيير كلمات مرور الفرق والحذف من Authentication. الحلّ: تثبيت `jose` على `5.10.0` عبر `overrides` في `package.json`. كما نُقل `firebase-admin` إلى `dependencies`، وأُضيف اختبار دخان بعد النشر (`scripts/post-deploy-smoke.mjs` / `npm run smoke`) يتأكّد أنّ `/api/admin/*` ترجع 401 لا 500 (يُمسك أي تكرار لهذا النوع من الأخطاء الذي لا تكشفه `tsc` ولا `vitest`).
 - **المصادقة:** إصلاح ظهور «ليست لديك صلاحية» مباشرة بعد تسجيل فريق/مدرب، والخروج المفاجئ للميسّر/المشرف على انقطاع شبكة لحظي — في `hooks/use-auth-role.ts`: لا يُخزَّن دور `null`/فاشل في الكاش (كان يُسمّم الجلسة)، مع إعادة محاولة، ودالّة `primeAuthRole` تُحقن الدور المعروف بعد التسجيل/الدخول.
@@ -644,7 +653,7 @@ Board: 5 fields × 6 questions (2 easy, 2 medium, 2 hard each)
 
 | status | Hero action | readinessKey | managedByPanel |
 |--------|-------------|--------------|----------------|
-| waiting_players | → competition_intro | — | no |
+| waiting_players | → competition_intro | ready (كل الفرق ضغطت «جاهز») | no |
 | competition_intro | → stage1_intro | competitionIntro | no |
 | stage1_intro | → stage1_running | stage1Intro | no |
 | stage1_running | finish → stage1_finished | — | no |
@@ -864,8 +873,9 @@ All use fingerprint refs to avoid duplicate writes from multiple facilitator tab
 - مكوّن `team-archive-panel.tsx` يُعرض في الميسّر/المدرب/شاشة انتظار الفريق (المستمعات **كسولة — تعمل عند الفتح فقط** لتوفير الباقة المجانية).
 
 ### 23.8 ميزة الاعتراضات (المدرب)
-- **مجموعة جديدة:** `competitions/main/objections/{id}` — `features/facilitator/objections.ts` (`submitObjection`, `markObjectionReviewed`, `useObjections`, `useTeamObjections`).
+- **مجموعة:** `competitions/main/objections/{id}` — `features/facilitator/objections.ts` (`submitObjection`, `markObjectionSeen`, `setObjectionDecision`, `objectionStatusLabel`, `isObjectionDecided`, `useObjections`, `useTeamObjections`).
 - المدرب يعترض على سؤال (أسباب شائعة: المرجع/إملائي/سؤال خاطئ + نص اختياري) من `coach-objection-form.tsx`؛ تظهر للميسّر في `facilitator-objections-panel.tsx` (تبويب التحكم) وتُحفظ في أرشيف الفريق وأرشيف المسابقة.
+- **دورة القرار (تحديث 2026‑06‑22):** `open → seen → accepted/rejected`. الميسّر يضغط «تم مشاهدة الاعتراض» (`seen`) ثم «قبول»/«رفض»؛ القبول يعدّل النقاط يدوياً من تبويب التحكم. الحالة القديمة `reviewed` تُقرأ كـ`seen` (توافق رجعي). تحديث/حذف الاعتراض للميسّر فقط في القواعد — فلا حاجة لنشر قواعد لهذه الدورة.
 
 ### 23.9 الجمهور (النقطة 17)
 - وضع ملء الشاشة يوسّع كل حاويات محتوى الجمهور لتملأ 100% (`html.audience-fullscreen-mode` في `globals.css`).
