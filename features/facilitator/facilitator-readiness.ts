@@ -18,6 +18,8 @@ export function isTeamReadyForReadiness(
   }
 
   switch (key) {
+    case "ready":
+      return team.ready;
     case "competitionIntro":
       return team.competitionIntroReady;
     case "stage1Intro":

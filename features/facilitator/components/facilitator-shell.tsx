@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AuthGate } from "@/features/auth/components/auth-gate";
 import { useCompetitionContentSync } from "@/features/competition-content/competition-content-runtime";
 import { useQuestionBankRuntimeSync } from "@/features/facilitator/question-bank-runtime";
+import { useFacilitatorTeamLogoSync } from "@/features/facilitator/use-facilitator-team-logo-sync";
 import { FacilitatorAboutTab } from "@/features/facilitator/components/facilitator-about-tab";
 import { FacilitatorAdminTab } from "@/features/facilitator/components/facilitator-admin-tab";
 import { FacilitatorAudienceTab } from "@/features/facilitator/components/facilitator-audience-tab";
@@ -89,6 +90,8 @@ function FacilitatorShellAuthenticated() {
   const { role } = useAuthRole();
   const searchParams = useSearchParams();
   const isSuperAdmin = role === "super_admin";
+  // مزامنة شعارات الفرق إلى teamStates العامة لتظهر لكل الشاشات.
+  useFacilitatorTeamLogoSync(role === "facilitator" || role === "super_admin");
   const tabs = isSuperAdmin ? [...FACILITATOR_TABS, FACILITATOR_SUPER_ADMIN_TAB] : FACILITATOR_TABS;
   const defaultTab = resolveFacilitatorDefaultTab(role, searchParams.get("tab"));
   const headerTitle = isSuperAdmin ? "لوحة المشرف العام" : "لوحة الميسر";

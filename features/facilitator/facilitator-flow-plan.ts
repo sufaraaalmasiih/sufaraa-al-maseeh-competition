@@ -9,6 +9,7 @@ export type FacilitatorStageKey =
   | "final";
 
 export type FacilitatorReadinessKey =
+  | "ready"
   | "competitionIntro"
   | "stage1Intro"
   | "stage2Intro"
@@ -101,14 +102,14 @@ const PLAN: Record<GameFlowStatus, FacilitatorPhasePlan> = {
     stageKey: "pre",
     stageName: FACILITATOR_STAGE_NAMES.pre,
     phaseLabel: "شاشة الانتظار",
-    hint: "ننتظر انضمام الفرق. ابدأ المقدمة عند اكتمال الحضور.",
+    hint: "ننتظر انضمام الفرق وضغطها «جاهز». ابدأ المقدمة عندما تجهز كل الفرق.",
     hero: {
       label: "بدء مقدمة المسابقة",
       nextStatus: "competition_intro",
       nextStage: "none",
       kind: "primary",
     },
-    readinessKey: null,
+    readinessKey: "ready",
     managedByPanel: false,
   },
   competition_intro: {
