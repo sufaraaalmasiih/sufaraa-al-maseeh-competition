@@ -212,21 +212,58 @@ export function useFacilitatorControlsTab() {
     });
   }
 
-  // يعيد القيم إلى النقاط المحسوبة تلقائياً من الإجابات (الوضع الافتراضي)، متجاهلاً
-  // أي تعديلات يدوية سابقة. تُملأ الحقول فقط؛ يراجع المشرف ثم يضغط «حفظ النقاط» للتطبيق.
+  // يعيد القيم إلى ما كانت عليه قبل أوّل تعديل يدوي (لقطة محفوظة في حالة الفريق)؛
+  // وإن لم توجد لقطة فيُحسب من الإجابات. لا يُصفّر فريقاً له نقاط بلا إجابات/لقطة.
+  // تُملأ الحقول فقط؛ يراجع المشرف ثم يضغط «حفظ النقاط» للتطبيق.
   function resetScoreInputsToAutomatic() {
     if (!selectedTeamId) {
       setToast("اختر فريقاً أولاً.");
       return;
     }
-    const auto = recomputeStageScoresFromAnswers(answerRows, selectedTeamId);
+
+    const doc = teamStateDocs.find((entry) => entry.id === selectedTeamId);
+    const baseline = doc?.data.scoreBaselineBeforeManual as
+      | Record<string, unknown>
+      | undefined;
+    const toNum = (value: unknown) =>
+      typeof value === "number" && Number.isFinite(value) ? Math.max(0, value) : 0;
+
+    let target: Record<AdminStageKey, number>;
+    let message: string;
+
+    if (baseline && typeof baseline === "object" && typeof baseline.stage1 === "number") {
+      target = {
+        stage1: toNum(baseline.stage1),
+        stage2: toNum(baseline.stage2),
+        stage3: toNum(baseline.stage3),
+        stage4: toNum(baseline.stage4),
+      };
+      message = "تم إرجاع النقاط إلى ما قبل التعديل اليدوي. راجعها ثم اضغط «حفظ النقاط».";
+    } else {
+      const auto = recomputeStageScoresFromAnswers(answerRows, selectedTeamId);
+      const autoTotal = auto.stage1 + auto.stage2 + auto.stage3 + auto.stage4;
+      // إن لم توجد إجابات (autoTotal=0) لكن للفريق نقاط حالية، أبقِ الحالية بدل التصفير.
+      if (autoTotal === 0 && currentScores.total > 0) {
+        target = {
+          stage1: currentScores.stage1,
+          stage2: currentScores.stage2,
+          stage3: currentScores.stage3,
+          stage4: currentScores.stage4,
+        };
+        message = "لا توجد لقطة سابقة ولا إجابات مسجّلة — أُبقيت النقاط الحالية كما هي.";
+      } else {
+        target = auto;
+        message = "تم احتساب النقاط تلقائياً من الإجابات. راجعها ثم اضغط «حفظ النقاط».";
+      }
+    }
+
     setScoreInputs({
-      stage1: String(auto.stage1),
-      stage2: String(auto.stage2),
-      stage3: String(auto.stage3),
-      stage4: String(auto.stage4),
+      stage1: String(target.stage1),
+      stage2: String(target.stage2),
+      stage3: String(target.stage3),
+      stage4: String(target.stage4),
     });
-    setToast("تم احتساب النقاط تلقائياً من الإجابات. راجعها ثم اضغط «حفظ النقاط».");
+    setToast(message);
   }
 
   function requestSaveScores() {

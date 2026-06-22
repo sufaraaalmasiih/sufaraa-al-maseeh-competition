@@ -3,6 +3,7 @@
 import { collection } from "firebase/firestore";
 import { useSyncExternalStore } from "react";
 import { getClientFirestore } from "@/firebase/firebaseClient";
+import { MAIN_COMPETITION_ID } from "@/firebase/firestore";
 import { subscribeFirestoreQuery } from "@/lib/firestore-listener";
 import type { TeamLogoMap } from "@/lib/resolve-team-logo-url";
 
@@ -21,8 +22,10 @@ function ensureSubscription(): void {
     return;
   }
 
+  // المصدر = teamStates (قراءته عامة لكل الأدوار: الجمهور/المدرب/الفريق/الميسّر)، بدل
+  // teams المقيّدة بالميسّر فقط — فلولاها يظهر شعار البديل (أيقونة) خارج لوحة الميسّر.
   unsubscribe = subscribeFirestoreQuery(
-    collection(getClientFirestore(), "teams"),
+    collection(getClientFirestore(), "competitions", MAIN_COMPETITION_ID, "teamStates"),
     (snapshot) => {
       const next = new Map<string, string>();
       snapshot.docs.forEach((docSnap) => {

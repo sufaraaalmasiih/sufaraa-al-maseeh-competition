@@ -54,11 +54,14 @@ export function buildInitialTeamStateDocument(
   teamId: string,
   teamName: string,
   governorate: string,
+  logoUrl?: string,
 ): TeamStateDocument {
   return {
     teamId,
     teamName,
     governorate,
+    // الشعار يبقى في حالة الفريق (مصدر عام للصور) عبر إعادة الضبط/الدخول، فلا يختفي.
+    ...(logoUrl ? { logoUrl } : {}),
     ready: false,
     readiness: {
       competitionIntro: false,
@@ -122,6 +125,6 @@ export async function createInitialTeamState(
 ): Promise<void> {
   await setDoc(
     teamStateRef(competitionId, uid),
-    buildInitialTeamStateDocument(uid, teamData.teamName, teamData.governorate),
+    buildInitialTeamStateDocument(uid, teamData.teamName, teamData.governorate, teamData.logoUrl),
   );
 }

@@ -108,10 +108,12 @@ async function resetAllTeamStates(competitionId: string): Promise<number> {
           typeof data.teamName === "string" ? data.teamName : "فريق بدون اسم";
         const governorate =
           typeof data.governorate === "string" ? data.governorate : "غير محددة";
+        // الحفاظ على شعار الفريق عبر إعادة الضبط/الاستعداد حتى لا يختفي من الشاشات.
+        const logoUrl = typeof data.logoUrl === "string" ? data.logoUrl : undefined;
 
         batch.set(
           docSnap.ref,
-          buildInitialTeamStateDocument(teamId, teamName, governorate),
+          buildInitialTeamStateDocument(teamId, teamName, governorate, logoUrl),
         );
       });
 

@@ -95,6 +95,14 @@ export async function setTeamStageScores(input: {
     const currentStages = (data.stageScores as Record<string, number>) ?? {};
     const currentTotal = typeof data.totalScore === "number" ? data.totalScore : 0;
 
+    // لقطة نقاط الفريق قبل أوّل تعديل يدوي (تُلتقط مرة واحدة) — مصدر «إرجاع النقاط
+    // إلى ما قبل التعديل اليدوي». لا تُلتقط ثانيةً حتى لا تُسجّل قيمة معدّلة كأساس.
+    const existingBaseline = data.scoreBaselineBeforeManual;
+    const hasBaseline =
+      existingBaseline !== null &&
+      typeof existingBaseline === "object" &&
+      typeof (existingBaseline as Record<string, unknown>).stage1 === "number";
+
     const beforeStages: Record<string, number> = {};
     const afterStages: Record<string, number> = {};
     const update: Record<string, unknown> = { updatedAt: serverTimestamp() };
@@ -119,6 +127,15 @@ export async function setTeamStageScores(input: {
 
     const nextTotal = Math.max(0, currentTotal + appliedDelta);
     update.totalScore = nextTotal;
+
+    if (!hasBaseline) {
+      update.scoreBaselineBeforeManual = {
+        stage1: beforeStages.stage1,
+        stage2: beforeStages.stage2,
+        stage3: beforeStages.stage3,
+        stage4: beforeStages.stage4,
+      };
+    }
 
     beforeValue = { stageScores: beforeStages, totalScore: currentTotal };
     afterValue = { stageScores: afterStages, totalScore: nextTotal };

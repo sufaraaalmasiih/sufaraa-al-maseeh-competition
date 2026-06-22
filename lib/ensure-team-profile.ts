@@ -1,4 +1,4 @@
-import { getDoc, serverTimestamp, setDoc } from "firebase/firestore";
+import { getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { firebaseAuth } from "@/firebase/firebaseClient";
 import {
   createInitialTeamState,
@@ -36,12 +36,27 @@ export async function ensureTeamProfileDoc(uid: string): Promise<void> {
  * دخول الفريق، فيعود للظهور في المسابقة بعد «بدء مسابقة جديدة» أو «الإخراج من المسابقة».
  */
 export async function ensureTeamStateDoc(uid: string): Promise<void> {
-  const stateSnapshot = await getDoc(teamStateRef(MAIN_COMPETITION_ID, uid));
+  const [stateSnapshot, profileSnapshot] = await Promise.all([
+    getDoc(teamStateRef(MAIN_COMPETITION_ID, uid)),
+    getDoc(teamRef(uid)),
+  ]);
+  const profileLogoUrl =
+    profileSnapshot.exists() && typeof profileSnapshot.data().logoUrl === "string"
+      ? (profileSnapshot.data().logoUrl as string)
+      : undefined;
+
   if (stateSnapshot.exists()) {
+    // إعادة ملء الشعار في حالة الفريق إن فُقد (مثلاً مُسح بإعادة ضبط سابقة) — لا يغيّر
+    // المجموع، فتسمح قواعد الأمان للفريق بهذا التحديث على مستنده.
+    if (profileLogoUrl && typeof stateSnapshot.data().logoUrl !== "string") {
+      await updateDoc(teamStateRef(MAIN_COMPETITION_ID, uid), {
+        logoUrl: profileLogoUrl,
+        updatedAt: serverTimestamp(),
+      });
+    }
     return;
   }
 
-  const profileSnapshot = await getDoc(teamRef(uid));
   if (!profileSnapshot.exists()) {
     return;
   }
@@ -50,5 +65,6 @@ export async function ensureTeamStateDoc(uid: string): Promise<void> {
   await createInitialTeamState(MAIN_COMPETITION_ID, uid, {
     teamName: typeof profile.teamName === "string" ? profile.teamName : "فريق بدون اسم",
     governorate: typeof profile.governorate === "string" ? profile.governorate : "",
+    logoUrl: profileLogoUrl,
   });
 }

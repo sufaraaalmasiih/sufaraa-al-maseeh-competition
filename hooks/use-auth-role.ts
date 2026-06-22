@@ -352,11 +352,18 @@ function bootstrapAuthState(source: string): void {
     }),
   ])
     .then(() => {
+      // اكتمل تحديد حالة المصادقة — القيمة نهائية (مستخدم أو لا أحد).
       handleAuthUser(auth.currentUser, `${source}:authStateReady`);
     })
     .catch((error) => {
       authHardTraceError("auth bootstrap timeout", error);
-      handleAuthUser(auth.currentUser, `${source}:authStateReady-timeout`);
+      // المهلة انتهت دون أن تُحسم الحالة. لا نُعلن «غير مسجّل» إن لم يتوفّر مستخدم بعد،
+      // فقد تكون استعادة الجلسة من التخزين المحلي ما زالت جارية تحت ضغط بداية المرحلة —
+      // وإعلانها يُظهر «يلزم تسجيل الدخول» للميسّر/المشرف خطأً. مستمع onAuthStateChanged
+      // (مرجع الحقيقة) سيحسمها حتماً، والـfailsafe احتياط أخير.
+      if (auth.currentUser) {
+        handleAuthUser(auth.currentUser, `${source}:authStateReady-timeout`);
+      }
     });
 }
 

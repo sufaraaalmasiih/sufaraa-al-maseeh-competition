@@ -2,6 +2,7 @@
 
 import { Stage3GameplayHeader } from "@/features/stage3/components/stage3-gameplay-header";
 import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
+import { useTeamLogosMap } from "@/features/gameflow/team-logos-store";
 import { getStage3MockQuestion } from "@/features/stage3/stage3-mock-questions";
 import { STAGE3_SELECTION_TIMEOUT_PENALTY } from "@/features/stage3/stage3-official-constants";
 import { isStage3SelectionTimeoutQuestion } from "@/features/stage3/stage3-selection-timeout-question";
@@ -48,6 +49,7 @@ export function Stage3AudienceRevealScreen({
   rankingTeams,
 }: Stage3AudienceRevealScreenProps) {
   const { answers, loading } = useStage3ActiveAnswers(question?.id ?? null);
+  const logos = useTeamLogosMap();
   const isSelectionTimeout = question ? isStage3SelectionTimeoutQuestion(question) : false;
   const mockQuestion = question ? getStage3MockQuestion(question.id) : null;
   // كل الفرق تظهر للجمهور: من لم يُجِب (لم يحضر دوره/تخطّى) يظهر كصف «لم يجيب» (#9/#10).
@@ -58,7 +60,8 @@ export function Stage3AudienceRevealScreen({
     const ownerTeam = ownerTeamId
       ? rankingTeams.find((team) => team.teamId === ownerTeamId)
       : null;
-    const ownerLogoUrl = ownerTeam?.logoUrl ?? null;
+    const ownerLogoUrl =
+      ownerTeam?.logoUrl ?? (ownerTeamId ? logos.get(ownerTeamId) ?? null : null);
     const ownerDisplayName = ownerTeam?.teamName ?? ownerTeamName ?? "صاحب الدور";
 
     return (

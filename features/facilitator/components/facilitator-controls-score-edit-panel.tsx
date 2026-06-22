@@ -45,8 +45,8 @@ export function FacilitatorControlsScoreEditPanel({
         <div>
           <h3 className="facilitator-card__title">تعديل نقاط الفريق تفصيلياً</h3>
           <p className="facilitator-card__desc">
-            عدّل نقاط «{teamName}» لكل مرحلة. زر «إرجاع للقيم المحسوبة تلقائياً» يعيد احتساب
-            النقاط من الإجابات (يتجاهل أي تعديل يدوي سابق). يتطلّب الحفظ كتابة سبب، ويُسجَّل في الأرشيف.
+            عدّل نقاط «{teamName}» لكل مرحلة. زر «إرجاع نقاط ما قبل التعديل» يستعيد نقاط الفريق
+            كما كانت قبل أوّل تعديل يدوي (أو يحسبها من الإجابات إن لم توجد لقطة). يتطلّب الحفظ كتابة سبب، ويُسجَّل في الأرشيف.
           </p>
         </div>
       </div>
@@ -94,7 +94,7 @@ export function FacilitatorControlsScoreEditPanel({
           disabled={disabled}
           onClick={onResetToAutomatic}
         >
-          إرجاع للقيم المحسوبة تلقائياً
+          إرجاع نقاط ما قبل التعديل
         </button>
       </div>
     </div>

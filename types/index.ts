@@ -106,6 +106,7 @@ export interface TeamDocument {
 export interface InitialTeamStateInput {
   teamName: string;
   governorate: string;
+  logoUrl?: string;
 }
 
 export interface TeamStateDocument {
