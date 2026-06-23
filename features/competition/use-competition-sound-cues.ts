@@ -85,8 +85,7 @@ export function useCompetitionSoundCues(
     }
     if (STAGE_INTRO_STATUSES.includes(status) && stageIntroPlayedRef.current !== status) {
       stageIntroPlayedRef.current = status;
-      playCue("swoosh");
-      window.setTimeout(() => playCue("stage_intro"), 120);
+      playCue("stage_intro");
     }
     if (!STAGE_INTRO_STATUSES.includes(status)) {
       stageIntroPlayedRef.current = null;
@@ -100,8 +99,7 @@ export function useCompetitionSoundCues(
     }
     if (REVEAL_STATUSES.includes(status) && revealPlayedRef.current !== status) {
       revealPlayedRef.current = status;
-      playCue("suspense");
-      window.setTimeout(() => playCue("reveal"), 400);
+      playCue("reveal");
     }
     if (!REVEAL_STATUSES.includes(status)) {
       revealPlayedRef.current = null;
