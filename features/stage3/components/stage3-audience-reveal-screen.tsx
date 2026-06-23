@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { Stage3GameplayHeader } from "@/features/stage3/components/stage3-gameplay-header";
 import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
 import { useTeamLogosMap } from "@/features/gameflow/team-logos-store";
@@ -52,8 +53,12 @@ export function Stage3AudienceRevealScreen({
   const logos = useTeamLogosMap();
   const isSelectionTimeout = question ? isStage3SelectionTimeoutQuestion(question) : false;
   const mockQuestion = question ? getStage3MockQuestion(question.id) : null;
-  // كل الفرق تظهر للجمهور: من لم يُجِب (لم يحضر دوره/تخطّى) يظهر كصف «لم يجيب» (#9/#10).
-  const revealRows = mergeNoAnswerRows(mapStage3AnswersToRevealRows(answers), rankingTeams);
+  const answersKey = answers.map((row) => row.answerDocId).join("|");
+  const teamsKey = rankingTeams.map((team) => team.teamId).join("|");
+  const revealRows = useMemo(
+    () => mergeNoAnswerRows(mapStage3AnswersToRevealRows(answers), rankingTeams),
+    [answersKey, teamsKey, answers, rankingTeams],
+  );
 
   if (isSelectionTimeout) {
     const penaltyPoints = Math.abs(STAGE3_SELECTION_TIMEOUT_PENALTY);

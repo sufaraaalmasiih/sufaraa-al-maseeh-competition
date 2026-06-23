@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { ChunkRecovery } from "@/components/layout/chunk-recovery";
 import { DevServerRecovery } from "@/components/layout/dev-server-recovery";
+import { AppSoundBindings } from "@/components/layout/app-sound-bindings";
 import "./globals.css";
 
 /** Firebase listeners are runtime-only; skip static prerender during Netlify build. */
@@ -27,6 +28,7 @@ export default function RootLayout({
       <body>
         <ChunkRecovery />
         <DevServerRecovery />
+        <AppSoundBindings />
         {children}
       </body>
     </html>

@@ -14,6 +14,7 @@ export function SoundToggleButton() {
       onClick={toggle}
       title={label}
       aria-label={label}
+      data-sound="off"
       className="fixed bottom-4 left-4 z-50 flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-[#143A5A]/80 text-white shadow-lg backdrop-blur transition hover:bg-[#143A5A]"
     >
       {muted ? (

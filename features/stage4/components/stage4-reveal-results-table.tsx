@@ -118,8 +118,13 @@ export function Stage4RevealResultsTable({
     usesStage3Outcomes ? formatStage3PointsDelta(pointsDelta) : pointsDelta > 0 ? `+${pointsDelta}` : String(pointsDelta);
   const visibleAnswers = answers;
 
-  const revealedAnswers = useGradualReveal(visibleAnswers, animate ? 520 : 0, {
-    maxDurationMs: 8_000,
+  const revealBatchSize =
+    visibleAnswers.length > 0 && visibleAnswers.length <= 8 ? visibleAnswers.length : 1;
+  const revealInterval = animate ? (visibleAnswers.length <= 8 ? 280 : 520) : 0;
+
+  const revealedAnswers = useGradualReveal(visibleAnswers, revealInterval, {
+    maxDurationMs: visibleAnswers.length <= 8 ? 2_400 : 8_000,
+    batchSize: revealBatchSize,
   });
   const rows = animate ? revealedAnswers : visibleAnswers;
 

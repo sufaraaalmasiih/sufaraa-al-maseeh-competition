@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export interface GradualRevealOptions {
   /** Target total reveal duration regardless of team count */
@@ -40,12 +40,37 @@ function resolveRevealTiming(
   return { intervalMs: resolvedInterval, batchSize };
 }
 
+/** مفتاح ثابت للصفوف — لا يعتمد على مرجع المصفوفة (يمنع إعادة ضبط الإعلان كل render). */
+export function getGradualRevealSequenceKey<T>(items: T[]): string {
+  return items
+    .map((item, index) => {
+      if (item && typeof item === "object") {
+        const record = item as Record<string, unknown>;
+        if (typeof record.answerDocId === "string" && record.answerDocId.length > 0) {
+          return record.answerDocId;
+        }
+        if (typeof record.teamId === "string" && record.teamId.length > 0) {
+          return record.teamId;
+        }
+        if (typeof record.id === "string" && record.id.length > 0) {
+          return record.id;
+        }
+      }
+      return `row:${index}`;
+    })
+    .join("|");
+}
+
 export function useGradualReveal<T>(
   items: T[],
   intervalMs = 700,
   options?: GradualRevealOptions,
 ): T[] {
   const [visibleCount, setVisibleCount] = useState(0);
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+
+  const sequenceKey = getGradualRevealSequenceKey(items);
   const maxDurationMs = options?.maxDurationMs ?? DEFAULT_MAX_DURATION_MS;
   const minIntervalMs = options?.minIntervalMs ?? DEFAULT_MIN_INTERVAL_MS;
   const batchSizeOption = options?.batchSize ?? DEFAULT_BATCH_SIZE;
@@ -61,32 +86,35 @@ export function useGradualReveal<T>(
   );
 
   useEffect(() => {
+    const count = itemsRef.current.length;
+
     if (intervalMs <= 0 || timing.intervalMs <= 0) {
-      setVisibleCount(items.length);
+      setVisibleCount(count);
       return;
     }
 
     setVisibleCount(0);
-    if (items.length === 0) {
+    if (count === 0) {
       return;
     }
 
-    setVisibleCount(Math.min(timing.batchSize, items.length));
-    if (items.length <= timing.batchSize) {
+    const firstBatch = Math.min(timing.batchSize, count);
+    setVisibleCount(firstBatch);
+    if (count <= firstBatch) {
       return;
     }
 
-    let current = Math.min(timing.batchSize, items.length);
+    let current = firstBatch;
     const timer = window.setInterval(() => {
-      current = Math.min(current + timing.batchSize, items.length);
+      current = Math.min(current + timing.batchSize, count);
       setVisibleCount(current);
-      if (current >= items.length) {
+      if (current >= count) {
         window.clearInterval(timer);
       }
     }, timing.intervalMs);
 
     return () => window.clearInterval(timer);
-  }, [items, intervalMs, timing.batchSize, timing.intervalMs]);
+  }, [sequenceKey, intervalMs, timing.batchSize, timing.intervalMs]);
 
-  return items.slice(0, visibleCount);
+  return itemsRef.current.slice(0, visibleCount);
 }

@@ -14,6 +14,7 @@ let audioContext: AudioContext | null = null;
 let masterGain: GainNode | null = null;
 let compressor: DynamicsCompressorNode | null = null;
 let unlockBound = false;
+let uiClickBound = false;
 
 function getAudioContext(): AudioContext | null {
   if (typeof window === "undefined") {
@@ -103,6 +104,46 @@ export function bindAudioUnlock(): void {
   const handler = () => unlockAudio();
   window.addEventListener("pointerdown", handler, { passive: true });
   window.addEventListener("keydown", handler, { passive: true });
+}
+
+/** مؤثر نقرة خفيف عند ضغط الأزرار والعناصر التفاعلية. */
+export function bindUiClickSounds(): void {
+  if (uiClickBound || typeof window === "undefined") {
+    return;
+  }
+  uiClickBound = true;
+
+  window.addEventListener(
+    "pointerdown",
+    (event) => {
+      if (isSoundMuted()) {
+        return;
+      }
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+      const interactive = target.closest(
+        [
+          "button:not(:disabled)",
+          "[role='button']:not([aria-disabled='true'])",
+          "a[href]",
+          ".facilitator-btn:not(:disabled)",
+          ".facilitator-dock__item",
+          "[data-ui-click-sound]",
+        ].join(", "),
+      );
+      if (!interactive) {
+        return;
+      }
+      if (interactive.closest("[data-sound='off']")) {
+        return;
+      }
+      unlockAudio();
+      playCue("click");
+    },
+    { capture: true, passive: true },
+  );
 }
 
 interface Tone {
@@ -230,6 +271,7 @@ function schedule(tones: Tone[]): void {
 }
 
 export type SoundCue =
+  | "click"
   | "tick"
   | "tick_urgent"
   | "timeup"
@@ -256,6 +298,13 @@ export function playCue(cue: SoundCue): void {
   ensureRunning(context);
 
   switch (cue) {
+    case "click":
+      schedule([
+        { freq: 1_420, start: 0, dur: 0.028, type: "sine", gain: 0.07, pan: 0.08 },
+        { freq: 920, start: 0.012, dur: 0.04, type: "triangle", gain: 0.05, pan: -0.06 },
+      ]);
+      scheduleNoiseBurst(0, 0.018, 0.018, "highpass", 4_800);
+      break;
     case "tick":
       schedule([
         { freq: 1_240, start: 0, dur: 0.045, type: "sine", gain: 0.11, pan: 0.12 },
