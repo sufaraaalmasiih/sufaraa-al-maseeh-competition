@@ -118,15 +118,17 @@ export function Stage4RevealResultsTable({
     usesStage3Outcomes ? formatStage3PointsDelta(pointsDelta) : pointsDelta > 0 ? `+${pointsDelta}` : String(pointsDelta);
   const visibleAnswers = answers;
 
+  // الجمهور والفرق: إظهار كل الإجابات فوراً (بدون تعليق على 1/N).
+  const gradualEnabled = animate && variant === "facilitator";
   const revealBatchSize =
     visibleAnswers.length > 0 && visibleAnswers.length <= 8 ? visibleAnswers.length : 1;
-  const revealInterval = animate ? (visibleAnswers.length <= 8 ? 280 : 520) : 0;
+  const revealInterval = gradualEnabled ? (visibleAnswers.length <= 8 ? 280 : 520) : 0;
 
   const revealedAnswers = useGradualReveal(visibleAnswers, revealInterval, {
     maxDurationMs: visibleAnswers.length <= 8 ? 2_400 : 8_000,
     batchSize: revealBatchSize,
   });
-  const rows = animate ? revealedAnswers : visibleAnswers;
+  const rows = gradualEnabled ? revealedAnswers : visibleAnswers;
 
   if (loading && variant !== "audience") {
     return <LoadingState variant={embedded ? "inline" : "page"} />;
@@ -158,7 +160,7 @@ export function Stage4RevealResultsTable({
         }
       />
 
-      {animate && rows.length < visibleAnswers.length ? (
+      {gradualEnabled && animate && rows.length < visibleAnswers.length ? (
         <motion.p
           className="reveal-results-card__progress reveal-progress-label"
           initial={{ opacity: 0, y: 6 }}

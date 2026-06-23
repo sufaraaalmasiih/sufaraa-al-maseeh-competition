@@ -93,18 +93,12 @@ export function useGradualReveal<T>(
       return;
     }
 
-    setVisibleCount(0);
-    if (count === 0) {
+    setVisibleCount(Math.min(timing.batchSize, count));
+    if (count <= timing.batchSize) {
       return;
     }
 
-    const firstBatch = Math.min(timing.batchSize, count);
-    setVisibleCount(firstBatch);
-    if (count <= firstBatch) {
-      return;
-    }
-
-    let current = firstBatch;
+    let current = Math.min(timing.batchSize, count);
     const timer = window.setInterval(() => {
       current = Math.min(current + timing.batchSize, count);
       setVisibleCount(current);
@@ -116,5 +110,9 @@ export function useGradualReveal<T>(
     return () => window.clearInterval(timer);
   }, [sequenceKey, intervalMs, timing.batchSize, timing.intervalMs]);
 
-  return itemsRef.current.slice(0, visibleCount);
+  if (intervalMs <= 0 || timing.intervalMs <= 0) {
+    return items;
+  }
+
+  return items.slice(0, visibleCount);
 }

@@ -97,9 +97,19 @@ service cloud.firestore {
       return resource == null ? true : resource.data.teamId == request.auth.uid;
     }
 
+    function competitionGameFlowStatus(competitionId) {
+      return get(/databases/$(database)/documents/competitions/$(competitionId)/system/gameFlow).data.status;
+    }
+
+    // أثناء الإعلان: الجمهور والفرق يقرؤون كل إجابات السؤال النشط (بدون انتظار visibleToAudience لكل وثيقة).
+    function audienceRevealReadable(competitionId) {
+      return competitionGameFlowStatus(competitionId) in ['stage3_reveal', 'stage4_reveal'];
+    }
+
     function answerReadable(competitionId) {
       return isFacilitator()
         || answerVisibleToAudience()
+        || audienceRevealReadable(competitionId)
         || (teamRegisteredInCompetition(competitionId) && answerOwnedByAuthUser())
         // المدرب المرتبط يقرأ إجابات فريقه (للمتابعة) — لكنه لا يكتب أبداً.
         || (isCoach() && resource != null && resource.data.teamId == coachLinkedTeamId());
