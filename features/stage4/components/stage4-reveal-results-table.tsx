@@ -5,8 +5,8 @@ import { motion } from "framer-motion";
 import { getRankingRowDelay } from "@/components/motion/animated-ranking-row";
 import { LoadingState } from "@/components/layout/state-view";
 import { RevealCorrectAnswer } from "@/components/motion/reveal-correct-answer";
+import { RevealResultChip } from "@/components/motion/reveal-result-chip";
 import { useGradualReveal } from "@/hooks/use-gradual-reveal";
-import { filterRevealRowsForTeam } from "@/features/competition/merge-no-answer-rows";
 import { getRevealResultsDensityClass } from "@/features/competition/reveal-results-density";
 import {
   formatStage3PointsDelta,
@@ -119,21 +119,30 @@ export function Stage4RevealResultsTable({
     usesStage3Outcomes ? formatStage3PointsDelta(pointsDelta) : pointsDelta > 0 ? `+${pointsDelta}` : String(pointsDelta);
   const visibleAnswers =
     variant === "team" && highlightTeamId
-      ? filterRevealRowsForTeam(answers, highlightTeamId)
+      ? answers.filter((answer) => answer.teamId === highlightTeamId)
       : answers;
   const showTeamColumn = variant !== "team";
+  const showTeamChips = variant === "team" && embedded;
 
-  // الجمهور والفرق: إظهار كل الإجابات فوراً (بدون تعليق على 1/N).
+  // الميسّر: إعلان تدريجي. الجمهور والفرق: فوري (ما عدا تحريك البطاقات في شاشة الفريق).
   const gradualEnabled = animate && variant === "facilitator";
+  const teamGradualEnabled = animate && variant === "team";
   const revealBatchSize =
     visibleAnswers.length > 0 && visibleAnswers.length <= 8 ? visibleAnswers.length : 1;
-  const revealInterval = gradualEnabled ? (visibleAnswers.length <= 8 ? 280 : 520) : 0;
+  const revealInterval = gradualEnabled
+    ? visibleAnswers.length <= 8
+      ? 280
+      : 520
+    : teamGradualEnabled
+      ? 520
+      : 0;
 
   const revealedAnswers = useGradualReveal(visibleAnswers, revealInterval, {
     maxDurationMs: visibleAnswers.length <= 8 ? 2_400 : 8_000,
     batchSize: revealBatchSize,
   });
-  const rows = gradualEnabled ? revealedAnswers : visibleAnswers;
+  const rows = gradualEnabled || teamGradualEnabled ? revealedAnswers : visibleAnswers;
+  const latestAnswer = rows[rows.length - 1] ?? null;
 
   if (loading && variant !== "audience") {
     return <LoadingState variant={embedded ? "inline" : "page"} />;
@@ -177,7 +186,54 @@ export function Stage4RevealResultsTable({
         </motion.p>
       ) : null}
 
-      <motion.div
+      {showTeamChips ? (
+        <div className="stage4-reveal-chips">
+          <p className="stage4-reveal-chips__title">نتيجتك</p>
+          {!latestAnswer ? (
+            <p className="stage4-reveal-chips__empty">لم تُسجَّل إجابة بعد.</p>
+          ) : (
+            <div className="stage4-reveal-chips__grid">
+              <RevealResultChip
+                label="إجابتك"
+                value={latestAnswer.passed ? "تخطي" : latestAnswer.answerText || "—"}
+                index={0}
+                className="stage4-reveal-chip"
+                labelClassName="stage4-reveal-chip__label"
+                valueClassName="stage4-reveal-chip__value"
+              />
+              <RevealResultChip
+                label={statusHeader}
+                value={getOutcomeLabel(latestAnswer)}
+                index={1}
+                className="stage4-reveal-chip"
+                labelClassName="stage4-reveal-chip__label"
+                valueClassName="stage4-reveal-chip__value"
+              />
+              <RevealResultChip
+                label="النقاط"
+                value={formatPoints(latestAnswer.pointsDelta)}
+                index={2}
+                highlight
+                className="stage4-reveal-chip"
+                labelClassName="stage4-reveal-chip__label"
+                valueClassName="stage4-reveal-chip__value"
+                highlightClassName="stage4-reveal-chip__value--highlight"
+              />
+              {showStreak ? (
+                <RevealResultChip
+                  label="التسلسل"
+                  value={String(latestAnswer.streakAfter)}
+                  index={3}
+                  className="stage4-reveal-chip"
+                  labelClassName="stage4-reveal-chip__label"
+                  valueClassName="stage4-reveal-chip__value"
+                />
+              ) : null}
+            </div>
+          )}
+        </div>
+      ) : (
+        <motion.div
           className="reveal-results-card__table-wrap"
           initial={animate ? { opacity: 0, y: 16 } : false}
           animate={{ opacity: 1, y: 0 }}
@@ -264,6 +320,7 @@ export function Stage4RevealResultsTable({
             </table>
           </div>
         </motion.div>
+      )}
 
       {rankingSection ? (
         <div className="reveal-results-card__ranking">{rankingSection}</div>

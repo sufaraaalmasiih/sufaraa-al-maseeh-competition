@@ -71,8 +71,7 @@ export function useCompetitionSoundCues(
     if (timerRunning && isExpired) {
       if (!timeupPlayedRef.current) {
         timeupPlayedRef.current = true;
-        playCue("drumroll");
-        window.setTimeout(() => playCue("timeup"), 720);
+        playCue("timeup");
       }
     } else if (!isExpired) {
       timeupPlayedRef.current = false;

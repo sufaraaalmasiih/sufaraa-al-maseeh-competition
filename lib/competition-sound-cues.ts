@@ -206,6 +206,57 @@ function scheduleNoiseBurst(
   source.stop(startAt + dur + 0.02);
 }
 
+function scheduleBell(
+  freq: number,
+  start: number,
+  dur: number,
+  gain = 0.18,
+  pan = 0,
+): void {
+  const partials = [
+    { ratio: 1, weight: 1 },
+    { ratio: 2.38, weight: 0.52 },
+    { ratio: 3.92, weight: 0.28 },
+    { ratio: 5.18, weight: 0.14 },
+  ];
+
+  for (const partial of partials) {
+    schedule([
+      {
+        freq: freq * partial.ratio,
+        start,
+        dur,
+        type: "sine",
+        gain: gain * partial.weight,
+        pan,
+        filterFreq: freq * 5.5,
+        filterEnd: Math.max(120, freq * 0.9),
+      },
+    ]);
+  }
+
+  schedule([
+    {
+      freq: Math.max(60, freq * 0.5),
+      start,
+      dur: dur * 1.15,
+      type: "sine",
+      gain: gain * 0.35,
+      pan,
+      filterFreq: 280,
+      filterEnd: 90,
+    },
+  ]);
+}
+
+function scheduleWoodBlock(start: number, freq: number, gain = 0.09, pan = 0): void {
+  schedule([
+    { freq, start, dur: 0.028, type: "sine", gain, pan },
+    { freq: freq * 1.6, start: start + 0.004, dur: 0.02, type: "triangle", gain: gain * 0.45, pan },
+  ]);
+  scheduleNoiseBurst(start, 0.014, gain * 0.22, "bandpass", freq * 2.8);
+}
+
 function scheduleReverbTap(start: number, freq: number, dur: number, gain = 0.08, pan = 0): void {
   schedule([
     {
@@ -300,38 +351,36 @@ export function playCue(cue: SoundCue): void {
   switch (cue) {
     case "click":
       schedule([
-        { freq: 1_420, start: 0, dur: 0.028, type: "sine", gain: 0.07, pan: 0.08 },
-        { freq: 920, start: 0.012, dur: 0.04, type: "triangle", gain: 0.05, pan: -0.06 },
+        { freq: 1_180, start: 0, dur: 0.022, type: "sine", gain: 0.055, pan: 0.06 },
+        { freq: 820, start: 0.008, dur: 0.03, type: "triangle", gain: 0.04, pan: -0.05 },
       ]);
-      scheduleNoiseBurst(0, 0.018, 0.018, "highpass", 4_800);
+      scheduleNoiseBurst(0, 0.012, 0.01, "highpass", 5_200);
       break;
     case "tick":
-      schedule([
-        { freq: 1_240, start: 0, dur: 0.045, type: "sine", gain: 0.11, pan: 0.12 },
-        { freq: 988, start: 0.018, dur: 0.06, type: "triangle", gain: 0.09, pan: -0.1 },
-      ]);
-      scheduleNoiseBurst(0, 0.035, 0.03, "bandpass", 3_200);
+      scheduleWoodBlock(0, 1_160, 0.075, -0.08);
       break;
 
     case "tick_urgent":
-      schedule([
-        { freq: 1_480, start: 0, dur: 0.04, type: "square", gain: 0.1, pan: 0.2 },
-        { freq: 1_180, start: 0.012, dur: 0.05, type: "sawtooth", gain: 0.09, pan: -0.18 },
-        { freq: 880, start: 0.03, dur: 0.07, type: "triangle", gain: 0.12 },
-      ]);
-      scheduleNoiseBurst(0, 0.05, 0.045, "highpass", 2_800);
+      scheduleWoodBlock(0, 1_320, 0.085, -0.12);
+      scheduleWoodBlock(0.09, 1_180, 0.08, 0.1);
       break;
 
     case "timeup":
+      scheduleBell(988, 0, 0.42, 0.2, -0.18);
+      scheduleBell(784, 0.18, 0.48, 0.22, 0.12);
+      scheduleBell(523, 0.42, 1.05, 0.24, 0);
       schedule([
-        { freq: 784, start: 0, dur: 0.18, type: "sawtooth", gain: 0.13, freqEnd: 520, pan: -0.25 },
-        { freq: 622, start: 0.14, dur: 0.24, type: "triangle", gain: 0.15, freqEnd: 360, pan: 0.2 },
-        { freq: 440, start: 0.34, dur: 0.32, type: "square", gain: 0.11, freqEnd: 220 },
-        { freq: 220, start: 0.48, dur: 0.5, type: "sine", gain: 0.17 },
-        { freq: 110, start: 0.62, dur: 0.55, type: "triangle", gain: 0.14 },
+        {
+          freq: 196,
+          start: 0.42,
+          dur: 1.15,
+          type: "sine",
+          gain: 0.1,
+          filterFreq: 420,
+          filterEnd: 110,
+        },
       ]);
-      scheduleNoiseBurst(0.08, 0.14, 0.055, "lowpass", 1_800);
-      scheduleNoiseBurst(0.45, 0.2, 0.04, "bandpass", 900);
+      scheduleNoiseBurst(0.42, 0.12, 0.018, "lowpass", 520);
       break;
 
     case "correct":
