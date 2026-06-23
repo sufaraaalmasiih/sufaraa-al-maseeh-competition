@@ -1,14 +1,7 @@
-﻿import {
-  getDocs,
-  query,
-  runTransaction,
-  serverTimestamp,
-  setDoc,
-  where,
-  writeBatch,
-} from "firebase/firestore";
+﻿import { runTransaction, serverTimestamp, setDoc } from "firebase/firestore";
 import { getClientFirestore } from "@/firebase/firebaseClient";
-import { answersCollectionRef, gameFlowRef, timerRef } from "@/firebase/firestore";
+import { gameFlowRef, timerRef } from "@/firebase/firestore";
+import { markAnswersVisibleToAudience } from "@/features/competition/mark-answers-visible-to-audience";
 import {
   parseStage3QuestionMetadata,
   parseStage3UsedQuestionIds,
@@ -16,33 +9,6 @@ import {
 import { buildStage3RevealTimerPayload } from "@/features/stage3/stage3-timer-payload";
 import { parseTimerDurations } from "@/features/facilitator/facilitator-timer-settings";
 import { getSyncedNowMs } from "@/lib/server-clock-sync";
-
-const MAIN_COMPETITION_ID = "main";
-
-async function markStage3AnswersVisibleToAudience(questionId: string) {
-  const answersSnapshot = await getDocs(
-    query(
-      answersCollectionRef(MAIN_COMPETITION_ID),
-      where("stage", "==", "stage3"),
-      where("questionId", "==", questionId),
-    ),
-  );
-
-  if (answersSnapshot.empty) {
-    return;
-  }
-
-  const batch = writeBatch(getClientFirestore());
-
-  for (const answerDoc of answersSnapshot.docs) {
-    batch.update(answerDoc.ref, {
-      visibleToAudience: true,
-      updatedAt: serverTimestamp(),
-    });
-  }
-
-  await batch.commit();
-}
 
 /**
  * B2: Commit gameFlow → reveal first (blocks late confirms), then load answers
@@ -93,5 +59,5 @@ export async function startStage3Reveal() {
     return { questionId: activeQuestion.id };
   });
 
-  await markStage3AnswersVisibleToAudience(questionId);
+  await markAnswersVisibleToAudience("stage3", questionId);
 }

@@ -2,6 +2,7 @@
 import { getClientFirestore, firebaseAuth } from "@/firebase/firebaseClient";
 import { MAIN_COMPETITION_ID } from "@/firebase/firestore";
 import { appendActiveSessionEditLog } from "@/features/facilitator/competition-session";
+import { getFacilitatorActorName } from "@/features/facilitator/facilitator-actor";
 
 export const FIRESTORE_BATCH_LIMIT = 500;
 
@@ -31,6 +32,7 @@ export async function appendTeamAdminAuditLog(entry: Record<string, unknown>): P
     await addDoc(auditLogCollection(), {
       ...entry,
       actorUid: firebaseAuth.currentUser?.uid ?? null,
+      actorName: getFacilitatorActorName(),
       createdAt: serverTimestamp(),
     });
     await appendActiveSessionEditLog({

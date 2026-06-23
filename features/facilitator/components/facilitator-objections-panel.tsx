@@ -9,10 +9,15 @@ import {
   objectionsForActiveSession,
   setObjectionDecision,
   useObjections,
+  type CompetitionObjection,
 } from "@/features/facilitator/objections";
 import { useActiveSessionId } from "@/features/facilitator/competition-session";
+import { publishObjectionAcceptedNotice } from "@/features/competition/objection-accepted-notice";
+import { logObjectionDecision } from "@/features/facilitator/objection-decision-log";
 import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
 import { useTeamLogosMap } from "@/features/gameflow/team-logos-store";
+import { showFacilitatorTopToast } from "@/features/facilitator/facilitator-top-toast";
+import { objectionDecisionScopeLabel } from "@/features/competition/objection-accepted-notice";
 
 function formatTime(ms: number): string {
   if (!ms) {
@@ -66,6 +71,47 @@ export function FacilitatorObjectionsPanel() {
     } finally {
       setBusyId(null);
     }
+  }
+
+  async function acceptObjection(
+    objection: CompetitionObjection,
+    scope: "team" | "general",
+  ) {
+    await runAction(objection.id, async () => {
+      await setObjectionDecision(objection.id, "accepted", { scope });
+      await publishObjectionAcceptedNotice({
+        objectionId: objection.id,
+        scope,
+        teamName: objection.teamName,
+        teamId: objection.teamId,
+      });
+      await logObjectionDecision({
+        objectionId: objection.id,
+        decision: "accepted",
+        teamId: objection.teamId,
+        teamName: objection.teamName,
+        questionLabel: objection.questionLabel,
+        scope,
+      });
+      const toastMessage =
+        scope === "general"
+          ? "تم قبول اعتراض عام — يظهر للجمهور وجميع الشاشات"
+          : `تم قبول اعتراض فريق ${objection.teamName}`;
+      showFacilitatorTopToast(toastMessage);
+    });
+  }
+
+  async function rejectObjection(objection: CompetitionObjection) {
+    await runAction(objection.id, async () => {
+      await setObjectionDecision(objection.id, "rejected");
+      await logObjectionDecision({
+        objectionId: objection.id,
+        decision: "rejected",
+        teamId: objection.teamId,
+        teamName: objection.teamName,
+        questionLabel: objection.questionLabel,
+      });
+    });
   }
 
   const visible = showDecided ? objections : pending;
@@ -159,46 +205,57 @@ export function FacilitatorObjectionsPanel() {
               <div className="mt-2 space-y-2">
                 <p className="text-xs font-bold text-[#B45309]">
                   <Check className="ml-1 inline h-4 w-4" aria-hidden />
-                  تم مشاهدة الاعتراض — اتّخذ قراراً:
+                  تم مشاهدة الاعتراض — اختر نوع القبول أو ارفض:
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
                     disabled={busyId === objection.id}
                     className="facilitator-btn facilitator-btn--primary"
-                    onClick={() =>
-                      void runAction(objection.id, () =>
-                        setObjectionDecision(objection.id, "accepted"),
-                      )
-                    }
+                    onClick={() => void acceptObjection(objection, "team")}
                   >
                     <ThumbsUp className="h-4 w-4" aria-hidden />
-                    قبول الاعتراض
+                    قبول خاص بالفريق
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busyId === objection.id}
+                    className="facilitator-btn facilitator-btn--primary"
+                    onClick={() => void acceptObjection(objection, "general")}
+                  >
+                    <ThumbsUp className="h-4 w-4" aria-hidden />
+                    قبول عام (للجميع)
                   </button>
                   <button
                     type="button"
                     disabled={busyId === objection.id}
                     className="facilitator-btn facilitator-btn--outline"
-                    onClick={() =>
-                      void runAction(objection.id, () =>
-                        setObjectionDecision(objection.id, "rejected"),
-                      )
-                    }
+                    onClick={() => void rejectObjection(objection)}
                   >
                     <ThumbsDown className="h-4 w-4" aria-hidden />
                     رفض الاعتراض
                   </button>
                 </div>
+                <p className="text-xs font-semibold text-[#64748B]">
+                  «خاص بالفريق» يُظهر اسم {objection.teamName} للجمهور. «عام» يُعلَن لجميع
+                  الفرق والجمهور.
+                </p>
               </div>
             ) : objection.status === "accepted" ? (
               <p className="mt-2 text-xs font-bold text-[#4F8A10]">
                 <ThumbsUp className="ml-1 inline h-4 w-4" aria-hidden />
-                مقبول — عدّل نقاط الفريق يدوياً من تبويب «التحكم».
+                مقبول
+                {objection.decisionScope
+                  ? ` (${objectionDecisionScopeLabel(objection.decisionScope)})`
+                  : ""}
+                {objection.decidedByName ? ` — بواسطة ${objection.decidedByName}` : ""}
+                {" — "}عدّل نقاط الفريق يدوياً من تبويب «التحكم».
               </p>
             ) : (
               <p className="mt-2 text-xs font-bold text-[#B91C1C]">
                 <ThumbsDown className="ml-1 inline h-4 w-4" aria-hidden />
                 مرفوض
+                {objection.decidedByName ? ` — بواسطة ${objection.decidedByName}` : ""}
               </p>
             )}
           </div>

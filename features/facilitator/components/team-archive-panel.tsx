@@ -8,6 +8,7 @@ import {
   objectionStatusLabel,
   useTeamObjections,
 } from "@/features/facilitator/objections";
+import { objectionDecisionScopeLabel } from "@/features/competition/objection-accepted-notice";
 import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
 import { useTeamLogosMap } from "@/features/gameflow/team-logos-store";
 
@@ -161,6 +162,14 @@ export function TeamArchivePanel({
                     ) : null}
                     {objection.note ? (
                       <p className="mt-1 text-xs text-[#143A5A]">{objection.note}</p>
+                    ) : null}
+                    {objection.decidedByName ? (
+                      <p className="mt-1 text-xs font-semibold text-[#64748B]">
+                        القرار بواسطة: {objection.decidedByName}
+                        {objection.decisionScope
+                          ? ` · ${objectionDecisionScopeLabel(objection.decisionScope)}`
+                          : ""}
+                      </p>
                     ) : null}
                   </div>
                 ))}

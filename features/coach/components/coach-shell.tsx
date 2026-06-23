@@ -4,10 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { Download } from "lucide-react";
 import { CompetitionBrandHeaderCard } from "@/components/competition/competition-brand-header-card";
 import { CompetitionFrozenBanner } from "@/components/layout/competition-frozen-banner";
+import { ObjectionAcceptedBanner } from "@/features/competition/components/objection-accepted-banner";
 import { CompetitionGradientShell } from "@/components/layout/competition-gradient-shell";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
 import { exportAnswersExcel } from "@/features/facilitator/export-answers-excel";
 import { exportElementAsPng } from "@/features/facilitator/export-results-image";
+import { useQuestionBankRuntimeSync } from "@/features/facilitator/question-bank-runtime";
+import { useCompetitionSoundCues } from "@/features/competition/use-competition-sound-cues";
 import { useCoachDashboard } from "@/features/coach/use-coach-dashboard";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
 import { CoachObjectionForm } from "@/features/coach/components/coach-objection-form";
@@ -17,8 +20,10 @@ import { useTeamLogosMap } from "@/features/gameflow/team-logos-store";
 import { setCoachViewMode } from "@/lib/coach-view-mode";
 
 export function CoachShell() {
-  const { competitionFrozen } = useGameFlow();
+  useQuestionBankRuntimeSync();
+  const { competitionFrozen, objectionAcceptedNotice } = useGameFlow();
   const { teamId, stageName, teamSummary, history, allHistory, loading, error } = useCoachDashboard();
+  useCompetitionSoundCues(null, true, objectionAcceptedNotice?.key ?? null);
   const logos = useTeamLogosMap();
   const historyListRef = useRef<HTMLUListElement | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -98,6 +103,7 @@ export function CoachShell() {
   return (
     <CompetitionGradientShell scrollable className="coach-shell" contentClassName="coach-shell__content">
       <CompetitionFrozenBanner frozen={competitionFrozen} />
+      <ObjectionAcceptedBanner notice={objectionAcceptedNotice} />
 
       <div className="coach-shell__header">
         <CompetitionBrandHeaderCard centerLabel="لوحة المدرب" />

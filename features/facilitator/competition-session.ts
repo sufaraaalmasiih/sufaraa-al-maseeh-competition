@@ -33,6 +33,9 @@ import {
 import { writeTeamArchivesForSession } from "@/features/facilitator/use-team-archive";
 import type { FinalResultTeam } from "@/features/facilitator/use-final-results";
 import { subscribeFirestoreDoc } from "@/lib/firestore-listener";
+import { getFacilitatorActorName } from "@/features/facilitator/facilitator-actor";
+
+export { getFacilitatorActorName };
 
 export interface ArchiveTeam {
   teamId: string;
@@ -59,6 +62,8 @@ export interface CompetitionSession {
   startedByName: string | null;
   resultsSavedAtMs: number | null;
   resultsSavedMode: "manual" | "auto" | null;
+  resultsSavedByName: string | null;
+  lastModifiedByName: string | null;
   teams: ArchiveTeam[];
   objections: CompetitionObjection[];
 }
@@ -84,11 +89,6 @@ export function buildSessionTitle(version: string, hostGovernorate: string): str
   const versionLabel = version.trim() || "نسخة بدون عنوان";
   const governorateLabel = hostGovernorate.trim() || "محافظة غير محددة";
   return `مسابقة سفراء المسيح ${versionLabel} في محافظة ${governorateLabel}`;
-}
-
-export function getFacilitatorActorName(): string {
-  const user = firebaseAuth.currentUser;
-  return user?.displayName?.trim() || user?.email?.split("@")[0] || "ميسر";
 }
 
 function historyCollection() {
@@ -178,6 +178,10 @@ function parseSession(id: string, data: Record<string, unknown>): CompetitionSes
       data.resultsSavedMode === "manual" || data.resultsSavedMode === "auto"
         ? data.resultsSavedMode
         : null,
+    resultsSavedByName:
+      typeof data.resultsSavedByName === "string" ? data.resultsSavedByName : null,
+    lastModifiedByName:
+      typeof data.lastModifiedByName === "string" ? data.lastModifiedByName : null,
     teams: parseTeams(data.teams),
     objections: parseArchivedObjections(data.objections),
   };
@@ -381,8 +385,12 @@ export async function saveSessionResults(
     teams: snapshotTeams,
     resultsSavedAt: serverTimestamp(),
     resultsSavedMode: mode,
+    resultsSavedByUid: firebaseAuth.currentUser?.uid ?? null,
+    resultsSavedByName: getFacilitatorActorName(),
     status: "completed",
     archivedAt: serverTimestamp(),
+    lastModifiedByName: getFacilitatorActorName(),
+    lastModifiedByUid: firebaseAuth.currentUser?.uid ?? null,
   });
 
   // نسخة أرشيف لكل فريق في مجموعة خاصة (يقرؤها الفريق نفسه فقط — خصوصية).
@@ -497,7 +505,13 @@ export async function updateSessionMetadata(
   const hostGovernorate = input.hostGovernorate?.trim() ?? current.hostGovernorate;
   const title = input.title?.trim() || buildSessionTitle(version, hostGovernorate);
 
-  await updateDoc(historyDoc(sessionId), { version, hostGovernorate, title });
+  await updateDoc(historyDoc(sessionId), {
+    version,
+    hostGovernorate,
+    title,
+    lastModifiedByName: getFacilitatorActorName(),
+    lastModifiedByUid: firebaseAuth.currentUser?.uid ?? null,
+  });
 
   await appendSessionEditLog(sessionId, {
     action: "session_metadata_updated",
@@ -522,7 +536,11 @@ export async function updateSessionTeams(
     : [];
 
   const nextTeams = recomputeArchiveTeams(teams);
-  await updateDoc(historyDoc(sessionId), { teams: nextTeams });
+  await updateDoc(historyDoc(sessionId), {
+    teams: nextTeams,
+    lastModifiedByName: getFacilitatorActorName(),
+    lastModifiedByUid: firebaseAuth.currentUser?.uid ?? null,
+  });
 
   await appendSessionEditLog(sessionId, {
     action: "session_results_updated",

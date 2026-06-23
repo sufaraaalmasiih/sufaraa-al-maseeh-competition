@@ -17,6 +17,10 @@ import {
 } from "@/features/stage3/stage3-selection-timeout-notice";
 import { parseStage4QuestionMetadata } from "@/features/stage4/stage4-question-metadata";
 import type { Stage4QuestionMetadata } from "@/features/stage4/stage4-question-types";
+import {
+  parseObjectionAcceptedNotice,
+  type ObjectionAcceptedNotice,
+} from "@/features/competition/objection-accepted-notice";
 import { parseCompetitionMode, parseTrainingEndsAtMs } from "@/features/facilitator/competition-mode";
 import { syncStage1ActiveSession } from "@/features/stage1/stage1-active-session";
 import { syncStage4ActiveSession } from "@/features/stage4/stage4-active-session";
@@ -37,6 +41,7 @@ interface GameFlowStoreState {
   stage3OwnerTeamId: string | null;
   stage3OwnerTeamName: string | null;
   stage3SelectionTimeoutNotice: Stage3SelectionTimeoutNotice | null;
+  objectionAcceptedNotice: ObjectionAcceptedNotice | null;
   stage4ActiveQuestion: Stage4QuestionMetadata | null;
   stage4QuestionIndex: number;
   stage4QuestionCount: number;
@@ -57,6 +62,7 @@ interface GameFlowSnapshotResult {
   stage3OwnerTeamId: string | null;
   stage3OwnerTeamName: string | null;
   stage3SelectionTimeoutNotice: Stage3SelectionTimeoutNotice | null;
+  objectionAcceptedNotice: ObjectionAcceptedNotice | null;
   stage4ActiveQuestion: Stage4QuestionMetadata | null;
   stage4QuestionIndex: number;
   stage4QuestionCount: number;
@@ -76,6 +82,7 @@ const SERVER_SNAPSHOT: GameFlowStoreState = {
   stage3OwnerTeamId: null,
   stage3OwnerTeamName: null,
   stage3SelectionTimeoutNotice: null,
+  objectionAcceptedNotice: null,
   stage4ActiveQuestion: null,
   stage4QuestionIndex: 0,
   stage4QuestionCount: 15,
@@ -169,6 +176,7 @@ function parseGameFlowSnapshot(snapshot: DocumentSnapshot): GameFlowSnapshotResu
       stage3OwnerTeamId: null,
       stage3OwnerTeamName: null,
       stage3SelectionTimeoutNotice: null,
+      objectionAcceptedNotice: null,
       stage4ActiveQuestion: null,
       stage4QuestionIndex: 0,
       stage4QuestionCount: 15,
@@ -205,6 +213,7 @@ function parseGameFlowSnapshot(snapshot: DocumentSnapshot): GameFlowSnapshotResu
     stage3SelectionTimeoutNotice: parseStage3SelectionTimeoutNotice(
       data.stage3SelectionTimeoutNotice,
     ),
+    objectionAcceptedNotice: parseObjectionAcceptedNotice(data.objectionAcceptedNotice),
     stage4ActiveQuestion: parseStage4QuestionMetadata(data.stage4ActiveQuestion),
     stage4QuestionIndex: typeof data.stage4QuestionIndex === "number" ? data.stage4QuestionIndex : 0,
     stage4QuestionCount: typeof data.stage4QuestionCount === "number" ? data.stage4QuestionCount : 15,
@@ -249,6 +258,7 @@ function applyGameFlowSnapshot(
     stage3OwnerTeamId: parsed.stage3OwnerTeamId,
     stage3OwnerTeamName: parsed.stage3OwnerTeamName,
     stage3SelectionTimeoutNotice: parsed.stage3SelectionTimeoutNotice,
+    objectionAcceptedNotice: parsed.objectionAcceptedNotice,
     stage4ActiveQuestion: parsed.stage4ActiveQuestion,
     stage4QuestionIndex: parsed.stage4QuestionIndex,
     stage4QuestionCount: parsed.stage4QuestionCount,
@@ -370,6 +380,7 @@ interface UseGameFlowResult {
   stage3OwnerTeamId: string | null;
   stage3OwnerTeamName: string | null;
   stage3SelectionTimeoutNotice: Stage3SelectionTimeoutNotice | null;
+  objectionAcceptedNotice: ObjectionAcceptedNotice | null;
   stage4ActiveQuestion: Stage4QuestionMetadata | null;
   stage4QuestionIndex: number;
   stage4QuestionCount: number;
@@ -406,6 +417,7 @@ export function useGameFlow(): UseGameFlowResult {
     stage3OwnerTeamId: state.stage3OwnerTeamId,
     stage3OwnerTeamName: state.stage3OwnerTeamName,
     stage3SelectionTimeoutNotice: state.stage3SelectionTimeoutNotice,
+    objectionAcceptedNotice: state.objectionAcceptedNotice,
     stage4ActiveQuestion: state.stage4ActiveQuestion,
     stage4QuestionIndex: state.stage4QuestionIndex,
     stage4QuestionCount: state.stage4QuestionCount,

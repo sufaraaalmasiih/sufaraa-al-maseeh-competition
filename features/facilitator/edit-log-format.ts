@@ -29,6 +29,8 @@ export const EDIT_LOG_ACTION_LABELS: Record<string, string> = {
   migrate_all_teams: "نقل جميع الفرق",
   remove_team_from_competition: "إزالة فريق",
   remove_team: "إزالة فريق",
+  objection_accepted: "قبول اعتراض",
+  objection_rejected: "رفض اعتراض",
 };
 
 const STAGE_SCORE_LABELS: Record<string, string> = {

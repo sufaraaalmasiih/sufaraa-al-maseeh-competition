@@ -37,6 +37,7 @@ import {
   useObjections,
   type CompetitionObjection,
 } from "@/features/facilitator/objections";
+import { objectionDecisionScopeLabel } from "@/features/competition/objection-accepted-notice";
 import { cn } from "@/lib/utils";
 
 function formatDate(ms: number): string {
@@ -266,8 +267,13 @@ function SessionCard({
             )}
             <p className="facilitator-card__desc">
               بدء: {formatDate(archive.startedAtMs)}
-              {archive.startedByName ? ` · ${archive.startedByName}` : ""}
+              {archive.startedByName ? ` · بدأها: ${archive.startedByName}` : ""}
               {archive.resultsSavedAtMs ? ` · آخر حفظ: ${formatDate(archive.resultsSavedAtMs)}` : ""}
+              {archive.resultsSavedByName ? ` · حفظها: ${archive.resultsSavedByName}` : ""}
+              {archive.lastModifiedByName &&
+              archive.lastModifiedByName !== archive.resultsSavedByName
+                ? ` · آخر تعديل: ${archive.lastModifiedByName}`
+                : ""}
               {archive.teams.length > 0 ? ` · ${archive.teams.length} فريق` : " · بانتظار النتائج"}
               {archive.resultsSavedMode
                 ? ` · ${archive.resultsSavedMode === "auto" ? "حفظ تلقائي" : "حفظ يدوي"}`
@@ -339,6 +345,14 @@ function SessionCard({
                   ) : null}
                   {objection.note ? (
                     <p className="mt-1 text-xs text-[#143A5A]">{objection.note}</p>
+                  ) : null}
+                  {objection.decidedByName ? (
+                    <p className="mt-1 text-xs font-semibold text-[#64748B]">
+                      القرار بواسطة: {objection.decidedByName}
+                      {objection.decisionScope
+                        ? ` · ${objectionDecisionScopeLabel(objection.decisionScope)}`
+                        : ""}
+                    </p>
                   ) : null}
                 </div>
               ))}

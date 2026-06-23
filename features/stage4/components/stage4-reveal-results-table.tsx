@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { getRankingRowDelay } from "@/components/motion/animated-ranking-row";
 import { LoadingState } from "@/components/layout/state-view";
 import { RevealCorrectAnswer } from "@/components/motion/reveal-correct-answer";
-import { RevealResultChip } from "@/components/motion/reveal-result-chip";
 import { useGradualReveal } from "@/hooks/use-gradual-reveal";
 import { getRevealResultsDensityClass } from "@/features/competition/reveal-results-density";
 import {
@@ -117,17 +116,12 @@ export function Stage4RevealResultsTable({
 
   const formatPoints = (pointsDelta: number) =>
     usesStage3Outcomes ? formatStage3PointsDelta(pointsDelta) : pointsDelta > 0 ? `+${pointsDelta}` : String(pointsDelta);
-  const visibleAnswers =
-    variant === "team" && highlightTeamId
-      ? answers.filter((answer) => answer.teamId === highlightTeamId)
-      : answers;
+  const visibleAnswers = answers;
 
   const revealedAnswers = useGradualReveal(visibleAnswers, animate ? 520 : 0, {
     maxDurationMs: 8_000,
   });
   const rows = animate ? revealedAnswers : visibleAnswers;
-  const latestAnswer = rows[rows.length - 1] ?? null;
-  const showTeamChips = variant === "team" && embedded;
 
   if (loading && variant !== "audience") {
     return <LoadingState variant={embedded ? "inline" : "page"} />;
@@ -171,54 +165,7 @@ export function Stage4RevealResultsTable({
         </motion.p>
       ) : null}
 
-      {showTeamChips ? (
-        <div className="stage4-reveal-chips">
-          <p className="stage4-reveal-chips__title">نتيجتك</p>
-          {!latestAnswer ? (
-            <p className="stage4-reveal-chips__empty">لم تُسجَّل إجابة بعد.</p>
-          ) : (
-            <div className="stage4-reveal-chips__grid">
-              <RevealResultChip
-                label="إجابتك"
-                value={latestAnswer.passed ? "تخطي" : latestAnswer.answerText || "—"}
-                index={0}
-                className="stage4-reveal-chip"
-                labelClassName="stage4-reveal-chip__label"
-                valueClassName="stage4-reveal-chip__value"
-              />
-              <RevealResultChip
-                label={statusHeader}
-                value={getOutcomeLabel(latestAnswer)}
-                index={1}
-                className="stage4-reveal-chip"
-                labelClassName="stage4-reveal-chip__label"
-                valueClassName="stage4-reveal-chip__value"
-              />
-              <RevealResultChip
-                label="النقاط"
-                value={String(latestAnswer.pointsDelta)}
-                index={2}
-                highlight
-                className="stage4-reveal-chip"
-                labelClassName="stage4-reveal-chip__label"
-                valueClassName="stage4-reveal-chip__value"
-                highlightClassName="stage4-reveal-chip__value--highlight"
-              />
-              {showStreak ? (
-                <RevealResultChip
-                  label="التسلسل"
-                  value={String(latestAnswer.streakAfter)}
-                  index={3}
-                  className="stage4-reveal-chip"
-                  labelClassName="stage4-reveal-chip__label"
-                  valueClassName="stage4-reveal-chip__value"
-                />
-              ) : null}
-            </div>
-          )}
-        </div>
-      ) : (
-        <motion.div
+      <motion.div
           className="reveal-results-card__table-wrap"
           initial={animate ? { opacity: 0, y: 16 } : false}
           animate={{ opacity: 1, y: 0 }}
@@ -232,7 +179,7 @@ export function Stage4RevealResultsTable({
             <table className="competition-ranking-table competition-ranking-table--reveal">
               <thead>
                 <tr>
-                  {variant !== "team" ? <th>الفريق</th> : null}
+                  {variant !== "team" || highlightTeamId ? <th>الفريق</th> : null}
                   <th>الإجابة</th>
                   <th>{statusHeader}</th>
                   <th>النقاط</th>
@@ -244,7 +191,7 @@ export function Stage4RevealResultsTable({
                   <tr>
                     <td
                       colSpan={
-                        variant === "team"
+                        variant === "team" && !highlightTeamId
                           ? showStreak
                             ? 4
                             : 3
@@ -261,7 +208,7 @@ export function Stage4RevealResultsTable({
                   <tr>
                     <td
                       colSpan={
-                        variant === "team"
+                        variant === "team" && !highlightTeamId
                           ? showStreak
                             ? 4
                             : 3
@@ -297,7 +244,7 @@ export function Stage4RevealResultsTable({
                             : undefined,
                       )}
                     >
-                      {variant !== "team" ? (
+                      {variant !== "team" || highlightTeamId ? (
                         <td className="reveal-results-team">{answer.teamName}</td>
                       ) : null}
                       <td className="reveal-results-answer">
@@ -321,7 +268,6 @@ export function Stage4RevealResultsTable({
             </table>
           </div>
         </motion.div>
-      )}
 
       {rankingSection ? (
         <div className="reveal-results-card__ranking">{rankingSection}</div>

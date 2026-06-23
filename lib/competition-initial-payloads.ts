@@ -24,6 +24,7 @@ export function buildInitialGameFlowPayload() {
     stage3RoundId: "",
     stage3LastSelectionTimeoutKey: "",
     stage3SelectionTimeoutNotice: null,
+    objectionAcceptedNotice: null,
     stage4QuestionIndex: 0,
     stage4QuestionCount: DEFAULT_QUESTION_DISPLAY_SETTINGS.stage4.displayCount,
     questionDisplaySettings: DEFAULT_QUESTION_DISPLAY_SETTINGS,

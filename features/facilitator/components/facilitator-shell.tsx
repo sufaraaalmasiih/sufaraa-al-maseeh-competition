@@ -44,6 +44,7 @@ const FacilitatorResultsTab = dynamic(
 import { FacilitatorStage12Automation } from "@/features/facilitator/components/facilitator-stage12-automation";
 import { FacilitatorStage3Automation } from "@/features/facilitator/components/facilitator-stage3-automation";
 import { FacilitatorStage4Automation } from "@/features/facilitator/components/facilitator-stage4-automation";
+import { FacilitatorTopToastBanner } from "@/features/facilitator/components/facilitator-top-toast-banner";
 import { TrainingModeCleanup } from "@/features/facilitator/components/training-mode-cleanup";
 import {
   FACILITATOR_SUPER_ADMIN_TAB,
@@ -126,6 +127,7 @@ function FacilitatorShellAuthenticated() {
 
   return (
     <main className="page-shell facilitator-console">
+        <FacilitatorTopToastBanner />
         <div className="facilitator-console__ambient" aria-hidden />
         <div className="content-shell facilitator-console__inner">
           <AppHeader title={headerTitle} />

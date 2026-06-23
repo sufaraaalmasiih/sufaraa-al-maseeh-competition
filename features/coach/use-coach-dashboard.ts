@@ -4,6 +4,7 @@ import { onSnapshot, query, where } from "firebase/firestore";
 import { useEffect, useMemo, useState } from "react";
 import { answersCollectionRef, coachRef } from "@/firebase/firestore";
 import { resolveAnswerCorrectLabel } from "@/features/facilitator/resolve-answer-correct-label";
+import { resolveQuestionDisplayLabel } from "@/features/facilitator/resolve-question-display-label";
 import { getFacilitatorPhasePlan } from "@/features/facilitator/facilitator-flow-plan";
 import { useTeamStatesSnapshot } from "@/features/gameflow/team-states-store";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
@@ -39,20 +40,30 @@ function formatStageLabel(stage: string): string {
 }
 
 function formatQuestionLabel(data: Record<string, unknown>): string {
-  if (typeof data.questionText === "string" && data.questionText.trim().length > 0) {
-    const text = data.questionText.trim();
-    if (!text.startsWith("stage") && !text.includes("selection_timeout")) {
-      return text;
-    }
+  const stage = typeof data.stage === "string" ? data.stage : "";
+  const questionId = typeof data.questionId === "string" ? data.questionId : null;
+  const questionText = typeof data.questionText === "string" ? data.questionText : null;
+  const field = typeof data.field === "string" ? data.field : null;
+  const fieldId = typeof data.fieldId === "string" ? data.fieldId : null;
+  const difficulty = typeof data.difficulty === "string" ? data.difficulty : null;
+  const questionIndex =
+    typeof data.questionIndex === "number" ? data.questionIndex : null;
+
+  if (stage) {
+    return resolveQuestionDisplayLabel({
+      stage,
+      questionId,
+      questionText,
+      field,
+      fieldId,
+      difficulty,
+      questionIndex,
+    });
   }
 
   const outcome = typeof data.outcome === "string" ? data.outcome : "";
   if (outcome && OUTCOME_LABELS[outcome]) {
     return OUTCOME_LABELS[outcome];
-  }
-
-  if (typeof data.field === "string" && data.field.length > 0) {
-    return `سؤال ${data.field}`;
   }
 
   return "سؤال مسابقة";

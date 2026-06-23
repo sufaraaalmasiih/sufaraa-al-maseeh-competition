@@ -19,6 +19,8 @@ import {
 import { useEffect, useState } from "react";
 import { getClientFirestore, firebaseAuth } from "@/firebase/firebaseClient";
 import { gameFlowRef, MAIN_COMPETITION_ID } from "@/firebase/firestore";
+import type { ObjectionDecisionScope } from "@/features/competition/objection-accepted-notice";
+import { getFacilitatorActorName } from "@/features/facilitator/facilitator-actor";
 
 /** الأسباب الشائعة للاعتراض على سؤال. */
 export const OBJECTION_REASONS = [
@@ -99,6 +101,10 @@ export interface CompetitionObjection {
   sessionTitle: string | null;
   status: ObjectionStatus;
   createdAtMs: number;
+  seenByName?: string | null;
+  decidedByName?: string | null;
+  decidedByUid?: string | null;
+  decisionScope?: ObjectionDecisionScope | null;
 }
 
 function objectionsCollection() {
@@ -117,6 +123,10 @@ function str(value: unknown, fallback = ""): string {
   return typeof value === "string" ? value : fallback;
 }
 
+function parseDecisionScope(value: unknown): ObjectionDecisionScope | null {
+  return value === "team" || value === "general" ? value : null;
+}
+
 function parseObjection(id: string, data: Record<string, unknown>): CompetitionObjection {
   return {
     id,
@@ -133,6 +143,10 @@ function parseObjection(id: string, data: Record<string, unknown>): CompetitionO
     sessionTitle: typeof data.sessionTitle === "string" ? data.sessionTitle : null,
     status: parseObjectionStatus(data.status),
     createdAtMs: num(data.createdAtMs),
+    seenByName: typeof data.seenByName === "string" ? data.seenByName : null,
+    decidedByName: typeof data.decidedByName === "string" ? data.decidedByName : null,
+    decidedByUid: typeof data.decidedByUid === "string" ? data.decidedByUid : null,
+    decisionScope: parseDecisionScope(data.decisionScope),
   };
 }
 
@@ -204,6 +218,10 @@ function objectionToArchive(objection: CompetitionObjection): Record<string, unk
     sessionTitle: objection.sessionTitle,
     status: objection.status,
     createdAtMs: objection.createdAtMs,
+    seenByName: objection.seenByName ?? null,
+    decidedByName: objection.decidedByName ?? null,
+    decidedByUid: objection.decidedByUid ?? null,
+    decisionScope: objection.decisionScope ?? null,
   };
 }
 
@@ -298,6 +316,7 @@ export async function markObjectionSeen(id: string): Promise<void> {
     status: "seen",
     seenAt: serverTimestamp(),
     seenByUid: firebaseAuth.currentUser?.uid ?? null,
+    seenByName: getFacilitatorActorName(),
   });
 }
 
@@ -305,11 +324,15 @@ export async function markObjectionSeen(id: string): Promise<void> {
 export async function setObjectionDecision(
   id: string,
   decision: "accepted" | "rejected",
+  options?: { scope?: ObjectionDecisionScope },
 ): Promise<void> {
+  const actorName = getFacilitatorActorName();
   await updateDoc(objectionDoc(id), {
     status: decision,
     decidedAt: serverTimestamp(),
     decidedByUid: firebaseAuth.currentUser?.uid ?? null,
+    decidedByName: actorName,
+    decisionScope: decision === "accepted" ? (options?.scope ?? "team") : null,
   });
 }
 

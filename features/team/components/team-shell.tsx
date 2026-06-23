@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
 import { CompetitionGradientShell } from "@/components/layout/competition-gradient-shell";
 import { CompetitionFrozenBanner } from "@/components/layout/competition-frozen-banner";
+import { ObjectionAcceptedBanner } from "@/features/competition/components/objection-accepted-banner";
 import { AuthGate } from "@/features/auth/components/auth-gate";
 import { useCompetitionContentSync } from "@/features/competition-content/competition-content-runtime";
 import { useCompetitionReauthGuard } from "@/features/competition-session/use-competition-reauth-guard";
@@ -74,7 +75,7 @@ function TeamShellAuthenticated() {
   // أُخرج الفريق من المسابقة (حُذفت حالته) → تسجيل خروج وإعادة لصفحة الدخول.
   useTeamRemovalGuard(true);
   // مؤثّرات صوتية: تكتكة آخر الوقت + انتهاء الوقت + احتفال المنصّة.
-  useCompetitionSoundCues(status);
+  useCompetitionSoundCues(status, true, gameFlow.objectionAcceptedNotice?.key ?? null);
 
   // إنهاء المسابقة من الميسّر: يسجّل خروج كل الفرق ويعيدها لصفحة الدخول.
   const { teamSignOutAt } = useGameFlow();
@@ -159,6 +160,7 @@ function TeamShellAuthenticated() {
       <SoundToggleButton />
       <TeamCoachModeBanner />
       <CompetitionFrozenBanner frozen={competitionFrozen} />
+      <ObjectionAcceptedBanner notice={gameFlow.objectionAcceptedNotice} />
       <TeamFlowContent
         status={layoutStatus}
         loading={gameFlowLoading}

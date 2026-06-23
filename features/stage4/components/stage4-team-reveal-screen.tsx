@@ -1,6 +1,7 @@
 "use client";
 
 import { RevealResultChip } from "@/components/motion/reveal-result-chip";
+import { mergeNoAnswerRows } from "@/features/competition/merge-no-answer-rows";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
 import { Stage4QuestionDisplay } from "@/features/stage4/components/stage4-question-display";
 import { Stage4RevealResultsTable } from "@/features/stage4/components/stage4-reveal-results-table";
@@ -22,6 +23,7 @@ export function Stage4TeamRevealScreen() {
     : null;
   const myTeam = teams.find((team) => team.teamId === teamId);
   const questionLabel = `السؤال ${Math.min(stage4QuestionIndex + 1, stage4QuestionCount)} من ${stage4QuestionCount}`;
+  const revealRows = mergeNoAnswerRows(answers, teams);
 
   return (
     <div className="gameplay-scene gameplay-scene--centered stage4-scene stage4-scene--reveal">
@@ -55,7 +57,7 @@ export function Stage4TeamRevealScreen() {
 
             <div className="stage4-reveal-zone">
               <Stage4RevealResultsTable
-                answers={answers}
+                answers={revealRows}
                 correctAnswer={
                   mockQuestion?.correctAnswer ?? stage4ActiveQuestion?.correctAnswer ?? "—"
                 }
