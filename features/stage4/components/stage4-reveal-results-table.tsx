@@ -6,6 +6,7 @@ import { getRankingRowDelay } from "@/components/motion/animated-ranking-row";
 import { LoadingState } from "@/components/layout/state-view";
 import { RevealCorrectAnswer } from "@/components/motion/reveal-correct-answer";
 import { useGradualReveal } from "@/hooks/use-gradual-reveal";
+import { filterRevealRowsForTeam } from "@/features/competition/merge-no-answer-rows";
 import { getRevealResultsDensityClass } from "@/features/competition/reveal-results-density";
 import {
   formatStage3PointsDelta,
@@ -116,7 +117,11 @@ export function Stage4RevealResultsTable({
 
   const formatPoints = (pointsDelta: number) =>
     usesStage3Outcomes ? formatStage3PointsDelta(pointsDelta) : pointsDelta > 0 ? `+${pointsDelta}` : String(pointsDelta);
-  const visibleAnswers = answers;
+  const visibleAnswers =
+    variant === "team" && highlightTeamId
+      ? filterRevealRowsForTeam(answers, highlightTeamId)
+      : answers;
+  const showTeamColumn = variant !== "team";
 
   // الجمهور والفرق: إظهار كل الإجابات فوراً (بدون تعليق على 1/N).
   const gradualEnabled = animate && variant === "facilitator";
@@ -186,7 +191,7 @@ export function Stage4RevealResultsTable({
             <table className="competition-ranking-table competition-ranking-table--reveal">
               <thead>
                 <tr>
-                  {variant !== "team" || highlightTeamId ? <th>الفريق</th> : null}
+                  {showTeamColumn ? <th>الفريق</th> : null}
                   <th>الإجابة</th>
                   <th>{statusHeader}</th>
                   <th>النقاط</th>
@@ -197,15 +202,7 @@ export function Stage4RevealResultsTable({
                 {loading ? (
                   <tr>
                     <td
-                      colSpan={
-                        variant === "team" && !highlightTeamId
-                          ? showStreak
-                            ? 4
-                            : 3
-                          : showStreak
-                            ? 5
-                            : 4
-                      }
+                      colSpan={showTeamColumn ? (showStreak ? 5 : 4) : showStreak ? 4 : 3}
                       className="reveal-results-card__empty"
                     >
                       جاري تحميل الإجابات...
@@ -214,15 +211,7 @@ export function Stage4RevealResultsTable({
                 ) : rows.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={
-                        variant === "team" && !highlightTeamId
-                          ? showStreak
-                            ? 4
-                            : 3
-                          : showStreak
-                            ? 5
-                            : 4
-                      }
+                      colSpan={showTeamColumn ? (showStreak ? 5 : 4) : showStreak ? 4 : 3}
                       className="reveal-results-card__empty"
                     >
                       لا توجد إجابات بعد.
@@ -251,7 +240,7 @@ export function Stage4RevealResultsTable({
                             : undefined,
                       )}
                     >
-                      {variant !== "team" || highlightTeamId ? (
+                      {showTeamColumn ? (
                         <td className="reveal-results-team">{answer.teamName}</td>
                       ) : null}
                       <td className="reveal-results-answer">

@@ -36,3 +36,34 @@ export function mergeNoAnswerRows(
     first.teamName.localeCompare(second.teamName, "ar"),
   );
 }
+
+/** شاشة المتسابق: صف واحد لإجابة الفريق الحالي فقط. */
+export function filterRevealRowsForTeam(
+  answers: RevealResultsAnswerRow[],
+  teamId: string | null,
+): RevealResultsAnswerRow[] {
+  if (!teamId) {
+    return [];
+  }
+
+  const mine = answers.find((row) => row.teamId === teamId);
+  if (mine) {
+    return [mine];
+  }
+
+  return [
+    {
+      answerDocId: `no-answer-${teamId}`,
+      teamId,
+      teamName: "فريقك",
+      answerText: "—",
+      passed: false,
+      confirmed: true,
+      isCorrect: false,
+      pointsDelta: 0,
+      streakBefore: 0,
+      streakAfter: 0,
+      outcome: "no_answer",
+    },
+  ];
+}

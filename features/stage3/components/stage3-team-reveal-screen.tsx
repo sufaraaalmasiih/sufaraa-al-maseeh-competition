@@ -1,14 +1,12 @@
 "use client";
 
-import { mergeNoAnswerRows } from "@/features/competition/merge-no-answer-rows";
-import { Stage3RevealSummary } from "@/features/stage3/components/stage3-reveal-summary";
 import { formatStage3RevealAnswerDisplay } from "@/features/stage3/stage3-reveal-outcome";
+import { Stage3RevealSummary } from "@/features/stage3/components/stage3-reveal-summary";
 import { getStage3MockQuestion } from "@/features/stage3/stage3-mock-questions";
 import { isStage3SelectionTimeoutQuestion } from "@/features/stage3/stage3-selection-timeout-question";
 import { STAGE3_SELECTION_TIMEOUT_PENALTY } from "@/features/stage3/stage3-official-constants";
 import { useStage3ActiveAnswers } from "@/features/stage3/use-stage3-active-answers";
 import { useStage3MyAnswer } from "@/features/stage3/use-stage3-my-answer";
-import { useStage3Ranking } from "@/features/stage3/use-stage3-ranking";
 import type { Stage3ActiveAnswerRow } from "@/features/stage3/use-stage3-active-answers";
 import type { Stage3QuestionMetadata } from "@/features/stage3/stage3-question-types";
 import { Stage4RevealResultsTable } from "@/features/stage4/components/stage4-reveal-results-table";
@@ -42,12 +40,11 @@ export function Stage3TeamRevealScreen({
   ownerTeamName = null,
 }: Stage3TeamRevealScreenProps) {
   const { answers, loading } = useStage3ActiveAnswers(question?.id ?? null);
-  const { teams: rankingTeams } = useStage3Ranking();
   const { teamId } = useStage3MyAnswer(question?.id ?? null);
   const mockQuestion = question ? getStage3MockQuestion(question.id) : null;
   const isSelectionTimeout = isStage3SelectionTimeoutQuestion(question);
   const penaltyPoints = Math.abs(STAGE3_SELECTION_TIMEOUT_PENALTY);
-  const revealRows = mergeNoAnswerRows(mapStage3AnswersToRevealRows(answers), rankingTeams);
+  const revealRows = mapStage3AnswersToRevealRows(answers);
 
   return (
     <div className="gameplay-scene gameplay-scene--centered stage3-scene stage3-scene--reveal">
@@ -73,7 +70,7 @@ export function Stage3TeamRevealScreen({
           <Stage3RevealSummary question={question} embedded />
 
           <div className="stage3-answer-zone">
-            <p className="mb-4 text-center text-xl font-black text-[#143A5A]">إجابات كل الفرق</p>
+            <p className="mb-4 text-center text-xl font-black text-[#143A5A]">إجابتك</p>
             <Stage4RevealResultsTable
               answers={revealRows}
               correctAnswer={isSelectionTimeout ? "—" : mockQuestion?.correctAnswer ?? "—"}
