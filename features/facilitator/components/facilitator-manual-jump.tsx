@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { AlertTriangle, ChevronDown } from "lucide-react";
 import { finishStage, setGameFlowStatus } from "@/features/facilitator/facilitator-flow-actions";
+import {
+  jumpToManualQuestion,
+  type ManualQuestionJumpStage,
+} from "@/features/facilitator/manual-question-jump-actions";
 import { startStage3Reveal } from "@/features/stage3/start-stage3-reveal";
 import { resetCompetition } from "@/features/gameflow/competition-reset";
 import { cn } from "@/lib/utils";
@@ -44,6 +48,12 @@ interface FacilitatorManualJumpProps {
 export function FacilitatorManualJump({ status, embedded = false }: FacilitatorManualJumpProps) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<GameFlowStatus | null>(null);
+  const [questionJumpPending, setQuestionJumpPending] = useState<ManualQuestionJumpStage | null>(null);
+  const [questionNumbers, setQuestionNumbers] = useState<Record<ManualQuestionJumpStage, string>>({
+    stage1: "1",
+    stage2: "1",
+    stage4: "1",
+  });
   const [error, setError] = useState<string | null>(null);
 
   async function handle(control: ManualControl) {
@@ -96,6 +106,24 @@ export function FacilitatorManualJump({ status, embedded = false }: FacilitatorM
     }
   }
 
+  async function handleQuestionJump(stage: ManualQuestionJumpStage) {
+    const questionNumber = Number(questionNumbers[stage]);
+    if (!Number.isFinite(questionNumber) || questionNumber < 1) {
+      setError("أدخل رقم سؤال صحيحاً أكبر من صفر.");
+      return;
+    }
+
+    setQuestionJumpPending(stage);
+    setError(null);
+    try {
+      await jumpToManualQuestion(stage, questionNumber);
+    } catch {
+      setError("تعذر نقلك إلى رقم السؤال المطلوب.");
+    } finally {
+      setQuestionJumpPending(null);
+    }
+  }
+
   return (
     <div className={cn("flow-manual", embedded && "flow-manual--embedded")}>
       <button
@@ -131,6 +159,38 @@ export function FacilitatorManualJump({ status, embedded = false }: FacilitatorM
               >
                 {pending === control.status ? "..." : control.label}
               </button>
+            ))}
+          </div>
+          <div className="flow-manual__question-jump">
+            <p className="flow-manual__question-jump-title">انتقال مباشر إلى سؤال داخل المرحلة</p>
+            {([
+              ["stage1", "المرحلة الأولى"],
+              ["stage2", "المرحلة الثانية"],
+              ["stage4", "المرحلة الرابعة"],
+            ] as const).map(([stage, label]) => (
+              <label key={stage} className="flow-manual__question-jump-row">
+                <span>{label}</span>
+                <input
+                  type="number"
+                  min={1}
+                  inputMode="numeric"
+                  value={questionNumbers[stage]}
+                  onChange={(event) =>
+                    setQuestionNumbers((current) => ({
+                      ...current,
+                      [stage]: event.target.value,
+                    }))
+                  }
+                />
+                <button
+                  type="button"
+                  className="facilitator-jump-btn"
+                  disabled={pending !== null || questionJumpPending !== null}
+                  onClick={() => void handleQuestionJump(stage)}
+                >
+                  {questionJumpPending === stage ? "..." : "انتقال"}
+                </button>
+              </label>
             ))}
           </div>
           {error ? <p className="facilitator-inline-error">{error}</p> : null}

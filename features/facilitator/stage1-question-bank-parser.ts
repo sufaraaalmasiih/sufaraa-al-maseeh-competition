@@ -55,8 +55,10 @@ function normalizeQuestion(raw: unknown, fallbackIndex: number): Stage1MockQuest
   const id = str(entry.id) || `stage1-import-${fallbackIndex + 1}`;
   const reference = str(entry.reference) || undefined;
   const imageUrl = str(entry.imageUrl) || undefined;
+  const typeLabel = str(entry.typeLabel) || str(entry.type) || undefined;
   const points = parseQuestionPoints(entry.points);
   const pointsField = points ? { points } : {};
+  const typeLabelField = typeLabel ? { typeLabel } : {};
 
   if (type === "multiple_choice") {
     const options = splitList(entry.options);
@@ -66,6 +68,7 @@ function normalizeQuestion(raw: unknown, fallbackIndex: number): Stage1MockQuest
     return {
       id,
       type,
+      ...typeLabelField,
       prompt,
       ...(reference ? { reference } : {}),
       ...(imageUrl ? { imageUrl } : {}),
@@ -88,6 +91,7 @@ function normalizeQuestion(raw: unknown, fallbackIndex: number): Stage1MockQuest
     return {
       id,
       type,
+      ...typeLabelField,
       prompt,
       ...(reference ? { reference } : {}),
       ...(imageUrl ? { imageUrl } : {}),
@@ -104,6 +108,7 @@ function normalizeQuestion(raw: unknown, fallbackIndex: number): Stage1MockQuest
   return {
     id,
     type,
+    ...typeLabelField,
     prompt,
     ...(reference ? { reference } : {}),
     ...(imageUrl ? { imageUrl } : {}),
@@ -135,6 +140,7 @@ export function parseStage1RowsToQuestions(
         {
           id: lower.id,
           type: lower.type ?? lower["النوع"],
+          typeLabel: lower.typelabel ?? lower.type ?? lower["النوع"],
           prompt: lower.prompt ?? lower["السؤال"],
           reference: lower.reference ?? lower["الشاهد"] ?? lower["المرجع"],
           correctAnswer:

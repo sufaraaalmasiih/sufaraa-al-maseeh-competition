@@ -9,6 +9,7 @@ import { getClientFirestore } from "@/firebase/firebaseClient";
 import {
   answersCollectionRef,
   buildInitialTeamStateDocument,
+  competitionSessionRef,
   gameFlowRef,
   MAIN_COMPETITION_ID,
   teamStatesCollectionRef,
@@ -63,6 +64,14 @@ export async function resetCompetition(
     await Promise.all([
       setDoc(gameFlowRef, buildInitialGameFlowPayload()),
       setDoc(timerRef, buildInitialTimerPayload()),
+      setDoc(
+        competitionSessionRef,
+        {
+          resetEpoch: Date.now(),
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true },
+      ),
     ]);
   } catch {
     throw new CompetitionResetError(
@@ -150,4 +159,3 @@ async function commitBatchedDeletes(refs: DocumentReference[]): Promise<void> {
     await batch.commit();
   }
 }
-

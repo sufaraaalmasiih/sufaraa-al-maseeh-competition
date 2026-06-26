@@ -30,7 +30,7 @@ function getFacilitatorPromptLabel(
     return `سؤال ${question.questionNumber} — ${question.fieldLabel}`;
   }
 
-  const typeLabel = getStage1QuestionTypeLabel(mockQuestion.type);
+  const typeLabel = mockQuestion.typeLabel ?? getStage1QuestionTypeLabel(mockQuestion.type);
   let prompt = mockQuestion.prompt.trim();
 
   if (prompt.includes(question.id)) {
@@ -73,6 +73,9 @@ export function Stage3QuestionOpenScreen({
   }
 
   const mockQuestion = getStage3MockQuestion(question.id);
+  const typeLabel = mockQuestion
+    ? mockQuestion.typeLabel ?? getStage1QuestionTypeLabel(mockQuestion.type)
+    : null;
   const ownerLabel = ownerTeamName || STAGE3_OWNER_TEAM_PLACEHOLDER;
   const isFacilitator = variant === "facilitator";
   const displayPrompt =
@@ -115,7 +118,7 @@ export function Stage3QuestionOpenScreen({
       >
         {isFacilitator && mockQuestion ? (
           <p className="stage3-question-hero__type-label">
-            {getStage1QuestionTypeLabel(mockQuestion.type)}
+            {typeLabel}
           </p>
         ) : null}
         <p className="stage3-question-hero__prompt">{displayPrompt}</p>

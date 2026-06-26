@@ -52,6 +52,30 @@ function collectOptions(row: Record<string, unknown>): string[] {
   return splitPipeList(row.options);
 }
 
+function normalizeDuplicateKey(value: string): string {
+  return value.replace(/\s+/g, " ").trim().toLocaleLowerCase("ar");
+}
+
+function findDuplicateText(values: string[]): string | null {
+  const seen = new Map<string, string>();
+  for (const value of values) {
+    const key = normalizeDuplicateKey(value);
+    if (!key) {
+      continue;
+    }
+    const first = seen.get(key);
+    if (first) {
+      return first;
+    }
+    seen.set(key, value);
+  }
+  return null;
+}
+
+function matchingGroupKey(id: string): string {
+  return id.replace(/-\d+$/, "");
+}
+
 export interface WorkbookValidationError {
   row: number;
   id: string;
@@ -242,6 +266,16 @@ function validateTypeRequirements(
   }
 
   if (type === "multiple_choice") {
+    const duplicatedOption = findDuplicateText(options);
+    if (duplicatedOption) {
+      pushError(
+        errors,
+        rowNumber,
+        row,
+        "الخيارات",
+        `الخيار «${duplicatedOption}» مكرر داخل نفس سؤال اختر من متعدد — اجعل كل خيار مختلفاً حتى لا يختفي من الشاشة.`,
+      );
+    }
     if (options.length < 2) {
       pushError(
         errors,
@@ -371,6 +405,13 @@ export function validateQuestionBankRows(
     stage4: {},
   };
   const seenIds = new Map<string, number>();
+  const matchingGroups = new Map<
+    string,
+    {
+      left: Map<string, { text: string; rowNumber: number }>;
+      right: Map<string, { text: string; rowNumber: number }>;
+    }
+  >();
   const stage3Categories = new Set<string>();
   let validCount = 0;
 
@@ -468,6 +509,51 @@ export function validateQuestionBankRows(
     }
 
     validateTypeRequirements(errors, rowNumber, row, type);
+
+    if (stage === "stage2" && type === "matching") {
+      const groupKey = matchingGroupKey(id);
+      const group =
+        matchingGroups.get(groupKey) ?? {
+          left: new Map<string, { text: string; rowNumber: number }>(),
+          right: new Map<string, { text: string; rowNumber: number }>(),
+        };
+      const leftText = trim(row.question) || trim(row.prompt);
+      const rightText = trim(row.correct) || trim(row.correctanswer) || trim(row.answer);
+      const leftKey = normalizeDuplicateKey(leftText);
+      const rightKey = normalizeDuplicateKey(rightText);
+
+      if (leftKey) {
+        const previous = group.left.get(leftKey);
+        if (previous) {
+          pushError(
+            errors,
+            rowNumber,
+            row,
+            "السؤال",
+            `الطرف الأيسر «${leftText}» مكرر في نفس مجموعة التوصيل — أول ظهور في الصف ${previous.rowNumber}.`,
+          );
+        } else {
+          group.left.set(leftKey, { text: leftText, rowNumber });
+        }
+      }
+
+      if (rightKey) {
+        const previous = group.right.get(rightKey);
+        if (previous) {
+          pushError(
+            errors,
+            rowNumber,
+            row,
+            "الإجابة الصحيحة",
+            `الطرف الأيمن «${rightText}» مكرر في نفس مجموعة التوصيل — أول ظهور في الصف ${previous.rowNumber}.`,
+          );
+        } else {
+          group.right.set(rightKey, { text: rightText, rowNumber });
+        }
+      }
+
+      matchingGroups.set(groupKey, group);
+    }
 
     // المرحلة 2 — ترتيب الآية: لا يُعرض أكثر من 5 أجزاء سويّاً، فإن زادت قسّم الآية
     // إلى سؤالين أو أكثر (كل منهما ≤5 أجزاء).

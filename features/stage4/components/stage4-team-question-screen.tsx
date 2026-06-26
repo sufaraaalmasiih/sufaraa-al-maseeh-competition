@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { EmptyState } from "@/components/layout/empty-state";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
 import { useGameFlow } from "@/features/gameflow/use-game-flow";
 import { Stage1QuestionCard } from "@/features/stage1/components/stage1-question-card";
 import type { Stage1MockQuestion } from "@/features/stage1/stage1-types";
 import { Stage4QuestionDisplay } from "@/features/stage4/components/stage4-question-display";
+import { Stage4TeamStatusScreen } from "@/features/stage4/components/stage4-team-status-screen";
 import {
   confirmStage4Answer,
   confirmStage4Pass,
@@ -43,6 +43,10 @@ export function Stage4TeamQuestionScreen() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [answerResult, setAnswerResult] = useState<{
+    isCorrect: boolean;
+    passed: boolean;
+  } | null>(null);
   const sawQuestionRef = useRef(false);
 
   const questionOpen = status === "stage4_question_open";
@@ -72,8 +76,13 @@ export function Stage4TeamQuestionScreen() {
       setSubmitted(true);
       setAnswerText(answerState.passed ? "" : answerState.answerText);
       setSelectedAnswer(answerState.passed ? null : answerState.answerText);
+      setAnswerResult({
+        isCorrect: answerState.isCorrect,
+        passed: answerState.passed,
+      });
     } else {
       setSubmitted(false);
+      setAnswerResult(null);
     }
   }, [answerState, stage4ActiveQuestion?.id]);
 
@@ -81,6 +90,7 @@ export function Stage4TeamQuestionScreen() {
     setAnswerText("");
     setSelectedAnswer(null);
     setSubmitted(false);
+    setAnswerResult(null);
     setSaveError(null);
   }, [stage4ActiveQuestion?.id]);
 
@@ -93,7 +103,15 @@ export function Stage4TeamQuestionScreen() {
   }
 
   if (!questionOpen && !sawQuestionRef.current && !submitted && !answerState?.confirmed) {
-    return <EmptyState title="لم يظهر السؤال" description="بانتظار توجيه الميسر" />;
+    return (
+      <Stage4TeamStatusScreen
+        panelTitle="بانتظار السؤال التالي"
+        panelSubtitle="ستظهر بطاقة السؤال هنا عندما يفتحها الميسر."
+        questionIndex={stage4QuestionIndex}
+        questionCount={stage4QuestionCount}
+        tone="waiting"
+      />
+    );
   }
 
   const closed = !questionOpen;
@@ -121,6 +139,7 @@ export function Stage4TeamQuestionScreen() {
 
       if (!result.duplicate) {
         setSubmitted(true);
+        setAnswerResult({ isCorrect: result.isCorrect, passed: result.passed });
       }
     } catch (error) {
       setSaveError(formatSaveError(error));
@@ -142,6 +161,7 @@ export function Stage4TeamQuestionScreen() {
 
       if (!result.duplicate) {
         setSubmitted(true);
+        setAnswerResult({ isCorrect: result.isCorrect, passed: result.passed });
       }
     } catch (error) {
       setSaveError(formatSaveError(error));
@@ -165,7 +185,7 @@ export function Stage4TeamQuestionScreen() {
                 </div>
                 {stage4ActiveQuestion ? (
                   <span className="stage4-question-top__type-badge">
-                    {getStage4QuestionTypeLabel(stage4ActiveQuestion.type)}
+                    {stage4ActiveQuestion.typeLabel ?? getStage4QuestionTypeLabel(stage4ActiveQuestion.type)}
                   </span>
                 ) : null}
               </div>
@@ -186,7 +206,13 @@ export function Stage4TeamQuestionScreen() {
 
             {submitted ? (
               <p className="stage4-answer-zone__status">
-                تم استلام إجابتكم، بانتظار بقية الفرق
+                {answerResult?.passed
+                  ? "تم تسجيل التخطي، بانتظار بقية الفرق"
+                  : answerResult
+                    ? answerResult.isCorrect
+                      ? "تم استلام إجابتكم: الإجابة صحيحة"
+                      : "تم استلام إجابتكم: الإجابة غير صحيحة"
+                    : "تم استلام إجابتكم، بانتظار بقية الفرق"}
               </p>
             ) : closed ? (
               <p className="stage4-answer-zone__status">

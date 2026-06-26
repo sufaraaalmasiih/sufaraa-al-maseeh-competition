@@ -73,7 +73,7 @@ export function Stage1ChoiceQuestionCard({
       <CardHeader>
         <CardDescription>
           السؤال {questionNumber} من {totalQuestions} ·{" "}
-          {getStage1QuestionTypeLabel("multiple_choice")}
+          {question.typeLabel ?? getStage1QuestionTypeLabel("multiple_choice")}
         </CardDescription>
         <CardTitle className="text-[#143A5A]">{question.prompt}</CardTitle>
         {question.reference ? (

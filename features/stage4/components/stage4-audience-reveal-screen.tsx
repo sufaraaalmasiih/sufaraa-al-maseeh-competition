@@ -18,8 +18,8 @@ export function Stage4AudienceRevealScreen() {
   const answersKey = answers.map((row) => row.answerDocId).join("|");
   const teamsKey = rankingTeams.map((team) => team.teamId).join("|");
   const mergedAnswers = useMemo(
-    () => mergeNoAnswerRows(answers, rankingTeams),
-    [answersKey, teamsKey, answers, rankingTeams],
+    () => (loading ? answers : mergeNoAnswerRows(answers, rankingTeams)),
+    [answersKey, teamsKey, answers, rankingTeams, loading],
   );
 
   return (

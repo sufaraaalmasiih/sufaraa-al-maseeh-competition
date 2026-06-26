@@ -97,6 +97,58 @@
   }
 }
 
+.audience-display .arena-question-text,
+.audience-display .competition-hero-question-text,
+.audience-display .stage4-question-hero__prompt,
+.audience-display .reveal-results-card__answer-value,
+.team-player-shell .arena-question-text,
+.team-player-shell .competition-hero-question-text,
+.team-player-shell .stage4-question-hero__prompt,
+.team-player-shell .stage4-answer-zone__status,
+.team-player-shell .matching-card,
+.team-player-shell .choice-card {
+  line-height: 1.65;
+}
+
+.team-player-shell .stage4-question-top__progress,
+.audience-display .stage4-question-hero__meta-progress {
+  line-height: 1.45;
+}
+
+.flow-manual__question-jump {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.65rem;
+  border-top: 1px solid rgba(20, 58, 90, 0.12);
+  padding-top: 1rem;
+}
+
+.flow-manual__question-jump-title {
+  font-size: 0.85rem;
+  font-weight: 900;
+  color: #143a5a;
+}
+
+.flow-manual__question-jump-row {
+  display: grid;
+  grid-template-columns: minmax(7rem, 1fr) 5rem minmax(5.5rem, auto);
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: rgba(20, 58, 90, 0.86);
+}
+
+.flow-manual__question-jump-row input {
+  min-width: 0;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(20, 58, 90, 0.18);
+  background: rgba(255, 255, 255, 0.85);
+  padding: 0.55rem 0.65rem;
+  text-align: center;
+  font-weight: 900;
+}
+
 @layer components {
   .app-viewport-fill {
     @apply h-[100dvh] w-full overflow-hidden p-0;

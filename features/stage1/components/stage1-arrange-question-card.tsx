@@ -162,7 +162,7 @@ export function Stage1ArrangeQuestionCard({
     <Card className="overflow-hidden">
       <CardHeader>
         <CardDescription>
-          السؤال {questionNumber} من {totalQuestions} · {getStage1QuestionTypeLabel("arrange")}
+          السؤال {questionNumber} من {totalQuestions} · {question.typeLabel ?? getStage1QuestionTypeLabel("arrange")}
         </CardDescription>
         <CardTitle className="text-[#143A5A]">{question.prompt}</CardTitle>
         {question.reference ? (

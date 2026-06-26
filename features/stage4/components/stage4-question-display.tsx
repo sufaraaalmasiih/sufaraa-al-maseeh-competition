@@ -54,7 +54,7 @@ export function Stage4QuestionDisplay({
                 </p>
               </div>
               <span className="stage4-question-hero__meta-type">
-                {getStage4QuestionTypeLabel(question.type)}
+                {question.typeLabel ?? getStage4QuestionTypeLabel(question.type)}
               </span>
             </div>
           </div>
@@ -65,7 +65,7 @@ export function Stage4QuestionDisplay({
               السؤال {questionIndex + 1} من {questionCount}
             </p>
             <p className="mt-2 text-xs font-bold text-[#B45309]">
-              {getStage4QuestionTypeLabel(question.type)}
+              {question.typeLabel ?? getStage4QuestionTypeLabel(question.type)}
             </p>
           </div>
         )

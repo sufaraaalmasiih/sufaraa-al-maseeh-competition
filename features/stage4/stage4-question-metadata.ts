@@ -65,6 +65,9 @@ export function parseStage4QuestionMetadata(value: unknown): Stage4QuestionMetad
   const question: Stage4QuestionMetadata = {
     id: data.id,
     type,
+    ...(typeof data.typeLabel === "string" && data.typeLabel.trim()
+      ? { typeLabel: data.typeLabel.trim() }
+      : {}),
     prompt: data.prompt,
     correctAnswer: data.correctAnswer,
     order: typeof data.order === "number" ? data.order : 0,

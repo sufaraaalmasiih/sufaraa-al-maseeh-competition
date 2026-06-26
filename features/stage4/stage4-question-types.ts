@@ -7,6 +7,7 @@ export type Stage4QuestionType = Stage1QuestionType | Stage4LegacyQuestionType;
 export interface Stage4QuestionMetadata {
   id: string;
   type: Stage4QuestionType;
+  typeLabel?: string;
   prompt: string;
   imageUrl?: string;
   reference?: string;

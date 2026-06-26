@@ -56,8 +56,11 @@ export function Stage3AudienceRevealScreen({
   const answersKey = answers.map((row) => row.answerDocId).join("|");
   const teamsKey = rankingTeams.map((team) => team.teamId).join("|");
   const revealRows = useMemo(
-    () => mergeNoAnswerRows(mapStage3AnswersToRevealRows(answers), rankingTeams),
-    [answersKey, teamsKey, answers, rankingTeams],
+    () => {
+      const rows = mapStage3AnswersToRevealRows(answers);
+      return loading ? rows : mergeNoAnswerRows(rows, rankingTeams);
+    },
+    [answersKey, teamsKey, answers, rankingTeams, loading],
   );
 
   if (isSelectionTimeout) {

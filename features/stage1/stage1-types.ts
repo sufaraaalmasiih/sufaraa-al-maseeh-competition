@@ -7,6 +7,7 @@ export type Stage1QuestionType =
 export interface Stage1BaseQuestion {
   id: string;
   type: Stage1QuestionType;
+  typeLabel?: string;
   prompt: string;
   reference?: string;
   imageUrl?: string;

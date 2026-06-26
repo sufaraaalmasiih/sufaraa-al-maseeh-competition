@@ -37,6 +37,11 @@ function collectOptions(row: Record<string, unknown>): string[] {
   return [row.option1, row.option2, row.option3, row.option4].map(trim).filter(Boolean);
 }
 
+function readTypeLabel(row: Record<string, unknown>): string | undefined {
+  const label = trim(row.type) || trim(row.typename);
+  return label || undefined;
+}
+
 function normalizeStage3Field(value: unknown): (typeof STAGE3_FIELD_KEYS)[number] | null {
   const raw = trim(value);
   if (!raw) {
@@ -83,6 +88,7 @@ function unifiedRowToLegacyStage1Row(row: Record<string, unknown>): Record<strin
   return {
     id: row.id,
     type: type ?? row.type,
+    typeLabel: row.type ?? row.typename,
     prompt: row.question ?? row.prompt,
     reference: row.reference ?? "",
     correctAnswer:
@@ -183,6 +189,7 @@ function buildStage4Question(row: Record<string, unknown>, order: number): Stage
   const question: Stage4QuestionMetadata = {
     id,
     type: type as Stage4QuestionMetadata["type"],
+    ...(readTypeLabel(row) ? { typeLabel: readTypeLabel(row) } : {}),
     prompt,
     correctAnswer,
     order,
@@ -241,16 +248,18 @@ function buildFlexibleQuestion(
 ): Stage1MockQuestion | null {
   const reference = trim(row.reference) || undefined;
   const imageUrl = trim(row.imageurl) || trim(row.image) || undefined;
+  const typeLabel = readTypeLabel(row);
   const correctAnswer = trim(row.correct) || trim(row.correctanswer);
   const points = parseQuestionPoints(row.points);
   const pointsField = points ? { points } : {};
+  const typeLabelField = typeLabel ? { typeLabel } : {};
 
   if (type === "multiple_choice") {
     const options = collectOptions(row);
     if (options.length < 2 || !correctAnswer) {
       return null;
     }
-    return { id, type: "multiple_choice", prompt, reference, imageUrl, ...pointsField, correctAnswer, options };
+    return { id, type: "multiple_choice", ...typeLabelField, prompt, reference, imageUrl, ...pointsField, correctAnswer, options };
   }
 
   if (type === "arrange" || type === "arrangeVerse") {
@@ -267,6 +276,7 @@ function buildFlexibleQuestion(
     return {
       id,
       type: "arrange",
+      ...typeLabelField,
       prompt,
       reference,
       imageUrl,
@@ -281,7 +291,7 @@ function buildFlexibleQuestion(
     if (!correctAnswer) {
       return null;
     }
-    return { id, type, prompt, reference, imageUrl, ...pointsField, correctAnswer };
+    return { id, type, ...typeLabelField, prompt, reference, imageUrl, ...pointsField, correctAnswer };
   }
 
   if (type === "matching" || type === "completeVerse" || type === "trueFalseCorrect") {
@@ -291,6 +301,7 @@ function buildFlexibleQuestion(
     return {
       id,
       type: "fill_blank",
+      ...typeLabelField,
       prompt,
       reference,
       imageUrl,
@@ -306,6 +317,7 @@ function buildFlexibleQuestion(
     return {
       id,
       type: type === "link" ? "fill_blank" : "missing",
+      ...typeLabelField,
       prompt,
       reference,
       imageUrl,

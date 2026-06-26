@@ -193,7 +193,7 @@ export function Stage1RunningScreen() {
         </QuestionPrompt>
       }
       questionNumber={effectiveIndex + 1}
-      questionTypeLabel={getStage1QuestionTypeLabel(currentQuestion.type)}
+      questionTypeLabel={currentQuestion.typeLabel ?? getStage1QuestionTypeLabel(currentQuestion.type)}
       totalQuestions={questionCount}
       progress={<StepJourney current={effectiveIndex + 1} total={questionCount} />}
       board={
