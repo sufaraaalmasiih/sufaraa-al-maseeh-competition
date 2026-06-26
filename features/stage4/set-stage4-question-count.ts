@@ -1,4 +1,4 @@
-import { fetchQuestionBankMeta } from "@/features/facilitator/question-bank-meta";
+import { fetchCurrentQuestionBankMeta } from "@/features/facilitator/question-bank-meta";
 import {
   DEFAULT_QUESTION_DISPLAY_SETTINGS,
   parseQuestionDisplaySettings,
@@ -7,9 +7,12 @@ import {
 
 /** @deprecated Use writeQuestionDisplaySettings — kept for backward compatibility. */
 export async function setStage4QuestionCount(questionCount: number) {
-  const meta = await fetchQuestionBankMeta();
+  const meta = await fetchCurrentQuestionBankMeta();
   const current = parseQuestionDisplaySettings(undefined, meta.bankSizes);
-  const safeCount = Math.max(1, Math.min(meta.bankSizes.stage4, Math.floor(questionCount)));
+  const safeCount =
+    meta.bankSizes.stage4 === 0
+      ? 0
+      : Math.max(1, Math.min(meta.bankSizes.stage4, Math.floor(questionCount)));
 
   await writeQuestionDisplaySettings({
     ...current,

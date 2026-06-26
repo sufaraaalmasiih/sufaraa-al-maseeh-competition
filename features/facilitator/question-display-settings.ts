@@ -55,17 +55,17 @@ export const STAGE2_FIELD_LABELS: Record<keyof Stage2FieldDisplaySettings, strin
 export const STAGE_DISPLAY_KEYS: AdminStageKey[] = ["stage1", "stage2", "stage3", "stage4"];
 
 export const DEFAULT_QUESTION_DISPLAY_SETTINGS: QuestionDisplaySettings = {
-  stage1: { displayCount: 40, orderMode: "order" },
-  stage2: { displayCount: 20, orderMode: "order" },
+  stage1: { displayCount: 50, orderMode: "random" },
+  stage2: { displayCount: 40, orderMode: "order" },
   stage3: { displayCount: 30, orderMode: "order" },
-  stage4: { displayCount: 15, orderMode: "order" },
+  stage4: { displayCount: 15, orderMode: "random" },
   stage2Fields: { ...DEFAULT_STAGE2_FIELD_DISPLAY },
 };
 
 function clampFieldCount(value: unknown, fallback: number): number {
   const parsed =
     typeof value === "number" && Number.isFinite(value) ? Math.floor(value) : fallback;
-  return Math.max(1, Math.min(50, parsed));
+  return Math.max(0, Math.min(50, parsed));
 }
 
 export function parseStage2FieldSettings(raw: unknown): Stage2FieldDisplaySettings {
@@ -83,7 +83,7 @@ export function parseStage2FieldSettings(raw: unknown): Stage2FieldDisplaySettin
 
 export const DEFAULT_BANK_SIZES: Record<AdminStageKey, number> = {
   stage1: 50,
-  stage2: 20,
+  stage2: 40,
   stage3: 30,
   stage4: 15,
 };
@@ -94,7 +94,10 @@ export function getStageDisplayLabel(stage: AdminStageKey): string {
 
 function clampDisplayCount(value: unknown, fallback: number, bankSize: number): number {
   const parsed = typeof value === "number" && Number.isFinite(value) ? Math.floor(value) : fallback;
-  const safeBank = Math.max(1, bankSize);
+  const safeBank = Math.max(0, Math.floor(bankSize));
+  if (safeBank === 0) {
+    return 0;
+  }
   return Math.max(1, Math.min(safeBank, parsed));
 }
 

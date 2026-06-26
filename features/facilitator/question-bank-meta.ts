@@ -4,6 +4,7 @@ import { MAIN_COMPETITION_ID } from "@/firebase/firestore";
 import {
   DEFAULT_BANK_SIZES,
   type QuestionDisplaySettings,
+  type Stage2FieldDisplaySettings,
 } from "@/features/facilitator/question-display-settings";
 import type { AdminStageKey } from "@/features/facilitator/facilitator-team-admin";
 
@@ -14,8 +15,17 @@ export interface QuestionBankMeta {
   updatedAt?: unknown;
 }
 
+export interface CurrentQuestionBankMeta extends QuestionBankMeta {
+  stage2FieldSizes: Stage2FieldDisplaySettings;
+  stage2MatchingPairCount: number;
+}
+
 function metaDocRef() {
   return doc(getClientFirestore(), "competitions", MAIN_COMPETITION_ID, "questionBanks", "meta");
+}
+
+function stageDocRef(stage: AdminStageKey) {
+  return doc(getClientFirestore(), "competitions", MAIN_COMPETITION_ID, "questionBanks", stage);
 }
 
 const DEFAULT_META: QuestionBankMeta = {
@@ -61,6 +71,89 @@ export function parseQuestionBankMeta(data: Record<string, unknown> | undefined)
 export async function fetchQuestionBankMeta(): Promise<QuestionBankMeta> {
   const snapshot = await getDoc(metaDocRef());
   return parseQuestionBankMeta(snapshot.data());
+}
+
+function arraySize(value: unknown): number {
+  return Array.isArray(value) ? value.length : 0;
+}
+
+function objectSize(value: unknown): number {
+  return value && typeof value === "object" ? Object.keys(value).length : 0;
+}
+
+function countMatchingPairs(value: unknown): number {
+  if (!Array.isArray(value)) {
+    return 0;
+  }
+
+  return value.reduce((total, question) => {
+    if (!question || typeof question !== "object") {
+      return total;
+    }
+    const pairs = (question as Record<string, unknown>).pairs;
+    return total + arraySize(pairs);
+  }, 0);
+}
+
+export function deriveCurrentBankSizes(input: {
+  stage1Questions?: unknown;
+  stage2Data?: Record<string, unknown>;
+  stage3Questions?: unknown;
+  stage4Questions?: unknown;
+}): {
+  bankSizes: Record<AdminStageKey, number>;
+  stage2FieldSizes: Stage2FieldDisplaySettings;
+  stage2MatchingPairCount: number;
+} {
+  const stage2Data = input.stage2Data ?? {};
+  const stage2MatchingPairCount = countMatchingPairs(stage2Data.matching);
+  const stage2FieldSizes: Stage2FieldDisplaySettings = {
+    matching: arraySize(stage2Data.matching),
+    arrangeVerse: arraySize(stage2Data.arrangeVerse),
+    completeVerse: arraySize(stage2Data.completeVerse),
+    trueFalseCorrect: arraySize(stage2Data.trueFalseCorrect),
+  };
+
+  return {
+    bankSizes: {
+      stage1: arraySize(input.stage1Questions),
+      stage2:
+        stage2MatchingPairCount +
+        stage2FieldSizes.arrangeVerse +
+        stage2FieldSizes.completeVerse +
+        stage2FieldSizes.trueFalseCorrect,
+      stage3: objectSize(input.stage3Questions),
+      stage4: arraySize(input.stage4Questions),
+    },
+    stage2FieldSizes,
+    stage2MatchingPairCount,
+  };
+}
+
+export async function fetchCurrentQuestionBankMeta(): Promise<CurrentQuestionBankMeta> {
+  const [stage1Snapshot, stage2Snapshot, stage3Snapshot, stage4Snapshot, metaSnapshot] =
+    await Promise.all([
+      getDoc(stageDocRef("stage1")),
+      getDoc(stageDocRef("stage2")),
+      getDoc(stageDocRef("stage3")),
+      getDoc(stageDocRef("stage4")),
+      getDoc(metaDocRef()),
+    ]);
+
+  const meta = parseQuestionBankMeta(metaSnapshot.data());
+  const current = deriveCurrentBankSizes({
+    stage1Questions: stage1Snapshot.data()?.questions,
+    stage2Data: stage2Snapshot.data(),
+    stage3Questions: stage3Snapshot.data()?.questions,
+    stage4Questions: stage4Snapshot.data()?.questions,
+  });
+
+  return {
+    ...meta,
+    bankSizes: current.bankSizes,
+    stage2FieldSizes: current.stage2FieldSizes,
+    stage2MatchingPairCount: current.stage2MatchingPairCount,
+  };
 }
 
 export async function saveQuestionBankMeta(patch: Partial<QuestionBankMeta>): Promise<void> {
@@ -134,6 +227,7 @@ export function deriveWorkbookBankStats(rows: Record<string, unknown>[]): Workbo
 export function clampSettingsToBankSizes(
   settings: QuestionDisplaySettings,
   bankSizes: Record<AdminStageKey, number>,
+  stage2FieldSizes?: Stage2FieldDisplaySettings,
 ): QuestionDisplaySettings {
   return {
     stage1: {
@@ -152,6 +246,22 @@ export function clampSettingsToBankSizes(
       ...settings.stage4,
       displayCount: Math.min(settings.stage4.displayCount, bankSizes.stage4),
     },
-    stage2Fields: settings.stage2Fields,
+    stage2Fields: stage2FieldSizes
+      ? {
+          matching: Math.min(settings.stage2Fields.matching, stage2FieldSizes.matching),
+          arrangeVerse: Math.min(
+            settings.stage2Fields.arrangeVerse,
+            stage2FieldSizes.arrangeVerse,
+          ),
+          completeVerse: Math.min(
+            settings.stage2Fields.completeVerse,
+            stage2FieldSizes.completeVerse,
+          ),
+          trueFalseCorrect: Math.min(
+            settings.stage2Fields.trueFalseCorrect,
+            stage2FieldSizes.trueFalseCorrect,
+          ),
+        }
+      : settings.stage2Fields,
   };
 }

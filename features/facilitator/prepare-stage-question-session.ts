@@ -6,7 +6,7 @@ import {
   buildActiveQuestionIndices,
   parseQuestionDisplaySettings,
 } from "@/features/facilitator/question-display-settings";
-import { fetchQuestionBankMeta } from "@/features/facilitator/question-bank-meta";
+import { fetchCurrentQuestionBankMeta } from "@/features/facilitator/question-bank-meta";
 import { getActiveStage1Bank } from "@/features/facilitator/stage1-question-bank-store";
 import { getStage4MockQuestions } from "@/features/stage4/stage4-mock-questions";
 
@@ -33,7 +33,10 @@ async function readStoredBankCount(stage: string, fallback: number): Promise<num
 }
 
 export async function prepareStage1QuestionSession(): Promise<number[]> {
-  const [gameFlowSnapshot, meta] = await Promise.all([getDoc(gameFlowRef), fetchQuestionBankMeta()]);
+  const [gameFlowSnapshot, meta] = await Promise.all([
+    getDoc(gameFlowRef),
+    fetchCurrentQuestionBankMeta(),
+  ]);
   const bankLength = await readStoredBankCount("stage1", getActiveStage1Bank().length);
   // نستخدم العدد الفعلي للبنك في القصّ أيضاً (لا أحجام البنك القديمة من meta).
   const settings = parseQuestionDisplaySettings(gameFlowSnapshot.data(), {
@@ -60,7 +63,10 @@ export async function prepareStage2QuestionSession(): Promise<{
   readingReference: string;
   readingPassage: string;
 }> {
-  const [gameFlowSnapshot, meta] = await Promise.all([getDoc(gameFlowRef), fetchQuestionBankMeta()]);
+  const [gameFlowSnapshot, meta] = await Promise.all([
+    getDoc(gameFlowRef),
+    fetchCurrentQuestionBankMeta(),
+  ]);
   const settings = parseQuestionDisplaySettings(gameFlowSnapshot.data(), meta.bankSizes);
   const bankLength = meta.bankSizes.stage2 ?? 20;
   const indices = buildActiveQuestionIndices(
@@ -84,7 +90,10 @@ export async function prepareStage2QuestionSession(): Promise<{
 }
 
 export async function prepareStage4QuestionSession(): Promise<number[]> {
-  const [gameFlowSnapshot, meta] = await Promise.all([getDoc(gameFlowRef), fetchQuestionBankMeta()]);
+  const [gameFlowSnapshot, meta] = await Promise.all([
+    getDoc(gameFlowRef),
+    fetchCurrentQuestionBankMeta(),
+  ]);
   const bankLength = await readStoredBankCount("stage4", getStage4MockQuestions().length);
   const settings = parseQuestionDisplaySettings(gameFlowSnapshot.data(), {
     ...meta.bankSizes,

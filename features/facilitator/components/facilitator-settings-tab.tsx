@@ -12,9 +12,9 @@ import {
 } from "@/features/facilitator/facilitator-timer-settings";
 import {
   clampSettingsToBankSizes,
-  fetchQuestionBankMeta,
+  fetchCurrentQuestionBankMeta,
   saveQuestionBankMeta,
-  type QuestionBankMeta,
+  type CurrentQuestionBankMeta,
 } from "@/features/facilitator/question-bank-meta";
 import {
   DEFAULT_QUESTION_DISPLAY_SETTINGS,
@@ -79,7 +79,7 @@ export function FacilitatorSettingsTab() {
   const [questionSettings, setQuestionSettings] = useState<QuestionDisplaySettings>(
     () => ({ ...DEFAULT_QUESTION_DISPLAY_SETTINGS }),
   );
-  const [bankMeta, setBankMeta] = useState<QuestionBankMeta | null>(null);
+  const [bankMeta, setBankMeta] = useState<CurrentQuestionBankMeta | null>(null);
   const [dirty, setDirty] = useState(false);
   const [questionDirty, setQuestionDirty] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -108,7 +108,7 @@ export function FacilitatorSettingsTab() {
   const [lockReason, setLockReason] = useState<string | null>(null);
 
   useEffect(() => {
-    void fetchQuestionBankMeta().then((meta) => {
+    void fetchCurrentQuestionBankMeta().then((meta) => {
       setBankMeta(meta);
       if (!readingDirty) {
         setStage2Reference(meta.stage2ReadingReference);
@@ -191,7 +191,7 @@ export function FacilitatorSettingsTab() {
     setQuestionDirty(true);
     setQuestionSettings((current) => ({
       ...current,
-      stage2Fields: { ...current.stage2Fields, [field]: Math.max(1, value || 1) },
+      stage2Fields: { ...current.stage2Fields, [field]: Math.max(0, value || 0) },
     }));
   }
 
@@ -201,9 +201,13 @@ export function FacilitatorSettingsTab() {
     setQuestionClampNotice(null);
     try {
       // نقرأ أحجام البنك الفعلية الطازجة دائماً من آخر استيراد Excel — مصدر الحقيقة.
-      const meta = await fetchQuestionBankMeta();
+      const meta = await fetchCurrentQuestionBankMeta();
       setBankMeta(meta);
-      const clamped = clampSettingsToBankSizes(questionSettings, meta.bankSizes);
+      const clamped = clampSettingsToBankSizes(
+        questionSettings,
+        meta.bankSizes,
+        meta.stage2FieldSizes,
+      );
 
       // رسالة صريحة بكل مرحلة طلب فيها الميسّر أكثر مما في البنك (#1).
       const clampMessages = STAGE_DISPLAY_KEYS.filter(
@@ -214,6 +218,19 @@ export function FacilitatorSettingsTab() {
         (stage) =>
           `${getStageDisplayLabel(stage)}: طلبت ${questionSettings[stage].displayCount} والبنك فيه ${meta.bankSizes[stage]} فقط`,
       );
+
+      STAGE2_FIELD_KEYS.forEach((field) => {
+        const requested = questionSettings.stage2Fields[field];
+        const available = meta.stage2FieldSizes[field];
+        if (requested > available) {
+          const unit = field === "matching" ? "جولات" : "أسئلة";
+          const extra =
+            field === "matching" ? ` (${meta.stage2MatchingPairCount} زوجاً في البنك)` : "";
+          clampMessages.push(
+            `${STAGE2_FIELD_LABELS[field]}: طلبت ${requested} ${unit} والبنك فيه ${available} فقط${extra}`,
+          );
+        }
+      });
 
       await writeQuestionDisplaySettings(clamped);
       setQuestionSettings(clamped);
@@ -269,7 +286,7 @@ export function FacilitatorSettingsTab() {
       });
       setReadingDirty(false);
       setReadingSaved(true);
-      const meta = await fetchQuestionBankMeta();
+      const meta = await fetchCurrentQuestionBankMeta();
       setBankMeta(meta);
     } catch {
       setReadingError("تعذر حفظ نص القراءة. حاول مرة أخرى.");
@@ -434,6 +451,10 @@ export function FacilitatorSettingsTab() {
                 {getStageDisplayLabel(stage)} — {bankMeta.bankSizes[stage]}
               </span>
             ))}
+            <span className="ml-2 inline-block">
+              التوصيل — {bankMeta.stage2FieldSizes.matching} جولات /{" "}
+              {bankMeta.stage2MatchingPairCount} زوج
+            </span>
           </p>
         ) : null}
 
@@ -530,20 +551,38 @@ export function FacilitatorSettingsTab() {
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             {STAGE2_FIELD_KEYS.map((field) => (
-              <label key={field} className="facilitator-field">
-                <span className="facilitator-field__label">{STAGE2_FIELD_LABELS[field]}</span>
-                <input
-                  type="number"
-                  min={1}
-                  max={50}
-                  className="facilitator-input"
-                  value={questionSettings.stage2Fields[field]}
-                  disabled={locked}
-                  onChange={(event) =>
-                    updateStage2Field(field, Number(event.target.value) || 1)
-                  }
-                />
-              </label>
+              <div key={field} className="space-y-2">
+                <label className="facilitator-field">
+                  <span className="facilitator-field__label">
+                    {STAGE2_FIELD_LABELS[field]}
+                    {bankMeta ? (
+                      <span className="mr-2 font-normal text-[#64748B]">
+                        (المتاح: {bankMeta.stage2FieldSizes[field]}
+                        {field === "matching"
+                          ? ` جولات / ${bankMeta.stage2MatchingPairCount} زوج`
+                          : " سؤال"})
+                      </span>
+                    ) : null}
+                  </span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={bankMeta?.stage2FieldSizes[field] ?? 50}
+                    className="facilitator-input"
+                    value={questionSettings.stage2Fields[field]}
+                    disabled={locked}
+                    onChange={(event) =>
+                      updateStage2Field(field, Number(event.target.value) || 0)
+                    }
+                  />
+                </label>
+                {bankMeta && questionSettings.stage2Fields[field] > bankMeta.stage2FieldSizes[field] ? (
+                  <p className="rounded-lg bg-[#FFF7ED] px-3 py-2 text-xs font-bold text-[#B45309]">
+                    ⚠️ العدد المطلوب ({questionSettings.stage2Fields[field]}) أكبر من المتاح في البنك
+                    ({bankMeta.stage2FieldSizes[field]}). سيُعرض المتاح فقط.
+                  </p>
+                ) : null}
+              </div>
             ))}
           </div>
         </div>
