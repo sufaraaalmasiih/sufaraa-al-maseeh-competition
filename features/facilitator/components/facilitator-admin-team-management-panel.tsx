@@ -8,8 +8,8 @@ import {
 } from "@/features/facilitator/components/facilitator-controls-confirm-card";
 import { FacilitatorControlsTeamProfilePanel } from "@/features/facilitator/components/facilitator-controls-team-profile-panel";
 import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
-import { updateTeamFullProfile } from "@/features/facilitator/facilitator-team-admin";
-import { callAdminApiOptional } from "@/lib/admin-api-client";
+import { updateTeamFullProfile, updateTeamLogo } from "@/features/facilitator/facilitator-team-admin";
+import { callAdminApiOptional, getStaffAuthIdToken } from "@/lib/admin-api-client";
 import { useAllRegisteredTeams } from "@/features/facilitator/use-all-teams";
 import { useTeamLogosMap } from "@/features/gameflow/team-logos-store";
 import { useTeamProfile } from "@/features/facilitator/use-team-profile";
@@ -41,6 +41,9 @@ export function FacilitatorAdminTeamManagementPanel() {
   const [accountEmail, setAccountEmail] = useState("");
   const [accountPassword, setAccountPassword] = useState("");
   const [playerNames, setPlayerNames] = useState<string[]>(["", "", "", "", ""]);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
+  const [logoSaving, setLogoSaving] = useState(false);
   const [confirmRequest, setConfirmRequest] = useState<ControlsConfirmRequest | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -58,6 +61,21 @@ export function FacilitatorAdminTeamManagementPanel() {
     setAccountEmail(email);
     setPlayerNames(players.map((player) => player.name).concat(["", "", "", "", ""]).slice(0, 5));
   }, [email, players]);
+
+  useEffect(() => {
+    setLogoFile(null);
+    setLogoPreviewUrl(null);
+  }, [selectedTeamId]);
+
+  useEffect(() => {
+    if (!logoFile) {
+      setLogoPreviewUrl(null);
+      return;
+    }
+    const previewUrl = URL.createObjectURL(logoFile);
+    setLogoPreviewUrl(previewUrl);
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [logoFile]);
 
   function requestSaveProfile() {
     if (!selectedTeam) {
@@ -128,6 +146,50 @@ export function FacilitatorAdminTeamManagementPanel() {
         setToast("تم حفظ بيانات الفريق.");
       },
     });
+  }
+
+  async function uploadSelectedTeamLogo() {
+    if (!selectedTeam) {
+      setToast("اختر فريقاً أولاً.");
+      return;
+    }
+    if (!logoFile) {
+      setToast("اختر صورة الفريق أولاً.");
+      return;
+    }
+
+    setLogoSaving(true);
+    setToast(null);
+    try {
+      const idToken = await getStaffAuthIdToken();
+      const formData = new FormData();
+      formData.append("logo", logoFile);
+      formData.append("teamId", selectedTeam.teamId);
+
+      const response = await fetch("/api/team-logo/upload", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${idToken}` },
+        body: formData,
+      });
+      const payload = (await response.json().catch(() => ({}))) as { logoUrl?: string; error?: string };
+      if (!response.ok || !payload.logoUrl) {
+        throw new Error(payload.error || `تعذر رفع الشعار (${response.status}).`);
+      }
+
+      await updateTeamLogo({
+        teamId: selectedTeam.teamId,
+        teamName: selectedTeam.teamName,
+        logoUrl: payload.logoUrl,
+        reason: "تغيير شعار الفريق من تبويب الإدارة",
+      });
+
+      setLogoFile(null);
+      setToast("تم حفظ شعار الفريق.");
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "تعذر حفظ شعار الفريق.");
+    } finally {
+      setLogoSaving(false);
+    }
   }
 
   return (
@@ -201,6 +263,12 @@ export function FacilitatorAdminTeamManagementPanel() {
           storedPassword={passwordPlain}
           playerNames={playerNames}
           onPlayerNamesChange={setPlayerNames}
+          logoUrl={logos.get(selectedTeam.teamId)}
+          logoPreviewUrl={logoPreviewUrl}
+          logoFileName={logoFile?.name ?? null}
+          logoSaving={logoSaving}
+          onLogoFileChange={setLogoFile}
+          onSaveLogo={() => void uploadSelectedTeamLogo()}
           confirmRequest={confirmRequest}
           onSaveProfile={requestSaveProfile}
         />

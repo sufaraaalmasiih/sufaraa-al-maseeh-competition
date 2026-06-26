@@ -3,6 +3,7 @@
 import { Eye, EyeOff, Save } from "lucide-react";
 import { useState } from "react";
 import { ErrorState, LoadingState } from "@/components/layout/state-view";
+import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
 import { PLAYER_LABELS } from "@/features/facilitator/components/facilitator-controls-constants";
 import type { ControlsConfirmRequest } from "@/features/facilitator/components/facilitator-controls-confirm-card";
 
@@ -22,6 +23,12 @@ interface FacilitatorControlsTeamProfilePanelProps {
   storedPassword?: string;
   playerNames: string[];
   onPlayerNamesChange: (updater: (current: string[]) => string[]) => void;
+  logoUrl?: string | null;
+  logoPreviewUrl?: string | null;
+  logoFileName?: string | null;
+  logoSaving?: boolean;
+  onLogoFileChange?: (file: File | null) => void;
+  onSaveLogo?: () => void;
   confirmRequest: ControlsConfirmRequest | null;
   onSaveProfile: () => void;
 }
@@ -41,6 +48,12 @@ export function FacilitatorControlsTeamProfilePanel({
   storedPassword,
   playerNames,
   onPlayerNamesChange,
+  logoUrl,
+  logoPreviewUrl,
+  logoFileName,
+  logoSaving = false,
+  onLogoFileChange,
+  onSaveLogo,
   confirmRequest,
   onSaveProfile,
 }: FacilitatorControlsTeamProfilePanelProps) {
@@ -60,6 +73,39 @@ export function FacilitatorControlsTeamProfilePanel({
       {profileLoading || adminLoading ? <LoadingState variant="inline" /> : null}
       {profileError ? (
         <ErrorState title="تعذر تحميل ملف الفريق" description={profileError} />
+      ) : null}
+
+      {onLogoFileChange && onSaveLogo ? (
+        <div className="mb-5 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+          <div className="mb-3 flex items-center gap-3">
+            <TeamLogoBadge logoUrl={logoPreviewUrl || logoUrl} teamName={teamName || "الفريق"} variant="header" />
+            <div>
+              <p className="text-sm font-black text-[#143A5A]">شعار الفريق</p>
+              <p className="text-xs font-semibold text-[#64748B]">
+                {logoFileName ? `الصورة الجديدة: ${logoFileName}` : logoUrl ? "يوجد شعار محفوظ حالياً." : "لا يوجد شعار محفوظ بعد."}
+              </p>
+            </div>
+          </div>
+          <label className="facilitator-field">
+            <span className="facilitator-field__label">إضافة أو تغيير صورة الفريق</span>
+            <input
+              type="file"
+              accept="image/*"
+              className="facilitator-input"
+              onChange={(event) => onLogoFileChange(event.target.files?.[0] ?? null)}
+            />
+          </label>
+          <div className="facilitator-timer__buttons mt-3">
+            <button
+              type="button"
+              className="facilitator-btn facilitator-btn--outline"
+              disabled={!logoFileName || logoSaving}
+              onClick={onSaveLogo}
+            >
+              {logoSaving ? "جارٍ رفع الشعار..." : "حفظ شعار الفريق"}
+            </button>
+          </div>
+        </div>
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2">

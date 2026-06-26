@@ -10,6 +10,7 @@ export {
 export {
   updateTeamProfile,
   updateTeamFullProfile,
+  updateTeamLogo,
   removeTeamFromCompetition,
 } from "@/features/facilitator/facilitator-team-admin-profile";
 export {

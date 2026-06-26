@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { uploadTeamLogoBuffer, isCloudinaryConfigured } from "@/lib/cloudinary-server";
 import { verifyFirebaseIdToken } from "@/lib/verify-firebase-id-token";
+import { verifySuperAdminRequest } from "@/lib/verify-super-admin-request";
 
 const MAX_LOGO_BYTES = 2 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
@@ -35,9 +36,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Logo must be under 2 MB." }, { status: 400 });
   }
 
+  const targetTeamId =
+    typeof formData.get("teamId") === "string" ? String(formData.get("teamId")).trim() : "";
+  const uploadOwnerId = targetTeamId || uid;
+  if (targetTeamId && targetTeamId !== uid) {
+    const admin = await verifySuperAdminRequest(request);
+    if (!admin) {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    }
+  }
+
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
-    const logoUrl = await uploadTeamLogoBuffer(uid, buffer, file.type);
+    const logoUrl = await uploadTeamLogoBuffer(uploadOwnerId, buffer, file.type);
     return NextResponse.json({ logoUrl });
   } catch {
     return NextResponse.json({ error: "Upload failed." }, { status: 500 });

@@ -161,3 +161,55 @@ export async function updateTeamFullProfile(input: {
     },
   });
 }
+
+export async function updateTeamLogo(input: {
+  teamId: string;
+  teamName: string;
+  logoUrl: string;
+  reason: string;
+}): Promise<void> {
+  const stateRef = teamStateRef(MAIN_COMPETITION_ID, input.teamId);
+  const profileRef = teamRef(input.teamId);
+  let beforeValue: Record<string, unknown> | null = null;
+
+  await runTransaction(getClientFirestore(), async (transaction) => {
+    const stateSnapshot = await transaction.get(stateRef);
+    const profileSnapshot = await transaction.get(profileRef);
+
+    if (!stateSnapshot.exists() && !profileSnapshot.exists()) {
+      throw new Error("الفريق غير موجود.");
+    }
+
+    const stateData = stateSnapshot.exists() ? stateSnapshot.data() : null;
+    const profileData = profileSnapshot.exists() ? profileSnapshot.data() : null;
+    beforeValue = {
+      logoUrl:
+        (typeof stateData?.logoUrl === "string" ? stateData.logoUrl : null) ??
+        (typeof profileData?.logoUrl === "string" ? profileData.logoUrl : ""),
+    };
+
+    if (stateSnapshot.exists()) {
+      transaction.update(stateRef, {
+        logoUrl: input.logoUrl,
+        updatedAt: serverTimestamp(),
+      });
+    }
+
+    if (profileSnapshot.exists()) {
+      transaction.update(profileRef, {
+        logoUrl: input.logoUrl,
+      });
+    }
+  });
+
+  await appendTeamAdminAuditLog({
+    type: "update_team_profile",
+    teamId: input.teamId,
+    teamName: input.teamName,
+    reason: input.reason,
+    beforeValue,
+    afterValue: {
+      logoUrl: input.logoUrl,
+    },
+  });
+}
