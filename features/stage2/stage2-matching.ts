@@ -20,7 +20,15 @@ export function evaluateMatchingPairings(
   return question.pairs.every((pair) => pairings[pair.left] === pair.correctRight);
 }
 
-/** عدد الأزواج الموصولة بشكل صحيح — تُمنح النقاط لكل زوج صحيح على حدة. */
+export function calculateMatchingRoundPoints(
+  question: Stage2MatchingQuestion,
+  pairings: Stage2MatchingPairings,
+  roundPoints = 15,
+): number {
+  return evaluateMatchingPairings(question, pairings) ? Math.max(0, Math.floor(roundPoints)) : 0;
+}
+
+/** عدد الأزواج الموصولة بشكل صحيح — يُستخدم للتشخيص، لا لتقسيم نقاط الجولة. */
 export function countCorrectMatchingPairs(
   question: Stage2MatchingQuestion,
   pairings: Stage2MatchingPairings,

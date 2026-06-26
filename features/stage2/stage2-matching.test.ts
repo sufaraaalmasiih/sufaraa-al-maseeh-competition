@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  calculateMatchingRoundPoints,
   countCorrectMatchingPairs,
   getMatchingRightAnswers,
   getShuffledMatchingRightOptions,
@@ -65,6 +66,27 @@ describe("stage2-matching", () => {
         question.pairs.map((pair) => [pair.left, "لا شيء"]),
       );
       expect(countCorrectMatchingPairs(question, pairings)).toBe(0);
+    });
+  });
+
+  describe("calculateMatchingRoundPoints", () => {
+    const question = stage2MatchingMockQuestions[0];
+
+    function correctPairings() {
+      return Object.fromEntries(
+        question.pairs.map((pair) => [pair.left, pair.correctRight]),
+      );
+    }
+
+    it("awards 15 points for a fully correct round regardless of pair count", () => {
+      expect(calculateMatchingRoundPoints(question, correctPairings())).toBe(15);
+    });
+
+    it("awards zero when any pair in the round is wrong", () => {
+      const pairings = correctPairings();
+      pairings[question.pairs[0].left] = "إجابة خاطئة";
+
+      expect(calculateMatchingRoundPoints(question, pairings)).toBe(0);
     });
   });
 });
