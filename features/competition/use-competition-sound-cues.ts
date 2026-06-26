@@ -19,6 +19,20 @@ const STAGE_INTRO_STATUSES: GameFlowStatus[] = [
 ];
 
 const REVEAL_STATUSES: GameFlowStatus[] = ["stage3_reveal", "stage4_reveal"];
+const QUESTION_OPEN_STATUSES: GameFlowStatus[] = [
+  "stage3_question_open",
+  "stage4_question_open",
+];
+const ANSWERS_CLOSED_STATUSES: GameFlowStatus[] = [
+  "stage3_answer_closed",
+  "stage4_answers_closed",
+];
+const STAGE_COMPLETE_STATUSES: GameFlowStatus[] = [
+  "stage1_finished",
+  "stage2_finished",
+  "stage3_finished",
+  "stage4_finished",
+];
 
 /**
  * يشغّل المؤثّرات الصوتية حسب المؤقّت وحالة المسابقة:
@@ -37,6 +51,9 @@ export function useCompetitionSoundCues(
   const podiumPlayedRef = useRef(false);
   const finalResultsPlayedRef = useRef(false);
   const revealPlayedRef = useRef<string | null>(null);
+  const questionOpenPlayedRef = useRef<string | null>(null);
+  const answersClosedPlayedRef = useRef<string | null>(null);
+  const stageCompletePlayedRef = useRef<string | null>(null);
   const stageIntroPlayedRef = useRef<string | null>(null);
   const objectionPlayedRef = useRef<string | null>(null);
   const prevStatusRef = useRef<GameFlowStatus | null>(null);
@@ -89,6 +106,45 @@ export function useCompetitionSoundCues(
     }
     if (!STAGE_INTRO_STATUSES.includes(status)) {
       stageIntroPlayedRef.current = null;
+    }
+  }, [status, enabled]);
+
+  useEffect(() => {
+    if (!enabled || !status) {
+      return;
+    }
+    if (QUESTION_OPEN_STATUSES.includes(status) && questionOpenPlayedRef.current !== status) {
+      questionOpenPlayedRef.current = status;
+      playCue("question_open");
+    }
+    if (!QUESTION_OPEN_STATUSES.includes(status)) {
+      questionOpenPlayedRef.current = null;
+    }
+  }, [status, enabled]);
+
+  useEffect(() => {
+    if (!enabled || !status) {
+      return;
+    }
+    if (ANSWERS_CLOSED_STATUSES.includes(status) && answersClosedPlayedRef.current !== status) {
+      answersClosedPlayedRef.current = status;
+      playCue("answers_closed");
+    }
+    if (!ANSWERS_CLOSED_STATUSES.includes(status)) {
+      answersClosedPlayedRef.current = null;
+    }
+  }, [status, enabled]);
+
+  useEffect(() => {
+    if (!enabled || !status) {
+      return;
+    }
+    if (STAGE_COMPLETE_STATUSES.includes(status) && stageCompletePlayedRef.current !== status) {
+      stageCompletePlayedRef.current = status;
+      playCue("stage_complete");
+    }
+    if (!STAGE_COMPLETE_STATUSES.includes(status)) {
+      stageCompletePlayedRef.current = null;
     }
   }, [status, enabled]);
 

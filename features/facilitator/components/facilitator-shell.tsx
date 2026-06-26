@@ -17,6 +17,9 @@ import { FacilitatorAudienceTab } from "@/features/facilitator/components/facili
 import { FacilitatorControlsTab } from "@/features/facilitator/components/facilitator-controls-tab";
 import { FacilitatorFlowPanel } from "@/features/facilitator/components/facilitator-flow-panel";
 import { FacilitatorSettingsTab } from "@/features/facilitator/components/facilitator-settings-tab";
+import { SoundToggleButton } from "@/features/competition/components/sound-toggle-button";
+import { useCompetitionSoundCues } from "@/features/competition/use-competition-sound-cues";
+import { useGameFlow } from "@/features/gameflow/use-game-flow";
 
 const FacilitatorQuestionBankTab = dynamic(
   () =>
@@ -87,6 +90,8 @@ export function FacilitatorShell() {
 function FacilitatorShellAuthenticated() {
   useCompetitionContentSync();
   useQuestionBankRuntimeSync();
+  const { status, objectionAcceptedNotice } = useGameFlow();
+  useCompetitionSoundCues(status, true, objectionAcceptedNotice?.key ?? null);
 
   const { role } = useAuthRole();
   const searchParams = useSearchParams();
@@ -128,6 +133,7 @@ function FacilitatorShellAuthenticated() {
   return (
     <main className="page-shell facilitator-console">
         <FacilitatorTopToastBanner />
+        <SoundToggleButton />
         <div className="facilitator-console__ambient" aria-hidden />
         <div className="content-shell facilitator-console__inner">
           <AppHeader title={headerTitle} />

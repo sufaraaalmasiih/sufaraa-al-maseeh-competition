@@ -38,6 +38,8 @@ let masterGain: GainNode | null = null;
 let masterFilter: BiquadFilterNode | null = null;
 let compressor: DynamicsCompressorNode | null = null;
 let unlockBound = false;
+let uiClickBound = false;
+let lastUiCueAt = 0;
 
 function getAudioContext(): AudioContext | null {
   if (typeof window === "undefined") {
@@ -142,9 +144,124 @@ export function bindAudioUnlock(): void {
   window.addEventListener("keydown", handler, { passive: true });
 }
 
+function isSoundCue(value: string): value is SoundCue {
+  return [
+    "click",
+    "ui_click",
+    "ui_confirm",
+    "ui_cancel",
+    "ui_error",
+    "ui_nav",
+    "answer_select",
+    "answer_submit",
+    "save_success",
+    "question_open",
+    "answers_closed",
+    "stage_complete",
+    "tick",
+    "tick_urgent",
+    "timeup",
+    "correct",
+    "wrong",
+    "reveal",
+    "drumroll",
+    "suspense",
+    "stage_intro",
+    "swoosh",
+    "objection",
+    "fanfare",
+    "celebrate",
+    "podium",
+  ].includes(value);
+}
+
+function resolveElementCue(element: HTMLElement): SoundCue | null {
+  const explicit = element.dataset.sound;
+  if (explicit === "off") {
+    return null;
+  }
+  if (explicit && isSoundCue(explicit)) {
+    return explicit;
+  }
+
+  const text = `${element.textContent ?? ""} ${element.getAttribute("aria-label") ?? ""} ${element.getAttribute("title") ?? ""}`;
+  const className = element.className.toString();
+
+  if (element.getAttribute("role") === "tab" || className.includes("tabs-trigger")) {
+    return "ui_nav";
+  }
+  if (className.includes("quiz-choice-card") || className.includes("matching-card")) {
+    return "answer_select";
+  }
+  if (/إرسال|تأكيد|حفظ|جاهز|ابدأ|بدء|فتح|اعتماد|موافق|submit|confirm|save|ready|start|open/i.test(text)) {
+    return "ui_confirm";
+  }
+  if (/إلغاء|رجوع|حذف|تصفير|إعادة تعيين|خطر|cancel|delete|reset|remove/i.test(text)) {
+    return "ui_cancel";
+  }
+  if (/خطأ|تعذر|مغلق|رفض|error|wrong|deny/i.test(text)) {
+    return "ui_error";
+  }
+
+  return "ui_click";
+}
+
+function getClickableSoundElement(target: EventTarget | null): HTMLElement | null {
+  if (!(target instanceof HTMLElement)) {
+    return null;
+  }
+
+  const element = target.closest<HTMLElement>(
+    "button, a, [role='button'], [role='tab'], .quiz-choice-card, .matching-card",
+  );
+  if (!element) {
+    return null;
+  }
+
+  if (
+    (element instanceof HTMLButtonElement ||
+      element instanceof HTMLInputElement ||
+      element instanceof HTMLSelectElement ||
+      element instanceof HTMLTextAreaElement) &&
+    element.disabled
+  ) {
+    return null;
+  }
+  if (element.getAttribute("aria-disabled") === "true") {
+    return null;
+  }
+
+  return element;
+}
+
 /** مؤثر نقرة — معطّل افتراضياً (كان يُشعِر بكل ضغطة زر). */
 export function bindUiClickSounds(): void {
-  // عُطّل عمداً: مؤثرات المسابقة فقط (مؤقت، إعلان، نتائج).
+  if (uiClickBound || typeof window === "undefined") {
+    return;
+  }
+  uiClickBound = true;
+
+  window.addEventListener(
+    "pointerup",
+    (event) => {
+      const element = getClickableSoundElement(event.target);
+      if (!element) {
+        return;
+      }
+
+      const now = Date.now();
+      if (now - lastUiCueAt < 45) {
+        return;
+      }
+      lastUiCueAt = now;
+
+      const cue = resolveElementCue(element);
+      if (cue) {
+        playCue(cue);
+      }
+    },
+    { passive: true },
+  );
 }
 
 interface NoteSpec {
@@ -318,8 +435,69 @@ function playSweep(context: AudioContext, at: number, dur: number, gain = 0.045)
   });
 }
 
+function playNoiseBurst(
+  context: AudioContext,
+  at: number,
+  dur: number,
+  gain = 0.035,
+  filterHz = 2_800,
+  type: BiquadFilterType = "bandpass",
+): void {
+  const sampleRate = context.sampleRate;
+  const length = Math.max(1, Math.floor(sampleRate * dur));
+  const buffer = context.createBuffer(1, length, sampleRate);
+  const data = buffer.getChannelData(0);
+
+  for (let index = 0; index < length; index += 1) {
+    const fade = 1 - index / length;
+    data[index] = (Math.random() * 2 - 1) * fade * fade;
+  }
+
+  const source = context.createBufferSource();
+  source.buffer = buffer;
+
+  const filter = context.createBiquadFilter();
+  filter.type = type;
+  filter.frequency.value = filterHz;
+  filter.Q.value = 1.2;
+
+  const gainNode = context.createGain();
+  const start = context.currentTime + at;
+  gainNode.gain.setValueAtTime(0.0001, start);
+  gainNode.gain.exponentialRampToValueAtTime(gain, start + 0.006);
+  gainNode.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+
+  source.connect(filter).connect(gainNode).connect(getMasterGain(context));
+  source.start(start);
+  source.stop(start + dur + 0.03);
+}
+
+function playUiPress(context: AudioContext, freq: number = N.E5, gain = 0.034): void {
+  playNoiseBurst(context, 0, 0.035, gain * 0.55, 2_400);
+  playNote(context, {
+    freq,
+    at: 0,
+    attack: 0.002,
+    hold: 0.012,
+    decay: 0.06,
+    gain,
+    filterHz: 5_500,
+  });
+}
+
 export type SoundCue =
   | "click"
+  | "ui_click"
+  | "ui_confirm"
+  | "ui_cancel"
+  | "ui_error"
+  | "ui_nav"
+  | "answer_select"
+  | "answer_submit"
+  | "save_success"
+  | "question_open"
+  | "answers_closed"
+  | "stage_complete"
   | "tick"
   | "tick_urgent"
   | "timeup"
@@ -343,7 +521,59 @@ async function playCueInternal(cue: SoundCue): Promise<void> {
 
   switch (cue) {
     case "click":
-      playNote(context, { freq: N.E5, at: 0, attack: 0.002, hold: 0.01, decay: 0.04, gain: 0.035 });
+    case "ui_click":
+      playUiPress(context, N.E5, 0.032);
+      break;
+
+    case "ui_nav":
+      playUiPress(context, N.C5, 0.028);
+      playNote(context, { freq: N.G5, at: 0.045, attack: 0.002, hold: 0.01, decay: 0.05, gain: 0.018 });
+      break;
+
+    case "ui_confirm":
+      playUiPress(context, N.G5, 0.038);
+      playNote(context, { freq: N.C6, at: 0.055, attack: 0.003, hold: 0.018, decay: 0.09, gain: 0.032 });
+      break;
+
+    case "ui_cancel":
+      playNoiseBurst(context, 0, 0.045, 0.026, 1_200);
+      playNote(context, { freq: N.F4, at: 0, attack: 0.003, hold: 0.02, decay: 0.08, gain: 0.03, filterHz: 2_200 });
+      break;
+
+    case "ui_error":
+      playNoiseBurst(context, 0, 0.08, 0.035, 900);
+      playNote(context, { freq: N.A3, at: 0, attack: 0.004, hold: 0.04, decay: 0.12, gain: 0.045, filterHz: 1_200 });
+      playNote(context, { freq: N.F4, at: 0.07, attack: 0.004, hold: 0.03, decay: 0.11, gain: 0.035, filterHz: 1_600 });
+      break;
+
+    case "answer_select":
+      playUiPress(context, N.A5, 0.033);
+      playNote(context, { freq: N.E6, at: 0.04, attack: 0.002, hold: 0.01, decay: 0.055, gain: 0.018, pan: 0.08 });
+      break;
+
+    case "answer_submit":
+      playNoiseBurst(context, 0, 0.06, 0.03, 3_200);
+      playArpeggio(context, [N.C5, N.G5, N.C6], 0, 0.055, 0.16, 0.05);
+      break;
+
+    case "save_success":
+      playArpeggio(context, [N.E5, N.G5, N.C6], 0, 0.055, 0.2, 0.045);
+      break;
+
+    case "question_open":
+      playSweep(context, 0, 0.28, 0.045);
+      playArpeggio(context, [N.G4, N.C5, N.E5], 0.08, 0.07, 0.24, 0.055);
+      break;
+
+    case "answers_closed":
+      playNoiseBurst(context, 0, 0.055, 0.036, 1_600);
+      playNote(context, { freq: N.C4, at: 0, attack: 0.004, hold: 0.04, decay: 0.18, gain: 0.07, filterHz: 1_000 });
+      playNote(context, { freq: N.G3, at: 0.12, attack: 0.004, hold: 0.04, decay: 0.2, gain: 0.055, filterHz: 850 });
+      break;
+
+    case "stage_complete":
+      playArpeggio(context, [N.C5, N.E5, N.G5, N.C6], 0, 0.075, 0.28, 0.07);
+      playGong(context, N.G4, 0.38, 0.55, 0.08);
       break;
 
     case "tick":
@@ -380,6 +610,7 @@ async function playCueInternal(cue: SoundCue): Promise<void> {
       break;
 
     case "timeup":
+      playNoiseBurst(context, 0, 0.08, 0.045, 1_100);
       playNote(context, {
         freq: N.G5,
         at: 0,
@@ -402,6 +633,7 @@ async function playCueInternal(cue: SoundCue): Promise<void> {
       break;
 
     case "correct":
+      playNoiseBurst(context, 0.02, 0.05, 0.025, 5_200, "highpass");
       playArpeggio(context, [N.C5, N.E5, N.G5, N.C6], 0, 0.09, 0.4, 0.09);
       playNote(context, {
         freq: N.E6,
@@ -415,6 +647,7 @@ async function playCueInternal(cue: SoundCue): Promise<void> {
       break;
 
     case "wrong":
+      playNoiseBurst(context, 0, 0.08, 0.03, 850);
       playArpeggio(context, [N.A4, N.F4, N.D5], 0, 0.14, 0.5, 0.08);
       playNote(context, {
         freq: N.A2,
@@ -428,11 +661,13 @@ async function playCueInternal(cue: SoundCue): Promise<void> {
       break;
 
     case "reveal":
+      playSweep(context, 0, 0.42, 0.045);
       playArpeggio(context, [N.G4, N.B4, N.D5, N.G5], 0, 0.12, 0.42, 0.085);
       playGong(context, N.G4, 0.5, 0.65, 0.09, 0.1);
       break;
 
     case "drumroll":
+      playNoiseBurst(context, 0, 0.75, 0.022, 900);
       for (let hit = 0; hit < 10; hit += 1) {
         playNote(context, {
           freq: N.G2 + hit * 6,
@@ -462,6 +697,7 @@ async function playCueInternal(cue: SoundCue): Promise<void> {
       break;
 
     case "stage_intro":
+      playSweep(context, 0, 0.34, 0.035);
       playArpeggio(context, [N.C4, N.E4, N.G4, N.C5, N.E5], 0, 0.11, 0.32, 0.085);
       break;
 
@@ -483,6 +719,7 @@ async function playCueInternal(cue: SoundCue): Promise<void> {
       break;
 
     case "fanfare":
+      playNoiseBurst(context, 0, 0.08, 0.035, 5_000, "highpass");
       playArpeggio(context, [N.C4, N.E4, N.G4, N.C5, N.E5, N.G5], 0, 0.1, 0.28, 0.09);
       playGong(context, N.C5, 0.65, 0.55, 0.11);
       break;
@@ -493,6 +730,7 @@ async function playCueInternal(cue: SoundCue): Promise<void> {
       break;
 
     case "podium":
+      playNoiseBurst(context, 0, 0.12, 0.04, 5_500, "highpass");
       playArpeggio(context, [N.C4, N.E4, N.G4, N.C5, N.E5, N.G5, N.C6], 0, 0.13, 0.38, 0.09);
       playGong(context, N.C4, 0.95, 1.4, 0.14);
       playGong(context, N.G4, 1.15, 1.0, 0.1, -0.2);

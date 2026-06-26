@@ -41,6 +41,7 @@ function CompetitionConfirmButtonInner({
         className={buttonClassName}
         disabled={disabled}
         forcePressed={confirmed}
+        data-sound="answer_submit"
         type="button"
         onClick={handleClick}
       >

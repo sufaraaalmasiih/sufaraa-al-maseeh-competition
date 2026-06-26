@@ -17,6 +17,7 @@ import { GameReadyButton } from "@/components/ui/game-ready-button";
 import { Input } from "@/components/ui/input";
 import { getStage4QuestionTypeLabel } from "@/features/stage4/stage4-question-types";
 import { formatSaveErrorFromCode } from "@/lib/format-save-error";
+import { playCue } from "@/lib/competition-sound-cues";
 
 function formatSaveError(error: unknown): string {
   const message = error instanceof Error ? error.message : "";
@@ -140,6 +141,7 @@ export function Stage4TeamQuestionScreen() {
       if (!result.duplicate) {
         setSubmitted(true);
         setAnswerResult({ isCorrect: result.isCorrect, passed: result.passed });
+        playCue(result.passed ? "ui_cancel" : result.isCorrect ? "correct" : "wrong");
       }
     } catch (error) {
       setSaveError(formatSaveError(error));
@@ -162,6 +164,7 @@ export function Stage4TeamQuestionScreen() {
       if (!result.duplicate) {
         setSubmitted(true);
         setAnswerResult({ isCorrect: result.isCorrect, passed: result.passed });
+        playCue(result.passed ? "ui_cancel" : result.isCorrect ? "correct" : "wrong");
       }
     } catch (error) {
       setSaveError(formatSaveError(error));
@@ -241,6 +244,7 @@ export function Stage4TeamQuestionScreen() {
                   <GameReadyButton
                     type="button"
                     className="game-ready-btn--outline"
+                    data-sound="ui_cancel"
                     disabled={saving}
                     onClick={() => void handlePass()}
                   >
@@ -267,6 +271,7 @@ export function Stage4TeamQuestionScreen() {
                   <div className="game-ready-btn-wrap">
                     <GameReadyButton
                       type="button"
+                      data-sound="answer_submit"
                       disabled={saving || !answerText.trim()}
                       onClick={() => void submitAnswer(answerText)}
                     >
@@ -277,6 +282,7 @@ export function Stage4TeamQuestionScreen() {
                     <GameReadyButton
                       type="button"
                       className="game-ready-btn--outline"
+                      data-sound="ui_cancel"
                       disabled={saving}
                       onClick={() => void handlePass()}
                     >
