@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FirebaseError } from "firebase/app";
 import { UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { stampCompetitionReauthEpoch } from "@/features/competition-session/competition-session-controls";
 import { registerTeam, TeamStateCreateError } from "@/firebase/auth";
@@ -33,18 +33,43 @@ export function RegisterForm() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<RegisterTeamInput>({
     resolver: zodResolver(registerTeamSchema),
   });
+  const selectedLogo = watch("logo");
+  const selectedLogoFile = selectedLogo?.[0] ?? null;
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
+  const [logoStatus, setLogoStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!selectedLogoFile) {
+      setLogoPreviewUrl(null);
+      setLogoStatus(null);
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(selectedLogoFile);
+    setLogoPreviewUrl(previewUrl);
+    setLogoStatus("تمت إضافة الصورة إلى النموذج. ستُرفع عند إنشاء الفريق.");
+
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [selectedLogoFile]);
 
   async function onSubmit(values: RegisterTeamInput) {
     setFormError(null);
     setIsRegistering(true);
+    if (values.logo?.[0]) {
+      setLogoStatus("جارٍ رفع شعار الفريق...");
+    }
     try {
       const { uid, logoUploadFailed } = await registerTeam(values);
       if (logoUploadFailed) {
         console.warn("Team registration continued without the optional logo.");
+        setLogoStatus("تم إنشاء الفريق، لكن تعذر رفع الشعار. يمكن إضافته لاحقاً من الإدارة.");
+      } else if (values.logo?.[0]) {
+        setLogoStatus("اكتمل رفع شعار الفريق بنجاح.");
       }
       // We just wrote teams/{uid}; seed the role so the AuthGate on /team does
       // not race the not-yet-propagated doc and show "ليست لديك صلاحية" (#5).
@@ -97,6 +122,26 @@ export function RegisterForm() {
 
         <FormField label="شعار الفريق (اختياري)" error={errors.logo?.message}>
           <Input type="file" accept="image/*" {...register("logo")} />
+          {selectedLogoFile ? (
+            <div className="mt-3 flex items-center gap-3 rounded-lg border border-primary/15 bg-primary/5 p-3">
+              {logoPreviewUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  alt="معاينة شعار الفريق"
+                  className="h-14 w-14 shrink-0 rounded-full border border-white bg-white object-cover"
+                  src={logoPreviewUrl}
+                />
+              ) : null}
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold text-[#143A5A]">
+                  {selectedLogoFile.name}
+                </p>
+                {logoStatus ? (
+                  <p className="text-xs font-semibold text-[#1E40AF]">{logoStatus}</p>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
         </FormField>
 
         <Button className="auth-form__submit" size="lg" disabled={isRegistering}>

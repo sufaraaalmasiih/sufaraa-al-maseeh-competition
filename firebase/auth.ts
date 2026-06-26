@@ -15,7 +15,7 @@ import { coachRef, createInitialTeamState, teamRef, teamStateRef, userRef } from
 import type { RegisterTeamInput } from "@/features/auth/schemas";
 import type { AppRole, CoachDocument, TeamDocument } from "@/types";
 
-const LOGO_UPLOAD_TIMEOUT_MS = 12000;
+const LOGO_UPLOAD_TIMEOUT_MS = 30000;
 const MAIN_COMPETITION_ID = "main";
 
 export class TeamStateCreateError extends Error {

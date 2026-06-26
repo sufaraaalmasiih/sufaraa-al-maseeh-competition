@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { normalizeImageUrl } from "@/lib/normalize-image-url";
 
 interface TeamLogoBadgeProps {
   logoUrl?: string | null;
@@ -16,6 +18,7 @@ export function TeamLogoBadge({
   className,
   variant = "default",
 }: TeamLogoBadgeProps) {
+  const [failed, setFailed] = useState(false);
   const sizeClass =
     variant === "ranking"
       ? "h-14 w-14 sm:h-16 sm:w-16"
@@ -25,7 +28,13 @@ export function TeamLogoBadge({
           ? "h-9 w-9"
           : "h-10 w-10";
 
-  if (logoUrl) {
+  const resolvedLogoUrl = normalizeImageUrl(logoUrl);
+
+  useEffect(() => {
+    setFailed(false);
+  }, [resolvedLogoUrl]);
+
+  if (resolvedLogoUrl && !failed) {
     return (
       <div
         className={cn(
@@ -38,7 +47,8 @@ export function TeamLogoBadge({
         <img
           alt={`شعار ${teamName}`}
           className="h-full w-full object-cover"
-          src={logoUrl}
+          src={resolvedLogoUrl}
+          onError={() => setFailed(true)}
         />
       </div>
     );
