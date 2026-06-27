@@ -27,6 +27,12 @@ export function Stage3BoardViewportFit({ children }: Stage3BoardViewportFitProps
     let frame = 0;
 
     const updateScale = () => {
+      if (window.matchMedia("(max-width: 639px)").matches) {
+        setScale(1);
+        inner.style.zoom = "";
+        return;
+      }
+
       const availableHeight = outer.clientHeight;
       const availableWidth = outer.clientWidth;
       const naturalHeight = inner.scrollHeight;
