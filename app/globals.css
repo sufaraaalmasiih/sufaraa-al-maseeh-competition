@@ -10840,6 +10840,402 @@
     }
   }
 
+  /* ===== Mobile hardening — team gameplay real phone layout ===== */
+  @media (max-width: 639px) {
+    body:has(.team-player-shell) {
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    .team-player-shell,
+    .team-player-shell.app-viewport-fill,
+    .team-player-shell.app-flow-shell {
+      height: auto !important;
+      min-height: 100dvh !important;
+      max-height: none !important;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+    }
+
+    .team-player-shell > .relative.z-10,
+    .team-player-shell .content-shell-arena,
+    .team-player-shell .content-shell-arena--stage2,
+    .team-player-shell .content-shell-arena--stage3,
+    .team-player-shell .content-shell-arena--stage3.content-shell-arena--stage3-board,
+    .team-player-shell .content-shell-arena--stage4 {
+      width: 100% !important;
+      height: auto !important;
+      min-height: 100dvh !important;
+      max-height: none !important;
+      padding: 0 !important;
+      overflow: visible !important;
+    }
+
+    .team-player-shell .team-flow-content {
+      width: 100%;
+      min-height: 100dvh;
+      gap: 0.55rem;
+      padding: 0.55rem 0 1.1rem;
+      align-items: center;
+    }
+
+    .team-player-shell .team-flow-content--fill,
+    .team-player-shell .team-flow-content__body,
+    .team-player-shell .gameplay-scene,
+    .team-player-shell .gameplay-scene--centered,
+    .team-player-shell .gameplay-flow,
+    .team-player-shell .gameplay-arena-core {
+      width: 100%;
+      height: auto !important;
+      min-height: 0 !important;
+      max-height: none !important;
+      overflow: visible !important;
+    }
+
+    .team-player-shell .team-flow-content__header {
+      width: min(100% - 1rem, 29rem);
+      margin-inline: auto;
+      padding: 0;
+      flex: 0 0 auto;
+    }
+
+    .team-player-shell .gameplay-unified-header,
+    .team-player-shell.app-viewport-fill .gameplay-unified-header {
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+      grid-template-rows: auto auto auto !important;
+      justify-items: center;
+      align-items: center;
+      gap: 0.55rem;
+      width: 100%;
+      min-height: 0;
+      padding: 0.7rem 0.75rem !important;
+      border-radius: 1.15rem;
+      text-align: center;
+    }
+
+    .team-player-shell .gameplay-unified-header__side,
+    .team-player-shell .gameplay-unified-header__side--start,
+    .team-player-shell .gameplay-unified-header__center,
+    .team-player-shell .gameplay-unified-header__side--end,
+    .team-player-shell .gameplay-unified-header--has-timer .gameplay-unified-header__center,
+    .team-player-shell .gameplay-unified-header--has-timer .gameplay-unified-header__side--end {
+      grid-column: 1 !important;
+      grid-row: auto !important;
+      width: 100%;
+      min-width: 0;
+      justify-content: center !important;
+      justify-self: center;
+      order: unset !important;
+    }
+
+    .team-player-shell .gameplay-header-identity {
+      justify-content: center;
+      min-width: 0;
+    }
+
+    .team-player-shell .gameplay-unified-competition-logo {
+      width: 2.35rem;
+      height: 2.35rem;
+      flex: 0 0 auto;
+    }
+
+    .team-player-shell .gameplay-unified-title {
+      max-width: 13rem;
+      font-size: 0.96rem;
+      line-height: 1.15;
+      white-space: normal;
+    }
+
+    .team-player-shell .gameplay-unified-slogan {
+      display: none !important;
+    }
+
+    .team-player-shell .gameplay-unified-stage.gameplay-unified-stage--center {
+      max-width: 100%;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.82rem;
+      line-height: 1.25;
+      white-space: normal;
+    }
+
+    .team-player-shell .gameplay-header-timer {
+      width: min(100%, 13rem);
+      margin-inline: auto;
+      padding: 0.35rem 0.7rem;
+    }
+
+    .team-player-shell .gameplay-header-timer__value {
+      font-size: 1.22rem;
+      line-height: 1;
+    }
+
+    .team-player-shell .gameplay-header-meta {
+      width: min(100%, 21rem);
+      margin-inline: auto;
+      justify-content: center;
+      gap: 0.45rem;
+      padding: 0.4rem 0.55rem;
+      flex-wrap: wrap;
+    }
+
+    .team-player-shell .gameplay-header-meta .team-logo-badge,
+    .team-player-shell .gameplay-header-meta img {
+      flex: 0 0 auto;
+    }
+
+    .team-player-shell .gameplay-unified-team-name {
+      max-width: 10.5rem;
+      font-size: 0.78rem;
+      line-height: 1.2;
+      text-align: center;
+    }
+
+    .team-player-shell .gameplay-unified-score {
+      flex: 0 0 auto;
+      font-size: 0.78rem;
+      line-height: 1.2;
+      padding: 0.25rem 0.55rem;
+    }
+
+    .team-player-shell .team-flow-content__body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      flex: 1 1 auto;
+    }
+
+    .team-player-shell .gameplay-scene--centered,
+    .team-player-shell .gameplay-flow {
+      display: flex;
+      align-items: center !important;
+      justify-content: flex-start !important;
+    }
+
+    .team-player-shell .gameplay-flow,
+    .team-player-shell.app-viewport-fill .gameplay-flow {
+      width: 100%;
+      max-width: 29rem !important;
+      margin-inline: auto;
+      padding: 0.35rem 0.55rem 1.1rem !important;
+      gap: 0.65rem;
+    }
+
+    .team-player-shell .gameplay-arena-core {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .team-player-shell .gameplay-board-card,
+    .team-player-shell.app-viewport-fill .gameplay-board-card,
+    .team-player-shell .gameplay-board-card.stage4-team-card {
+      width: min(100%, 28rem) !important;
+      max-width: 100% !important;
+      margin-inline: auto !important;
+      padding: 0.9rem 0.85rem 1rem !important;
+      border-radius: 1.15rem !important;
+      overflow: visible !important;
+    }
+
+    .team-player-shell .gameplay-question-meta {
+      margin-bottom: 0.65rem !important;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .team-player-shell .gameplay-question-type {
+      max-width: 58vw;
+      padding: 0.35rem 0.65rem;
+      font-size: 0.78rem !important;
+      line-height: 1.25;
+    }
+
+    .team-player-shell .gameplay-question-counter {
+      font-size: 0.78rem !important;
+      line-height: 1.25;
+      white-space: nowrap;
+    }
+
+    .team-player-shell .gameplay-question-body,
+    .team-player-shell .gameplay-board-body {
+      width: 100%;
+      padding-inline: 0 !important;
+    }
+
+    .team-player-shell .arena-question-text,
+    .team-player-shell .competition-hero-question-text,
+    .team-player-shell .stage3-question-hero__prompt,
+    .team-player-shell .stage4-question-hero__prompt {
+      font-size: clamp(1.12rem, 5.1vw, 1.42rem) !important;
+      line-height: 1.55 !important;
+      letter-spacing: 0 !important;
+      text-align: center;
+      text-wrap: balance;
+    }
+
+    .team-player-shell .quiz-choice-grid,
+    .team-player-shell .quiz-choice-grid--five,
+    .team-player-shell .gameplay-mc-choice-zone .quiz-choice-grid {
+      grid-template-columns: 1fr !important;
+      gap: 0.58rem !important;
+    }
+
+    .team-player-shell .quiz-choice-card,
+    .team-player-shell.app-viewport-fill .quiz-choice-card,
+    .team-player-shell .stage3-answer-choice {
+      width: 100%;
+      min-height: 3.25rem !important;
+      padding: 0.62rem 0.72rem !important;
+      font-size: 0.94rem !important;
+      line-height: 1.45 !important;
+      border-radius: 0.95rem !important;
+    }
+
+    .team-player-shell .game-ready-btn-wrap,
+    .team-player-shell .game-ready-btn {
+      width: 100%;
+    }
+
+    .team-player-shell .stage3-scene--board .gameplay-flow,
+    .team-player-shell .content-shell-arena--stage3-board .gameplay-flow {
+      max-width: 100% !important;
+      align-items: center !important;
+      padding-inline: 0.5rem !important;
+    }
+
+    .team-player-shell .stage3-board-viewport-fit,
+    .team-player-shell .stage3-board-viewport-fit__inner {
+      width: 100%;
+      height: auto !important;
+      min-height: 0 !important;
+      max-height: none !important;
+      overflow: visible !important;
+    }
+
+    .team-player-shell .stage3-board-viewport-fit .gameplay-board-card.stage3-board-unified,
+    .team-player-shell .gameplay-board-card.stage3-board-unified {
+      width: min(100%, 29rem) !important;
+      padding: 0.82rem !important;
+    }
+
+    .team-player-shell .stage3-board-body {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      padding: 0.2rem 0.05rem 0.6rem;
+      overscroll-behavior-x: contain;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+
+    .team-player-shell .stage3-board-shell--featured .stage3-jeopardy-board,
+    .team-player-shell .content-shell-arena--stage3 .stage3-jeopardy-board {
+      width: max-content !important;
+      min-width: max(36rem, 100%) !important;
+      grid-template-columns: repeat(var(--stage3-cols, 5), minmax(6.4rem, 1fr)) !important;
+      gap: 0.58rem !important;
+      padding: 0.58rem !important;
+    }
+
+    .team-player-shell .stage3-board-shell--featured .stage3-category-col {
+      min-width: 6.4rem;
+      padding: 0.58rem !important;
+      border-radius: 0.95rem !important;
+    }
+
+    .team-player-shell .stage3-board-shell--featured .stage3-category-col__title {
+      min-height: 2.55rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.48rem !important;
+      font-size: 0.8rem !important;
+      line-height: 1.25 !important;
+    }
+
+    .team-player-shell .stage3-board-shell--featured .stage3-q-tile,
+    .team-player-shell .content-shell-arena--stage3 .stage3-q-tile {
+      height: 3.15rem !important;
+      min-height: 3.15rem !important;
+      max-height: 3.15rem !important;
+      padding-inline: 0.58rem !important;
+      border-radius: 0.85rem !important;
+    }
+
+    .team-player-shell .stage3-board-shell--featured .stage3-q-tile__label {
+      font-size: 0.73rem !important;
+      line-height: 1.15 !important;
+    }
+
+    .team-player-shell .stage3-question-open-card,
+    .team-player-shell .stage3-scene--reveal .gameplay-board-card.stage3-unified-card {
+      width: min(100%, 28.5rem) !important;
+      padding: 0.88rem !important;
+    }
+
+    .team-player-shell .stage3-question-top__meta .stage3-gameplay-header--bar,
+    .team-player-shell .stage4-question-top__bar {
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+      justify-items: center;
+      gap: 0.45rem;
+      min-height: 0 !important;
+      padding: 0.65rem 0.75rem !important;
+      text-align: center;
+    }
+
+    .team-player-shell .stage3-question-hero,
+    .team-player-shell .stage4-question-hero {
+      padding: 0.85rem !important;
+      border-radius: 1rem !important;
+    }
+
+    .team-player-shell .stage3-answer-zone,
+    .team-player-shell .stage4-answer-zone,
+    .team-player-shell .stage4-reveal-zone {
+      width: 100%;
+      margin-top: 0.75rem !important;
+      padding-top: 0.75rem !important;
+    }
+
+    .team-player-shell .stage3-reveal-chips__grid,
+    .team-player-shell .stage4-reveal-stats {
+      grid-template-columns: 1fr !important;
+      gap: 0.65rem !important;
+    }
+
+    .team-player-shell .competition-ranking-panel {
+      width: min(100%, 28.5rem) !important;
+      margin: 0 auto !important;
+      padding-inline: 0.55rem !important;
+    }
+
+    .team-player-shell .competition-ranking-scroll {
+      max-height: none !important;
+      overflow: visible !important;
+      border: 0 !important;
+      background: transparent !important;
+    }
+
+    .team-player-shell .competition-ranking-scroll--cards {
+      display: grid;
+      gap: 0.58rem;
+      padding: 0 !important;
+    }
+
+    .team-player-shell .competition-ranking-scroll--cards .competition-ranking-row {
+      width: 100%;
+      min-width: 0;
+      grid-template-columns: auto minmax(0, 1fr) !important;
+      gap: 0.55rem !important;
+      padding: 0.75rem !important;
+      border-radius: 1rem !important;
+    }
+  }
+
   /* ===== Desktop — team player (>1280px) ===== */
   @media (min-width: 1281px) {
     .team-player-shell .content-shell-arena,
