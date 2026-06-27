@@ -11335,6 +11335,53 @@
     }
   }
 
+  /* Align team gameplay panels on phones: header, question card, and action card share one visual axis. */
+  @media (max-width: 639px) {
+    .team-player-shell {
+      --team-mobile-panel-width: min(calc(100vw - 1.5rem), 22.5rem);
+    }
+
+    .team-player-shell .team-flow-content__header {
+      width: var(--team-mobile-panel-width) !important;
+      margin-inline: auto !important;
+    }
+
+    .team-player-shell .gameplay-unified-header,
+    .team-player-shell.app-viewport-fill .gameplay-unified-header {
+      width: 100% !important;
+      max-width: none !important;
+      margin-inline: auto !important;
+    }
+
+    .team-player-shell .gameplay-scene,
+    .team-player-shell .gameplay-scene--centered,
+    .team-player-shell .gameplay-flow,
+    .team-player-shell.app-viewport-fill .gameplay-flow,
+    .team-player-shell .gameplay-arena-core {
+      width: var(--team-mobile-panel-width) !important;
+      max-width: var(--team-mobile-panel-width) !important;
+      margin-inline: auto !important;
+      padding-inline: 0 !important;
+    }
+
+    .team-player-shell .gameplay-board-card,
+    .team-player-shell.app-viewport-fill .gameplay-board-card,
+    .team-player-shell .gameplay-board-card.stage4-team-card,
+    .team-player-shell .stage3-question-open-card,
+    .team-player-shell .stage3-scene--reveal .gameplay-board-card.stage3-unified-card {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin-inline: auto !important;
+    }
+
+    .team-player-shell .content-shell-arena--stage3-board .gameplay-flow,
+    .team-player-shell .stage3-scene--board .gameplay-flow {
+      width: var(--team-mobile-panel-width) !important;
+      max-width: var(--team-mobile-panel-width) !important;
+      padding-inline: 0 !important;
+    }
+  }
+
   /* ===== Desktop — team player (>1280px) ===== */
   @media (min-width: 1281px) {
     .team-player-shell .content-shell-arena,
