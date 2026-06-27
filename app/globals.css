@@ -11268,6 +11268,73 @@
     }
   }
 
+  /* Team competition intro on phones must scroll; the ready button must not cover stage cards. */
+  @media (max-width: 639px) {
+    body:has(.team-player-shell .competition-intro-screen__wrap) {
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+    }
+
+    .team-player-shell .competition-intro-screen__wrap {
+      height: auto !important;
+      min-height: 100dvh !important;
+      max-height: none !important;
+      width: 100% !important;
+      max-width: min(100%, 31rem) !important;
+      justify-content: flex-start !important;
+      overflow: visible !important;
+      padding: 0.85rem 0.85rem calc(1.25rem + env(safe-area-inset-bottom)) !important;
+    }
+
+    .team-player-shell .competition-intro-screen {
+      display: flex;
+      width: 100%;
+      flex-direction: column;
+      gap: 0.85rem;
+      padding-bottom: 0.35rem;
+    }
+
+    .team-player-shell .competition-intro-screen__wrap .competition-intro {
+      max-height: none !important;
+      justify-content: flex-start !important;
+      overflow: visible !important;
+      gap: 0.65rem !important;
+    }
+
+    .team-player-shell .competition-intro-screen__wrap .competition-intro__stages,
+    .team-player-shell .competition-intro__stages {
+      max-height: none !important;
+      overflow: visible !important;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.65rem !important;
+      padding-top: 0.25rem;
+    }
+
+    .team-player-shell .competition-intro__stage {
+      min-height: 0;
+      padding: 0.8rem 0.85rem !important;
+      border-radius: 1rem;
+    }
+
+    .team-player-shell .competition-intro__stage-name {
+      font-size: 1.05rem !important;
+      line-height: 1.25;
+    }
+
+    .team-player-shell .competition-intro__stage-summary {
+      font-size: 0.82rem !important;
+      line-height: 1.55 !important;
+    }
+
+    .team-player-shell .competition-intro-screen > .game-ready-btn-wrap {
+      position: static !important;
+      width: min(100%, 24rem) !important;
+      margin-top: 0.15rem !important;
+      margin-bottom: 0 !important;
+    }
+  }
+
   /* ===== Desktop — team player (>1280px) ===== */
   @media (min-width: 1281px) {
     .team-player-shell .content-shell-arena,
