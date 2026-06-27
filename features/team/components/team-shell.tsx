@@ -28,6 +28,7 @@ import {
 import { TeamShellScreens } from "@/features/team/components/team-shell-screens";
 import { useTeamShellView } from "@/features/team/components/use-team-shell-view";
 import { useTeamGameFlow } from "@/features/team/use-team-game-flow";
+import { useTeamScoreGainSound } from "@/features/team/use-team-score-gain-sound";
 import { useTeamStageEarlyFinish } from "@/features/team/use-team-stage-early-finish";
 import { firebaseAuth } from "@/firebase/firebaseClient";
 import { isCoachDashboardPreferred, setCoachViewMode } from "@/lib/coach-view-mode";
@@ -76,6 +77,7 @@ function TeamShellAuthenticated() {
   useTeamRemovalGuard(true);
   // مؤثّرات صوتية: تكتكة آخر الوقت + انتهاء الوقت + احتفال المنصّة.
   useCompetitionSoundCues(status, true, gameFlow.objectionAcceptedNotice?.key ?? null);
+  useTeamScoreGainSound(true);
 
   // إنهاء المسابقة من الميسّر: يسجّل خروج كل الفرق ويعيدها لصفحة الدخول.
   const { teamSignOutAt } = useGameFlow();

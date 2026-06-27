@@ -15,9 +15,7 @@ import { isStage4FlexibleType } from "@/features/stage4/stage4-question-types";
 import { useStage4MyAnswer } from "@/features/stage4/use-stage4-my-answer";
 import { GameReadyButton } from "@/components/ui/game-ready-button";
 import { Input } from "@/components/ui/input";
-import { getStage4QuestionTypeLabel } from "@/features/stage4/stage4-question-types";
 import { formatSaveErrorFromCode } from "@/lib/format-save-error";
-import { playCue } from "@/lib/competition-sound-cues";
 
 function formatSaveError(error: unknown): string {
   const message = error instanceof Error ? error.message : "";
@@ -44,10 +42,7 @@ export function Stage4TeamQuestionScreen() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
-  const [answerResult, setAnswerResult] = useState<{
-    isCorrect: boolean;
-    passed: boolean;
-  } | null>(null);
+  const [passedAnswer, setPassedAnswer] = useState(false);
   const sawQuestionRef = useRef(false);
 
   const questionOpen = status === "stage4_question_open";
@@ -77,13 +72,10 @@ export function Stage4TeamQuestionScreen() {
       setSubmitted(true);
       setAnswerText(answerState.passed ? "" : answerState.answerText);
       setSelectedAnswer(answerState.passed ? null : answerState.answerText);
-      setAnswerResult({
-        isCorrect: answerState.isCorrect,
-        passed: answerState.passed,
-      });
+      setPassedAnswer(answerState.passed);
     } else {
       setSubmitted(false);
-      setAnswerResult(null);
+      setPassedAnswer(false);
     }
   }, [answerState, stage4ActiveQuestion?.id]);
 
@@ -91,7 +83,7 @@ export function Stage4TeamQuestionScreen() {
     setAnswerText("");
     setSelectedAnswer(null);
     setSubmitted(false);
-    setAnswerResult(null);
+    setPassedAnswer(false);
     setSaveError(null);
   }, [stage4ActiveQuestion?.id]);
 
@@ -140,8 +132,7 @@ export function Stage4TeamQuestionScreen() {
 
       if (!result.duplicate) {
         setSubmitted(true);
-        setAnswerResult({ isCorrect: result.isCorrect, passed: result.passed });
-        playCue(result.passed ? "ui_cancel" : result.isCorrect ? "correct" : "wrong");
+        setPassedAnswer(result.passed);
       }
     } catch (error) {
       setSaveError(formatSaveError(error));
@@ -163,8 +154,7 @@ export function Stage4TeamQuestionScreen() {
 
       if (!result.duplicate) {
         setSubmitted(true);
-        setAnswerResult({ isCorrect: result.isCorrect, passed: result.passed });
-        playCue(result.passed ? "ui_cancel" : result.isCorrect ? "correct" : "wrong");
+        setPassedAnswer(result.passed);
       }
     } catch (error) {
       setSaveError(formatSaveError(error));
@@ -188,7 +178,7 @@ export function Stage4TeamQuestionScreen() {
                 </div>
                 {stage4ActiveQuestion ? (
                   <span className="stage4-question-top__type-badge">
-                    {stage4ActiveQuestion.typeLabel ?? getStage4QuestionTypeLabel(stage4ActiveQuestion.type)}
+                    {stage4ActiveQuestion.prompt}
                   </span>
                 ) : null}
               </div>
@@ -209,13 +199,9 @@ export function Stage4TeamQuestionScreen() {
 
             {submitted ? (
               <p className="stage4-answer-zone__status">
-                {answerResult?.passed
+                {passedAnswer
                   ? "تم تسجيل التخطي، بانتظار بقية الفرق"
-                  : answerResult
-                    ? answerResult.isCorrect
-                      ? "تم استلام إجابتكم: الإجابة صحيحة"
-                      : "تم استلام إجابتكم: الإجابة غير صحيحة"
-                    : "تم استلام إجابتكم، بانتظار بقية الفرق"}
+                  : "تم استلام إجابتكم، بانتظار بقية الفرق"}
               </p>
             ) : closed ? (
               <p className="stage4-answer-zone__status">

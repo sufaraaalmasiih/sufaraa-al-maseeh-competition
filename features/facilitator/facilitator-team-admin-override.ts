@@ -7,6 +7,7 @@ import {
 } from "@/features/facilitator/team-control-types";
 import { setStage3OwnerTeam } from "@/features/stage3/set-stage3-owner";
 import { getStage4MockQuestionByIndex } from "@/features/stage4/stage4-mock-questions";
+import { resolveStage4BankIndex } from "@/features/stage4/stage4-active-session";
 import { STAGE3_BOARD_FIELDS } from "@/features/stage3/stage3-board-data";
 import { boardQuestionToMetadata } from "@/features/stage3/stage3-question-metadata";
 import type { GameFlowStatus } from "@/types";
@@ -59,7 +60,7 @@ export async function setTeamFacilitatorOverride(
     progressPatch["progress.stage4QuestionIndex"] = Math.max(0, input.stage4QuestionIndex);
     override.stage4QuestionIndex = progressPatch["progress.stage4QuestionIndex"] as number;
     if (input.status === "stage4_question_open") {
-      const question = getStage4MockQuestionByIndex(override.stage4QuestionIndex);
+      const question = getStage4MockQuestionByIndex(resolveStage4BankIndex(override.stage4QuestionIndex));
       override.stage4ActiveQuestion = question;
     }
   }

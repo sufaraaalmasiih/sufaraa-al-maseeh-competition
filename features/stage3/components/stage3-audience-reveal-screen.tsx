@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { Stage3GameplayHeader } from "@/features/stage3/components/stage3-gameplay-header";
 import { TeamLogoBadge } from "@/components/competition/team-logo-badge";
 import { useTeamLogosMap } from "@/features/gameflow/team-logos-store";
@@ -8,7 +7,6 @@ import { getStage3MockQuestion } from "@/features/stage3/stage3-mock-questions";
 import { STAGE3_SELECTION_TIMEOUT_PENALTY } from "@/features/stage3/stage3-official-constants";
 import { isStage3SelectionTimeoutQuestion } from "@/features/stage3/stage3-selection-timeout-question";
 import { formatStage3RevealAnswerDisplay } from "@/features/stage3/stage3-reveal-outcome";
-import { mergeNoAnswerRows } from "@/features/competition/merge-no-answer-rows";
 import type { RankedStage3Team } from "@/features/stage3/stage3-ranking";
 import type { Stage3ActiveAnswerRow } from "@/features/stage3/use-stage3-active-answers";
 import { useStage3ActiveAnswers } from "@/features/stage3/use-stage3-active-answers";
@@ -53,15 +51,7 @@ export function Stage3AudienceRevealScreen({
   const logos = useTeamLogosMap();
   const isSelectionTimeout = question ? isStage3SelectionTimeoutQuestion(question) : false;
   const mockQuestion = question ? getStage3MockQuestion(question.id) : null;
-  const answersKey = answers.map((row) => row.answerDocId).join("|");
-  const teamsKey = rankingTeams.map((team) => team.teamId).join("|");
-  const revealRows = useMemo(
-    () => {
-      const rows = mapStage3AnswersToRevealRows(answers);
-      return loading ? rows : mergeNoAnswerRows(rows, rankingTeams);
-    },
-    [answersKey, teamsKey, answers, rankingTeams, loading],
-  );
+  const revealRows = mapStage3AnswersToRevealRows(answers);
 
   if (isSelectionTimeout) {
     const penaltyPoints = Math.abs(STAGE3_SELECTION_TIMEOUT_PENALTY);

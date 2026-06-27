@@ -3405,7 +3405,7 @@
   }
 
   .gameplay-question-type {
-    @apply rounded-full border border-[#2388C4]/25 bg-[#E9F6FC] px-4 py-1.5 text-sm font-black text-[#143A5A] sm:text-base;
+    @apply max-w-[min(24rem,58vw)] truncate rounded-full border border-[#2388C4]/25 bg-[#E9F6FC] px-4 py-1.5 text-sm font-black text-[#143A5A] sm:text-base;
   }
 
   .gameplay-question-counter {
@@ -4299,7 +4299,7 @@
   }
 
   .stage4-question-top__type-badge {
-    @apply shrink-0 rounded-full border px-3 py-1 text-xs font-black sm:px-4 sm:py-1.5 sm:text-sm;
+    @apply max-w-[min(24rem,56vw)] shrink-0 truncate rounded-full border px-3 py-1 text-xs font-black sm:px-4 sm:py-1.5 sm:text-sm;
     border-color: rgba(180, 83, 9, 0.28);
     background: linear-gradient(
       180deg,
@@ -9729,6 +9729,10 @@
 
   .audience-display .stage4-question-hero__meta-type {
     flex-shrink: 0;
+    max-width: min(32rem, 48vw);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     border-radius: 9999px;
     border: 1px solid rgba(180, 83, 9, 0.3);
     padding: 0.55rem 1.1rem;

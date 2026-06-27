@@ -154,6 +154,7 @@ function isSoundCue(value: string): value is SoundCue {
     "ui_nav",
     "answer_select",
     "answer_submit",
+    "score_gain",
     "save_success",
     "question_open",
     "answers_closed",
@@ -494,6 +495,7 @@ export type SoundCue =
   | "ui_nav"
   | "answer_select"
   | "answer_submit"
+  | "score_gain"
   | "save_success"
   | "question_open"
   | "answers_closed"
@@ -554,6 +556,12 @@ async function playCueInternal(cue: SoundCue): Promise<void> {
     case "answer_submit":
       playNoiseBurst(context, 0, 0.06, 0.03, 3_200);
       playArpeggio(context, [N.C5, N.G5, N.C6], 0, 0.055, 0.16, 0.05);
+      break;
+
+    case "score_gain":
+      playNoiseBurst(context, 0.02, 0.05, 0.028, 5_800, "highpass");
+      playArpeggio(context, [N.E5, N.G5, N.C6, N.E6], 0, 0.075, 0.34, 0.08);
+      playGong(context, N.C5, 0.34, 0.58, 0.08, 0.08);
       break;
 
     case "save_success":

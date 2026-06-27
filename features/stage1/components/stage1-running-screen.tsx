@@ -18,7 +18,6 @@ import {
   getStage1QuestionCount,
   isStage1BankComplete,
 } from "@/features/stage1/stage1-question-bank";
-import { getStage1QuestionTypeLabel } from "@/features/stage1/stage1-types";
 import { useStage1BankSync } from "@/features/facilitator/stage1-question-bank-store";
 import { useStage1TeamProgress } from "@/features/stage1/use-stage1-team-progress";
 import { firebaseAuth } from "@/firebase/firebaseClient";
@@ -52,8 +51,7 @@ export function Stage1RunningScreen() {
     (status !== null && status !== "stage1_running") ||
     Boolean(hasStage1Timer && isSubmitExpired);
 
-  const effectiveIndex =
-    optimisticIndex !== null ? Math.max(remoteIndex, optimisticIndex) : remoteIndex;
+  const effectiveIndex = optimisticIndex !== null ? optimisticIndex : remoteIndex;
 
   const bankCompleted =
     bankCompletedLocally || isStage1BankComplete(effectiveIndex);
@@ -85,7 +83,7 @@ export function Stage1RunningScreen() {
   }, []);
 
   useEffect(() => {
-    if (optimisticIndex !== null && remoteIndex >= optimisticIndex) {
+    if (optimisticIndex !== null && remoteIndex !== optimisticIndex - 1) {
       setOptimisticIndex(null);
     }
   }, [remoteIndex, optimisticIndex]);
@@ -93,6 +91,8 @@ export function Stage1RunningScreen() {
   useEffect(() => {
     if (isStage1BankComplete(remoteIndex)) {
       setBankCompletedLocally(true);
+    } else {
+      setBankCompletedLocally(false);
     }
   }, [remoteIndex]);
 
@@ -193,7 +193,7 @@ export function Stage1RunningScreen() {
         </QuestionPrompt>
       }
       questionNumber={effectiveIndex + 1}
-      questionTypeLabel={currentQuestion.typeLabel ?? getStage1QuestionTypeLabel(currentQuestion.type)}
+      questionTypeLabel={currentQuestion.prompt}
       totalQuestions={questionCount}
       progress={<StepJourney current={effectiveIndex + 1} total={questionCount} />}
       board={

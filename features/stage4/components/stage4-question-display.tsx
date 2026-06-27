@@ -1,10 +1,7 @@
 "use client";
 
 import { QuestionImage } from "@/components/competition/question-image";
-import {
-  getStage4QuestionTypeLabel,
-  type Stage4QuestionMetadata,
-} from "@/features/stage4/stage4-question-types";
+import type { Stage4QuestionMetadata } from "@/features/stage4/stage4-question-types";
 import { STAGE4_NAME } from "@/features/stage4/stage4-constants";
 
 interface Stage4QuestionDisplayProps {
@@ -54,7 +51,7 @@ export function Stage4QuestionDisplay({
                 </p>
               </div>
               <span className="stage4-question-hero__meta-type">
-                {question.typeLabel ?? getStage4QuestionTypeLabel(question.type)}
+                {question.prompt}
               </span>
             </div>
           </div>
@@ -65,7 +62,7 @@ export function Stage4QuestionDisplay({
               السؤال {questionIndex + 1} من {questionCount}
             </p>
             <p className="mt-2 text-xs font-bold text-[#B45309]">
-              {question.typeLabel ?? getStage4QuestionTypeLabel(question.type)}
+              {question.prompt}
             </p>
           </div>
         )

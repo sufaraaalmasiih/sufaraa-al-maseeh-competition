@@ -70,6 +70,7 @@ function QuestionPreviewBody({ item }: { item: EditorItem }) {
             خطأ
           </ChoiceCard>
         </div>
+        <CorrectChip label="الإجابة الصحيحة" value={item.correctIsTrue ? "صح" : "خطأ"} />
         {!item.correctIsTrue ? <CorrectChip label="التصحيح" value={item.data} /> : null}
       </div>
     );
@@ -101,6 +102,7 @@ function QuestionPreviewBody({ item }: { item: EditorItem }) {
               );
             })}
         </div>
+        <CorrectChip label="الإجابة الصحيحة" value={item.correct} />
       </div>
     );
   }

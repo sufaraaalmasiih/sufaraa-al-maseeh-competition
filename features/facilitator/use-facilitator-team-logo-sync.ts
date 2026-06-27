@@ -42,7 +42,7 @@ export function useFacilitatorTeamLogoSync(enabled: boolean): void {
               typeof logoUrl === "string" &&
               logoUrl.length > 0 &&
               stateLogoById.has(docSnap.id) &&
-              typeof stateLogoById.get(docSnap.id) !== "string"
+              stateLogoById.get(docSnap.id) !== logoUrl
             );
           })
           .map((docSnap) =>

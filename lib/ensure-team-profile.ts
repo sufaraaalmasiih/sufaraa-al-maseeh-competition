@@ -23,6 +23,9 @@ export async function ensureTeamProfileDoc(uid: string): Promise<void> {
   await setDoc(profileRef, {
     teamName: typeof state.teamName === "string" ? state.teamName : "فريق بدون اسم",
     governorate: typeof state.governorate === "string" ? state.governorate : "",
+    ...(typeof state.logoUrl === "string" && state.logoUrl.length > 0
+      ? { logoUrl: state.logoUrl }
+      : {}),
     email: firebaseAuth.currentUser?.email ?? "",
     role: "team",
     active: true,
@@ -48,7 +51,7 @@ export async function ensureTeamStateDoc(uid: string): Promise<void> {
   if (stateSnapshot.exists()) {
     // إعادة ملء الشعار في حالة الفريق إن فُقد (مثلاً مُسح بإعادة ضبط سابقة) — لا يغيّر
     // المجموع، فتسمح قواعد الأمان للفريق بهذا التحديث على مستنده.
-    if (profileLogoUrl && typeof stateSnapshot.data().logoUrl !== "string") {
+    if (profileLogoUrl && stateSnapshot.data().logoUrl !== profileLogoUrl) {
       await updateDoc(teamStateRef(MAIN_COMPETITION_ID, uid), {
         logoUrl: profileLogoUrl,
         updatedAt: serverTimestamp(),

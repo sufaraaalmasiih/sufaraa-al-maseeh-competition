@@ -1,8 +1,10 @@
 import { getStage1QuestionCount } from "@/features/stage1/stage1-question-bank";
-import { STAGE2_ARRANGE_VERSE_QUESTION_COUNT } from "@/features/stage2/stage2-arrange-verse-mock-questions";
-import { STAGE2_COMPLETE_VERSE_QUESTION_COUNT } from "@/features/stage2/stage2-complete-verse-mock-questions";
-import { STAGE2_MATCHING_QUESTION_COUNT } from "@/features/stage2/stage2-matching-mock-questions";
-import { STAGE2_TRUE_FALSE_CORRECT_QUESTION_COUNT } from "@/features/stage2/stage2-true-false-correct-mock-questions";
+import {
+  getActiveStage2ArrangeVerseQuestions,
+  getActiveStage2CompleteVerseQuestions,
+  getActiveStage2MatchingQuestions,
+  getActiveStage2TrueFalseQuestions,
+} from "@/features/facilitator/question-bank-runtime-cache";
 import { getStage4MockQuestions } from "@/features/stage4/stage4-mock-questions";
 
 export type OverrideQuestionScope = "stage1" | "stage2" | "stage4";
@@ -16,11 +18,11 @@ export function getOverrideQuestionMax(
   }
 
   if (scope === "stage2") {
-    return Math.min(
-      STAGE2_MATCHING_QUESTION_COUNT,
-      STAGE2_ARRANGE_VERSE_QUESTION_COUNT,
-      STAGE2_COMPLETE_VERSE_QUESTION_COUNT,
-      STAGE2_TRUE_FALSE_CORRECT_QUESTION_COUNT,
+    return Math.max(
+      getActiveStage2MatchingQuestions().length,
+      getActiveStage2ArrangeVerseQuestions().length,
+      getActiveStage2CompleteVerseQuestions().length,
+      getActiveStage2TrueFalseQuestions().length,
     );
   }
 

@@ -6,7 +6,6 @@ import { Stage4QuestionDisplay } from "@/features/stage4/components/stage4-quest
 import { Stage4RevealResultsTable } from "@/features/stage4/components/stage4-reveal-results-table";
 import { STAGE4_NAME } from "@/features/stage4/stage4-constants";
 import { getStage4MockQuestion } from "@/features/stage4/stage4-mock-questions";
-import { getStage4QuestionTypeLabel } from "@/features/stage4/stage4-question-types";
 import { useStage4ActiveAnswers } from "@/features/stage4/use-stage4-active-answers";
 import { useStage4MyAnswer } from "@/features/stage4/use-stage4-my-answer";
 import { useStage4Ranking } from "@/features/stage4/use-stage4-ranking";
@@ -36,7 +35,7 @@ export function Stage4TeamRevealScreen() {
                 </div>
                 {stage4ActiveQuestion ? (
                   <span className="stage4-question-top__type-badge">
-                    {getStage4QuestionTypeLabel(stage4ActiveQuestion.type)}
+                    {stage4ActiveQuestion.prompt}
                   </span>
                 ) : null}
               </div>
