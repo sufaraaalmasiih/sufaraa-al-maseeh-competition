@@ -11400,6 +11400,67 @@
     }
   }
 
+  /* Make the centered gameplay card substantial and readable on phones. */
+  @media (max-width: 639px) {
+    .team-player-shell .gameplay-board-card,
+    .team-player-shell.app-viewport-fill .gameplay-board-card {
+      padding: 1.15rem 1rem 1.15rem !important;
+    }
+
+    .team-player-shell .gameplay-question-meta {
+      min-height: 2.35rem;
+      margin-bottom: 0.9rem !important;
+      gap: 0.65rem;
+    }
+
+    .team-player-shell .gameplay-question-type,
+    .team-player-shell .gameplay-question-counter {
+      font-size: 0.9rem !important;
+      line-height: 1.35 !important;
+    }
+
+    .team-player-shell .gameplay-question-type {
+      max-width: 64vw;
+      padding: 0.42rem 0.75rem;
+    }
+
+    .team-player-shell .gameplay-question-body {
+      padding-block: 0.25rem 0.35rem !important;
+    }
+
+    .team-player-shell .arena-question-text,
+    .team-player-shell .competition-hero-question-text {
+      font-size: clamp(1.42rem, 7vw, 1.72rem) !important;
+      line-height: 1.5 !important;
+    }
+
+    .team-player-shell .gameplay-progress-strip {
+      margin-top: 0.95rem !important;
+      padding-top: 0.8rem !important;
+    }
+
+    .team-player-shell .gameplay-board-body {
+      margin-top: 0.95rem !important;
+      padding-top: 0.9rem !important;
+    }
+
+    .team-player-shell .gameplay-board-card .glass-input,
+    .team-player-shell .gameplay-board-card input,
+    .team-player-shell .stage4-answer-zone__input {
+      min-height: 3.45rem !important;
+      height: 3.45rem !important;
+      font-size: 1.05rem !important;
+      border-radius: 0.9rem !important;
+    }
+
+    .team-player-shell .game-ready-btn {
+      min-height: 4.05rem !important;
+      height: 4.05rem !important;
+      font-size: 1.25rem !important;
+      border-radius: 1rem !important;
+    }
+  }
+
   /* ===== Desktop — team player (>1280px) ===== */
   @media (min-width: 1281px) {
     .team-player-shell .content-shell-arena,
