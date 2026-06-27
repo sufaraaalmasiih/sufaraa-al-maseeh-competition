@@ -11382,6 +11382,24 @@
     }
   }
 
+  /* Center the active gameplay card inside the remaining phone viewport below the header. */
+  @media (max-width: 639px) {
+    .team-player-shell.app-viewport-fill .team-flow-content__body:has(.gameplay-scene) {
+      justify-content: center !important;
+      padding-bottom: calc(0.9rem + env(safe-area-inset-bottom));
+    }
+
+    .team-player-shell.app-viewport-fill .team-flow-content__body:has(.gameplay-scene) > * {
+      flex: 0 0 auto;
+    }
+
+    .team-player-shell.app-viewport-fill .gameplay-scene,
+    .team-player-shell.app-viewport-fill .gameplay-scene--centered,
+    .team-player-shell.app-viewport-fill .gameplay-flow {
+      justify-content: center !important;
+    }
+  }
+
   /* ===== Desktop — team player (>1280px) ===== */
   @media (min-width: 1281px) {
     .team-player-shell .content-shell-arena,
