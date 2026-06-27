@@ -794,6 +794,38 @@
   }
 
   @media (max-width: 40rem) {
+    .app-viewport-fill:has(.auth-screen__card) {
+      height: 100dvh;
+      min-height: 100dvh;
+      max-height: 100dvh;
+      overflow: hidden;
+    }
+
+    .app-viewport-fill:has(.auth-screen__card) > .relative.z-10 {
+      height: 100%;
+      min-height: 100%;
+      align-items: center;
+      justify-content: center;
+      padding: max(0.75rem, env(safe-area-inset-top)) 0.75rem max(0.75rem, env(safe-area-inset-bottom));
+    }
+
+    .auth-screen__wrap {
+      width: min(100%, 28.5rem);
+      min-height: 0;
+      padding: 0;
+      justify-content: center;
+    }
+
+    .auth-screen__wrap:not(.auth-screen__wrap--hub):not(.auth-screen__wrap--form-wide) {
+      max-height: calc(100dvh - 1.5rem);
+    }
+
+    .auth-screen__wrap:not(.auth-screen__wrap--hub):not(.auth-screen__wrap--form-wide) .auth-screen__card {
+      max-height: calc(100dvh - 1.5rem);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+
     .auth-screen__wrap--hub {
       width: min(100%, calc(100vw - 1.25rem));
       max-width: none;
